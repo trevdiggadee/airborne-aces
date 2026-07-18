@@ -1542,7 +1542,14 @@ flyBtn.addEventListener("click", startGame);
     mini_tank:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_tank.webp?cb=2",
     mini_heli:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli.webp?cb=2",
     mini_ebomb: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_ebomb.webp?cb=2",
-    shieldPickup: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/shieldPickup.webp?cb=2"
+    shieldPickup: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/shieldPickup.webp?cb=2",
+
+    // single static "hero" image per blimp choice — used in gameplay for any
+    // blimp that doesn't have its own 36-frame flight animation yet
+    asset_extra_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_06.webp?cb=2",
+    blimp2_main:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp2_main.webp?cb=2",
+    blimp3_main:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp3_main.webp?cb=2",
+    blimp4_main:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_main.webp?cb=2"
   };
 
   const BOSS_THROW_FRAME_COUNT = 25;
@@ -1552,6 +1559,25 @@ flyBtn.addEventListener("click", startGame);
   const PLAYER_BLIMP_FRAME_COUNT = 36;
   const PLAYER_BLIMP_FPS = 24;
   const PLAYER_BLIMP_KEYS = Array.from({ length: PLAYER_BLIMP_FRAME_COUNT }, (_, i) => `player_blimp_${String(i + 1).padStart(2, "0")}`);
+
+  // blimp1 has a full 36-frame flight animation; blimp2-4 only have a single
+  // static hero image so far, so gameplay falls back to that until each gets
+  // its own animated frame set
+  const BLIMP_HERO_KEYS = {
+    blimp1: "asset_extra_06",
+    blimp2: "blimp2_main",
+    blimp3: "blimp3_main",
+    blimp4: "blimp4_main"
+  };
+
+  function currentPlayerImage() {
+    if (typeof selectedBlimp !== "undefined" && selectedBlimp !== "blimp1") {
+      const heroKey = BLIMP_HERO_KEYS[selectedBlimp];
+      const heroImg = heroKey && images[heroKey];
+      if (heroImg && heroImg.naturalWidth) return heroImg;
+    }
+    return images[PLAYER_BLIMP_KEYS[playerBlimpFrame]] || images.blimp;
+  }
   let playerBlimpFrame = 0; // 0-based index into PLAYER_BLIMP_KEYS
   let playerBlimpFrameTimer = 0;
 
@@ -1808,8 +1834,8 @@ flyBtn.addEventListener("click", startGame);
   };
 
   function resetPlayer() {
-    const firstFrame = images[PLAYER_BLIMP_KEYS[0]];
-    const aspect = (firstFrame && firstFrame.naturalHeight / firstFrame.naturalWidth) || 0.6;
+    const firstFrame = currentPlayerImage();
+    const aspect = (firstFrame && firstFrame.naturalWidth && firstFrame.naturalHeight / firstFrame.naturalWidth) || 0.6;
     player.w = Math.min(110, W * 0.22);
     player.h = player.w * aspect;
     player.x = W * 0.28;
@@ -1858,7 +1884,7 @@ flyBtn.addEventListener("click", startGame);
   }
 
   function drawPlayer() {
-    const img = images[PLAYER_BLIMP_KEYS[playerBlimpFrame]] || images.blimp;
+    const img = currentPlayerImage();
     if (!img || !img.naturalWidth) return;
     ctx.save();
     ctx.translate(player.x, player.y);
