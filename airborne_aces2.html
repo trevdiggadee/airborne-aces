@@ -2478,7 +2478,7 @@ flyBtn.addEventListener("click", startGame);
     const type = pickObstacleType();
     const frames = OBSTACLE_ANIM_SETS[type];
     const img = images[frames[0]];
-    const aspect = imgAspect(img);
+    let aspect = imgAspect(img);
     let dispW;
     if (type === "balloon_anim") {
       dispW = Math.min(90, W * 0.18);
@@ -2635,7 +2635,7 @@ flyBtn.addEventListener("click", startGame);
 
   function spawnHealPickup() {
     const img = images.heartPickup;
-    const aspect = imgAspect(img);
+    let aspect = imgAspect(img);
     const dispW = Math.min(50, W * 0.12);
     const dispH = dispW * aspect;
 
@@ -3248,6 +3248,7 @@ flyBtn.addEventListener("click", startGame);
     if (dx < player.w * 0.5 + checkpointPickup.r * 0.9 && dy < player.h * 0.5 + checkpointPickup.r * 0.9) {
       checkpointPickup.collected = true;
       checkpointReached = Math.max(checkpointReached, checkpointPickup.targetNum);
+      checkpointScore = score; // save score at checkpoint for restart
       sfxPowerup();
       showBanner("CHECKPOINT! BOSS " + checkpointPickup.targetNum + " NEAR!", 2000);
       // heal 1 pip as a reward for collecting it
@@ -3572,7 +3573,7 @@ function triggerBoss(num) {
     const img = images.bomb;
     playerBombs.forEach(b => {
       if (!img || !img.naturalWidth) return;
-      const aspect = imgAspect(img);
+      let aspect = imgAspect(img);
       const w = b.r * 2.1;
       const h = w * aspect;
       ctx.save();
@@ -3614,7 +3615,7 @@ function triggerBoss(num) {
     rockets.forEach(r => {
       const img = images[ROCKET_FLIGHT_KEYS[r.animFrame]] || images.rocket;
       if (!img || !img.naturalWidth) return;
-      const aspect = imgAspect(img);
+      let aspect = imgAspect(img);
       const w = r.r * 3.6;
       const h = w * aspect;
       ctx.save();
@@ -4359,7 +4360,7 @@ function triggerBoss(num) {
     const img = images.bomb;
     bombs.forEach(b => {
       if (!img || !img.naturalWidth) return;
-      const aspect = imgAspect(img);
+      let aspect = imgAspect(img);
       const w = b.r * 2.1;
       const h = w * aspect;
       ctx.save();
@@ -4514,6 +4515,7 @@ function triggerBoss(num) {
     checkpointPickup = null;
     checkpointTriggeredFor = [];
     checkpointReached = 0;
+    checkpointScore = 0;
     bossNumber = 0;
     bossActive = false;
     boss = null;
@@ -4564,13 +4566,7 @@ function triggerBoss(num) {
 
   function crash() {
     if (state !== "playing") return;
-    
-    // Second life: if we have a checkpoint reached, respawn instead of game over
-    if (checkpointReached > 0) {
-      respawnAtCheckpoint();
-      return;
-    }
-    
+    state = "over";
     state = "over";
     sfxCrash();
     stopMusic();
@@ -4583,69 +4579,117 @@ function triggerBoss(num) {
     gameOverOverlay.classList.remove("hidden");
   }
 
-  function respawnAtCheckpoint() {
-    // Reset player but keep score and progress
-    state = "playing";
-    health = MAX_HEALTH;
-    invulnerableUntil = performance.now() + 2500; // longer invulnerability after respawn
-    updateHealthDisplay();
-
-    // Clear immediate threats
-    obstacles = [];
-    bombs = [];
-    rockets = [];
-    playerBombs = [];
-    bullets = [];
-
-    // Reset player position
-    resetPlayer();
-
-    // Clear boss if active (shouldn't be, but safety)
-    bossActive = false;
-    boss = null;
-    bossNumber = 0;
-
-    // Reset spawn timer to give breathing room
-    spawnTimer = -1.5; // brief delay before new obstacles
-
-    // Visual and audio feedback
-    sfxPowerup();
-    showBanner("SECOND CHANCE! CHECKPOINT RESTORED!", 2500);
-
-    // Big respawn flash effect
-    for (let i = 0; i < 20; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = 100 + Math.random() * 180;
-      hitParticles.push({
-        type: "spark",
-        x: player.x,
-        y: player.y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: 0.5 + Math.random() * 0.4,
-        age: 0,
-        r: 3 + Math.random() * 4
-      });
-    }
-
-    // Checkpoint is consumed on use
-    checkpointReached = 0;
-  }
-
   document.getElementById("startBtn").addEventListener("click", () => { ensureAudio(); sfxClick(); startGame(); });
   document.getElementById("retryBtn").addEventListener("click", () => { ensureAudio(); sfxClick(); startGame(); });
+
+  document.getElementById("checkpointBtn").addEventListener("click", () => {
+    ensureAudio();
+    sfxClick();
+    restartFromCheckpoint();
+  });
 
   document.getElementById("menuBtn").addEventListener("click", () => {
     ensureAudio();
     sfxClick();
     state = "start";
     checkpointReached = 0;
+    checkpointScore = 0;
     gameOverOverlay.classList.add("hidden");
     document.getElementById("gameScreen").style.display = "none";
     const menuScreenEl = document.getElementById("menuScreen");
     menuScreenEl.style.display = "";
     if (window.__airborneShowMenu) window.__airborneShowMenu();
   });
+
+  function restartFromCheckpoint() {
+    // Resume game from last checkpoint — keep score, reset health, clear threats
+    ensureAudio();
+    setMusicTheme(THEME_NORMAL);
+    startMusic();
+
+    // Restore score to checkpoint level
+    score = checkpointScore;
+    scoreVal.textContent = score;
+
+    // Reset health
+    health = MAX_HEALTH;
+    invulnerableUntil = performance.now() + 2000;
+    updateHealthDisplay();
+
+    // Clear all threats
+    obstacles = [];
+    bombs = [];
+    rockets = [];
+    playerBombs = [];
+    bullets = [];
+    hitParticles = [];
+    explosionBursts = [];
+    windParticles = [];
+    comboPopups = [];
+
+    // Clear boss state
+    bossActive = false;
+    boss = null;
+    bossNumber = 0;
+    bossThrowFrame = 0;
+    bossThrowFrameTimer = 0;
+    bossThrowBombSpawned = false;
+    bossBanner = null;
+    bossHitFlashUntil = 0;
+    bossShakeUntil = 0;
+
+    // Clear powerups and pickups
+    powerup = null;
+    hasFirepower = false;
+    hasDualFire = false;
+    hasArcBomb = false;
+    powerupRespawnTimer = 0;
+    checkpointPickup = null;
+    healPickup = null;
+    shieldPickup = null;
+    shieldActive = false;
+
+    // Reset timers
+    spawnTimer = 0;
+    spawnInterval = Math.max(0.95, 1.7 - score * 0.03);
+    obstacleSpeed = 220 + Math.min(160, score * 6);
+    bulletTimer = 0;
+    bombTimer = 0;
+    rocketTimer = 0;
+    arcBombTimer = 0;
+    healSpawnTimer = 6 + Math.random() * 5;
+    shieldSpawnTimer = 25 + Math.random() * 15;
+
+    // Reset bonus state
+    bonusActive = false;
+    bonusType = null;
+    bonusPending = false;
+    bonusPendingType = null;
+    bonusItems = [];
+    bonusTotal = 0;
+    bonusCollected = 0;
+    bonusPoints = 0;
+
+    // Reset storm
+    stormCharge = 0;
+    lastStormMilestone = 0;
+    stormActive = false;
+    stormClouds = [];
+    updateStormMeterDisplay();
+
+    // Reset player
+    resetPlayer();
+
+    // Reset buildings and clouds
+    initBuildings();
+    initClouds();
+
+    // Resume
+    state = "playing";
+    runStartTime = performance.now() - elapsedMs;
+    gameOverOverlay.classList.add("hidden");
+    showBanner("RESUMED FROM CHECKPOINT!", 2000);
+  }
 
   const muteBtn = document.getElementById("muteBtn");
   if (muteBtn) {
