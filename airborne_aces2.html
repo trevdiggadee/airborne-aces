@@ -2458,7 +2458,17 @@ flyBtn.addEventListener("click", startGame);
     const frames = OBSTACLE_ANIM_SETS[type];
     const img = images[frames[0]];
     const aspect = imgAspect(img);
-    const dispW = type === "balloon_anim" ? Math.min(90, W * 0.18) : Math.min(70, W * 0.15);
+    let dispW;
+    if (type === "balloon_anim") {
+      dispW = Math.min(90, W * 0.18);
+    } else if (type === "mini_blimp") {
+      // mini blimps match the player blimp size for visual parity
+      const playerImg = currentPlayerImage();
+      const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
+      dispW = Math.min(110, W * 0.22);
+    } else {
+      dispW = Math.min(70, W * 0.15);
+    }
     const dispH = dispW * aspect;
 
     // Buildings can rise up to maxH (see makeBuilding: H*0.5) above the ground,
@@ -2540,6 +2550,14 @@ flyBtn.addEventListener("click", startGame);
         spawnInterval = Math.max(0.95, 1.7 - score * 0.03);
         if (!bossActive) {
           const next = nextBossConfig();
+          // checkpoint: show floating banner 15-20 points before each boss
+          if (next && !checkpoint && !checkpointTriggeredFor.includes(next.num)) {
+            const checkpointStart = next.threshold - 18;
+            if (gameplayScore >= checkpointStart && gameplayScore < next.threshold) {
+              checkpointTriggeredFor.push(next.num);
+              spawnCheckpoint(next.num);
+            }
+          }
           if (next && gameplayScore >= next.threshold) {
             triggerBoss(next.num);
           }
@@ -3156,7 +3174,177 @@ flyBtn.addEventListener("click", startGame);
     bossBanner = { text, until: performance.now() + durationMs };
   }
 
-  function triggerBoss(num) {
+  
+  // ---------- Checkpoint functions ----------
+  function spawnCheckpoint(targetBossNum) {
+    const bannerW = Math.min(340, W * 0.72);
+    const bannerH = bannerW * 0.28;
+    checkpoint = {
+      x: W + bannerW,
+      y: H * 0.22,
+      w: bannerW,
+      h: bannerH,
+      targetNum: targetBossNum,
+      bobPhase: 0,
+      alpha: 0,
+      state: "enter",
+      timer: 0,
+      particles: []
+    };
+    // spawn confetti particles
+    for (let i = 0; i < 24; i++) {
+      checkpoint.particles.push({
+        x: 0, y: 0,
+        vx: (Math.random() - 0.5) * 180,
+        vy: -80 - Math.random() * 140,
+        r: 3 + Math.random() * 4,
+        color: ["#f5c542", "#3fa0e0", "#c0392b", "#5aa85e", "#f5e6c8"][Math.floor(Math.random() * 5)],
+        life: 0.6 + Math.random() * 0.5,
+        age: Math.random() * 0.3
+      });
+    }
+    showBanner("CHECKPOINT REACHED!", 1800);
+    sfxPowerup();
+  }
+
+  function updateCheckpoint(dt) {
+    if (!checkpoint) return;
+    checkpoint.timer += dt;
+    checkpoint.bobPhase += dt * 2.2;
+
+    if (checkpoint.state === "enter") {
+      checkpoint.x += ((W * 0.5) - checkpoint.x) * Math.min(1, dt * 2.5);
+      checkpoint.alpha = Math.min(1, checkpoint.alpha + dt * 3);
+      if (Math.abs(checkpoint.x - W * 0.5) < 4 && checkpoint.alpha >= 0.95) {
+        checkpoint.state = "hover";
+        checkpoint.timer = 0;
+      }
+    } else if (checkpoint.state === "hover") {
+      checkpoint.x = W * 0.5 + Math.sin(checkpoint.bobPhase) * 8;
+      checkpoint.y = H * 0.22 + Math.sin(checkpoint.bobPhase * 0.7) * 6;
+      if (checkpoint.timer > 2.5) {
+        checkpoint.state = "exit";
+      }
+    } else if (checkpoint.state === "exit") {
+      checkpoint.x += ((-checkpoint.w - 40) - checkpoint.x) * Math.min(1, dt * 2.5);
+      checkpoint.alpha = Math.max(0, checkpoint.alpha - dt * 2.5);
+      if (checkpoint.alpha <= 0.01) {
+        checkpoint = null;
+      }
+    }
+
+    // update particles
+    if (checkpoint && checkpoint.particles) {
+      checkpoint.particles.forEach(p => {
+        p.age += dt;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.vy += 220 * dt;
+      });
+      checkpoint.particles = checkpoint.particles.filter(p => p.age < p.life);
+    }
+  }
+
+  function drawCheckpoint() {
+    if (!checkpoint) return;
+    const cp = checkpoint;
+    ctx.save();
+    ctx.globalAlpha = cp.alpha;
+
+    // draw banner background — rounded rectangle with brass gradient
+    const cx = cp.x;
+    const cy = cp.y;
+    const bw = cp.w;
+    const bh = cp.h;
+    const r = bh * 0.22;
+
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    roundRect(ctx, cx - bw / 2 + 4, cy - bh / 2 + 5, bw, bh, r);
+    ctx.fill();
+
+    // main banner body
+    const grad = ctx.createLinearGradient(cx - bw / 2, cy - bh / 2, cx - bw / 2, cy + bh / 2);
+    grad.addColorStop(0, "#c9a66b");
+    grad.addColorStop(0.5, "#f5e6c8");
+    grad.addColorStop(1, "#8b6b3d");
+    ctx.fillStyle = grad;
+    roundRect(ctx, cx - bw / 2, cy - bh / 2, bw, bh, r);
+    ctx.fill();
+
+    // border
+    ctx.strokeStyle = "#3a2410";
+    ctx.lineWidth = 3;
+    roundRect(ctx, cx - bw / 2, cy - bh / 2, bw, bh, r);
+    ctx.stroke();
+
+    // inner highlight line
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 1;
+    roundRect(ctx, cx - bw / 2 + 3, cy - bh / 2 + 3, bw - 6, bh - 6, r - 2);
+    ctx.stroke();
+
+    // checkpoint icon — a small flag/banner glyph on the left
+    const iconSize = bh * 0.55;
+    const iconX = cx - bw / 2 + bh * 0.35;
+    const iconY = cy;
+    ctx.fillStyle = "#c0392b";
+    ctx.beginPath();
+    ctx.moveTo(iconX - iconSize * 0.15, iconY - iconSize * 0.45);
+    ctx.lineTo(iconX + iconSize * 0.35, iconY - iconSize * 0.15);
+    ctx.lineTo(iconX - iconSize * 0.15, iconY + iconSize * 0.15);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = "#3a2410";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(iconX - iconSize * 0.15, iconY - iconSize * 0.45);
+    ctx.lineTo(iconX - iconSize * 0.15, iconY + iconSize * 0.45);
+    ctx.stroke();
+
+    // text
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    const fontSize = Math.max(16, Math.min(26, bw * 0.09));
+    ctx.font = "bold " + fontSize + "px Georgia, serif";
+    ctx.fillStyle = "#3a2410";
+    ctx.shadowColor = "rgba(255,255,255,0.4)";
+    ctx.shadowBlur = 2;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 1;
+    ctx.fillText("CHECKPOINT", iconX + iconSize * 0.55, cy - fontSize * 0.15);
+
+    // subtext
+    ctx.font = "italic " + Math.max(11, fontSize * 0.58) + "px Georgia, serif";
+    ctx.fillStyle = "#5e4420";
+    ctx.fillText("Boss " + cp.targetNum + " approaches...", iconX + iconSize * 0.55, cy + fontSize * 0.55);
+    ctx.shadowColor = "transparent";
+
+    // draw particles
+    cp.particles.forEach(p => {
+      const t = 1 - p.age / p.life;
+      ctx.globalAlpha = cp.alpha * t;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(cx + p.x, cy + p.y, p.r * t, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    ctx.restore();
+  }
+
+  // helper for rounded rect (checkpoint uses it)
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+function triggerBoss(num) {
     const cfg = bossConfig(num);
     setMusicTheme(THEME_BOSS);
     lastBossTriggered = num;
@@ -3171,7 +3359,7 @@ flyBtn.addEventListener("click", startGame);
     // boss 2's sprite is a wide blimp silhouette (short + very wide), so the normal
     // height-based sizing formula made it read as oversized once divided by its aspect
     // ratio — scale it down specifically so it matches the others visually
-    const kindSizeScale = num === 2 ? (1 / 3) : 1;
+    const kindSizeScale = 1; // boss 2 now full size (3x bigger than before)
     const dispH = Math.min(H * (isGround ? 0.32 : 0.42) * sizeMult, isGround ? 220 : 300) * kindSizeScale;
     const dispW = dispH / aspect;
     const groundY = H - 6;
@@ -4148,6 +4336,11 @@ flyBtn.addEventListener("click", startGame);
     best = parseInt(localStorage.getItem("aa_best") || "0", 10) || 0;
   } catch (e) { best = 0; }
 
+  // ---------- Checkpoint system — floating milestone banner before each boss ----------
+  let checkpoint = null; // { x, y, w, h, targetNum, bobPhase, alpha, state: "enter"|"hover"|"exit", timer }
+  const CHECKPOINT_BOSS_NUMBERS = [2, 3, 4, 5]; // bosses that get a checkpoint
+  let checkpointTriggeredFor = []; // which bosses we've already shown checkpoints for
+
   const startOverlay = document.getElementById("startOverlay");
   const gameOverOverlay = document.getElementById("gameOverOverlay");
   const scoreVal = document.getElementById("scoreVal");
@@ -4258,6 +4451,8 @@ flyBtn.addEventListener("click", startGame);
     spawnInterval = 1.7;
     obstacleSpeed = 220;
     lastBossTriggered = 0;
+    checkpoint = null;
+    checkpointTriggeredFor = [];
     bossNumber = 0;
     bossActive = false;
     boss = null;
@@ -4440,6 +4635,7 @@ flyBtn.addEventListener("click", startGame);
       updateBuildings(dtScale);
       updatePlayer(dt);
       updateObstacles(dt);
+      updateCheckpoint(dt);
       checkBuildingCollision();
       if (bossActive) {
         updateBoss(dt);
@@ -4483,6 +4679,7 @@ flyBtn.addEventListener("click", startGame);
     drawShieldEffect();
     drawStorm();
     drawRain();
+    drawCheckpoint();
     drawBossBanner();
     drawBonusHUD();
     drawComboPopups();
