@@ -3124,6 +3124,13 @@ flyBtn.addEventListener("click", startGame);
     bonusType = null;
     // resume the normal spawn cadence cleanly
     spawnTimer = 0;
+
+    // After bonus round, update checkpoint to next boss threshold
+    // so the player's second life respawns at the appropriate difficulty level
+    const next = nextBossConfig();
+    if (next && checkpointReached > 0) {
+      checkpointReached = next.num;
+    }
   }
 
   function updateBonusRound(dt) {
@@ -3240,6 +3247,7 @@ flyBtn.addEventListener("click", startGame);
     const dy = Math.abs(player.y - drawY);
     if (dx < player.w * 0.5 + checkpointPickup.r * 0.9 && dy < player.h * 0.5 + checkpointPickup.r * 0.9) {
       checkpointPickup.collected = true;
+      checkpointReached = Math.max(checkpointReached, checkpointPickup.targetNum);
       sfxPowerup();
       showBanner("CHECKPOINT! BOSS " + checkpointPickup.targetNum + " NEAR!", 2000);
       // heal 1 pip as a reward for collecting it
@@ -4391,6 +4399,7 @@ function triggerBoss(num) {
   // ---------- Checkpoint pickup — collectible glowing item before each boss ----------
   let checkpointPickup = null; // { x, y, r, bobPhase, targetNum, collected, vx }
   let checkpointTriggeredFor = []; // which bosses we've already shown checkpoint pickups for
+  let checkpointReached = 0; // highest boss number whose checkpoint was collected (0 = none) — enables second life
 
   const startOverlay = document.getElementById("startOverlay");
   const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -4504,6 +4513,7 @@ function triggerBoss(num) {
     lastBossTriggered = 0;
     checkpointPickup = null;
     checkpointTriggeredFor = [];
+    checkpointReached = 0;
     bossNumber = 0;
     bossActive = false;
     boss = null;
@@ -4554,6 +4564,13 @@ function triggerBoss(num) {
 
   function crash() {
     if (state !== "playing") return;
+    
+    // Second life: if we have a checkpoint reached, respawn instead of game over
+    if (checkpointReached > 0) {
+      respawnAtCheckpoint();
+      return;
+    }
+    
     state = "over";
     sfxCrash();
     stopMusic();
@@ -4566,6 +4583,55 @@ function triggerBoss(num) {
     gameOverOverlay.classList.remove("hidden");
   }
 
+  function respawnAtCheckpoint() {
+    // Reset player but keep score and progress
+    state = "playing";
+    health = MAX_HEALTH;
+    invulnerableUntil = performance.now() + 2500; // longer invulnerability after respawn
+    updateHealthDisplay();
+
+    // Clear immediate threats
+    obstacles = [];
+    bombs = [];
+    rockets = [];
+    playerBombs = [];
+    bullets = [];
+
+    // Reset player position
+    resetPlayer();
+
+    // Clear boss if active (shouldn't be, but safety)
+    bossActive = false;
+    boss = null;
+    bossNumber = 0;
+
+    // Reset spawn timer to give breathing room
+    spawnTimer = -1.5; // brief delay before new obstacles
+
+    // Visual and audio feedback
+    sfxPowerup();
+    showBanner("SECOND CHANCE! CHECKPOINT RESTORED!", 2500);
+
+    // Big respawn flash effect
+    for (let i = 0; i < 20; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 100 + Math.random() * 180;
+      hitParticles.push({
+        type: "spark",
+        x: player.x,
+        y: player.y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 0.5 + Math.random() * 0.4,
+        age: 0,
+        r: 3 + Math.random() * 4
+      });
+    }
+
+    // Checkpoint is consumed on use
+    checkpointReached = 0;
+  }
+
   document.getElementById("startBtn").addEventListener("click", () => { ensureAudio(); sfxClick(); startGame(); });
   document.getElementById("retryBtn").addEventListener("click", () => { ensureAudio(); sfxClick(); startGame(); });
 
@@ -4573,6 +4639,7 @@ function triggerBoss(num) {
     ensureAudio();
     sfxClick();
     state = "start";
+    checkpointReached = 0;
     gameOverOverlay.classList.add("hidden");
     document.getElementById("gameScreen").style.display = "none";
     const menuScreenEl = document.getElementById("menuScreen");
