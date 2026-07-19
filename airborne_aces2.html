@@ -1298,6 +1298,7 @@ setEffect(BLIMP_DATA.blimp1.effect);
 function startGame(){
   document.getElementById("menuScreen").style.display = "none";
   document.getElementById("gameScreen").style.display = "block";
+  document.getElementById("startOverlay").classList.add("hidden");
   if (window.__airborneGameStart) window.__airborneGameStart();
 }
 
@@ -1309,7 +1310,7 @@ flyBtn.addEventListener("pointerdown", (e) => {
 ["pointerup", "pointercancel", "pointerleave"].forEach(evt => {
   flyBtn.addEventListener(evt, () => flyBtn.classList.remove("pressed"));
 });
-flyBtn.addEventListener("click", () => { document.getElementById("startOverlay").classList.remove("hidden"); startGame(); });
+flyBtn.addEventListener("click", () => { startGame(); });
 
 
 
@@ -4400,7 +4401,8 @@ function triggerBoss(num) {
   // ---------- Checkpoint pickup — collectible glowing item before each boss ----------
   let checkpointPickup = null; // { x, y, r, bobPhase, targetNum, collected, vx }
   let checkpointTriggeredFor = []; // which bosses we've already shown checkpoint pickups for
-  let checkpointReached = 0; // highest boss number whose checkpoint was collected (0 = none) — enables second life
+  let checkpointReached = 0; // highest boss number whose checkpoint was collected (0 = none)
+  let checkpointScore = 0; // score stored when checkpoint was collected — enables second life
 
   const startOverlay = document.getElementById("startOverlay");
   const gameOverOverlay = document.getElementById("gameOverOverlay");
