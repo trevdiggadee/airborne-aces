@@ -545,7 +545,7 @@ input[type=range].tapSlider::-moz-range-thumb {
     box-sizing: border-box;
   }
 
-  .overlay.hidden { display: none; }
+  .overlay.hidden { display: none !important; }
 
   .overlay h1 {
     color: #f5e6c8;
@@ -1309,7 +1309,7 @@ flyBtn.addEventListener("pointerdown", (e) => {
 ["pointerup", "pointercancel", "pointerleave"].forEach(evt => {
   flyBtn.addEventListener(evt, () => flyBtn.classList.remove("pressed"));
 });
-flyBtn.addEventListener("click", startGame);
+flyBtn.addEventListener("click", () => { document.getElementById("startOverlay").classList.remove("hidden"); startGame(); });
 
 
 
@@ -4490,6 +4490,9 @@ function triggerBoss(num) {
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
     startMusic();
+    // force hide overlays
+    document.getElementById("startOverlay").classList.add("hidden");
+    document.getElementById("gameOverOverlay").classList.add("hidden");
     score = 0;
     gameplayScore = 0;
     dodgeStreak = 0;
@@ -4579,7 +4582,7 @@ function triggerBoss(num) {
     gameOverOverlay.classList.remove("hidden");
   }
 
-  document.getElementById("startBtn").addEventListener("click", () => { ensureAudio(); sfxClick(); startGame(); });
+  document.getElementById("startBtn").addEventListener("click", () => { ensureAudio(); sfxClick(); startGame(); document.getElementById("startOverlay").classList.add("hidden"); });
   document.getElementById("retryBtn").addEventListener("click", () => { ensureAudio(); sfxClick(); startGame(); });
 
   document.getElementById("checkpointBtn").addEventListener("click", () => {
