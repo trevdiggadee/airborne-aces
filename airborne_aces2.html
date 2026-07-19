@@ -81,6 +81,22 @@ html, body {
   50% { transform: translate(-5%, 2%); }
 }
 
+/* MENU BANNER — decorative backdrop behind the hero blimp */
+.menuBanner {
+  position: absolute;
+  top: 4%;
+  left: 50%;
+  width: 92%;
+  transform: translateX(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.menuBanner img {
+  display: block;
+  width: 100%;
+}
+
 /* HERO BLIMP — floats alone in the open sky area, no frame/scenery/vignette.
    Two stacked image layers crossfade between animation frames for a smooth,
    motion-blurred spin rather than a hard frame-to-frame pop. */
@@ -397,14 +413,15 @@ input[type=range].tapSlider::-moz-range-thumb {
     100% { transform: scale(1); }
   }
 
-  /* BONUS HEARTS — small row tucked below the health badge, still inside the frame */
+  /* BONUS HEARTS — fixed to the viewport just below the HUD frame, so they
+     stay clear of the main heart regardless of how the frame is scaled */
   #bonusHearts {
-    position: absolute;
-    left: 2%;
-    top: 66%;
+    position: fixed;
+    top: calc(20.6vw + 4px);
+    left: 14px;
     display: flex;
     gap: 3px;
-    z-index: 2;
+    z-index: 16;
     pointer-events: none;
   }
 
@@ -603,6 +620,10 @@ input[type=range].tapSlider::-moz-range-thumb {
 
   <img class="cloudLayer cA" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_04.webp?cb=2" alt="" />
   <img class="cloudLayer cB" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_05.webp?cb=2" alt="" />
+
+  <div class="menuBanner">
+    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/menuBanner.webp?cb=2" alt="" />
+  </div>
 
   <div class="heroBlimpWrap">
     <img id="heroBlimpImg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_06.webp?cb=2" alt="" />
@@ -978,6 +999,14 @@ function renderPlaceholder(key) {
       ctx.arc(((i * 83) % w), ((i * 53) % (h * 0.6)) + h * 0.2, 30 + (i * 11) % 40, 0, Math.PI * 2);
       ctx.fill();
     }
+  } else if (key === "menuBanner") {
+    w = 650; h = 431; c = phCanvas(w, h); ctx = c.getContext("2d");
+    const g = ctx.createLinearGradient(0, 0, w, h);
+    g.addColorStop(0, "rgba(201,166,107,0.15)");
+    g.addColorStop(0.5, "rgba(201,166,107,0.35)");
+    g.addColorStop(1, "rgba(201,166,107,0.15)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
   } else if (key === "gasTank") {
     w = 90; h = 90; c = phCanvas(w, h); ctx = c.getContext("2d");
     ctx.strokeStyle = PH_PAL.brass; ctx.lineWidth = 5;
@@ -1059,7 +1088,7 @@ function renderPlaceholder(key) {
     ctx.fillStyle = "#ffcf5c";
     ctx.beginPath(); ctx.arc(0, -h * 0.02, w * 0.07, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
-  } else if (key === "mini_blimp") {
+  } else if (key === "mini_blimp" || key.indexOf("mini_blimp2_") === 0) {
     // small villain blimp — same silhouette as the boss's, scaled down, purple livery
     w = 130; h = 82; c = phCanvas(w, h); ctx = c.getContext("2d");
     phDrawZeppelin(ctx, w / 2, h / 2, w, h, "#5c3a7a", 0);
@@ -1145,6 +1174,7 @@ if (PLACEHOLDER_MODE) {
   document.querySelector(".stageBg").src = renderPlaceholder("asset_extra_03");
   document.querySelector(".cloudLayer.cA").src = renderPlaceholder("asset_extra_04");
   document.querySelector(".cloudLayer.cB").src = renderPlaceholder("asset_extra_05");
+  document.querySelector(".menuBanner img").src = renderPlaceholder("menuBanner");
   document.getElementById("healthImg").src = renderPlaceholder("heartPickup");
 
   const numBtnImgs = document.querySelectorAll(".numBtn img");
@@ -1619,7 +1649,68 @@ flyBtn.addEventListener("click", startGame);
     bldg_library:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_library.webp?cb=2",
     boss:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
     boss2:           "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2.webp?cb=2",
+    boss2_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_01.webp",
+    boss2_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_02.webp",
+    boss2_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_03.webp",
+    boss2_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_04.webp",
+    boss2_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_05.webp",
+    boss2_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_06.webp",
+    boss2_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_07.webp",
+    boss2_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_08.webp",
+    boss2_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_09.webp",
+    boss2_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_10.webp",
+    boss2_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_11.webp",
+    boss2_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_12.webp",
+    boss2_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_13.webp",
+    boss2_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_14.webp",
+    boss2_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_15.webp",
+    boss2_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_16.webp",
+    boss2_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_17.webp",
+    boss2_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_18.webp",
+    boss2_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_19.webp",
+    boss2_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_20.webp",
+    boss2_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_21.webp",
+    boss2_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_22.webp",
+    boss2_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_23.webp",
+    boss2_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_24.webp",
+    boss2_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_25.webp",
+    boss2_26: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_26.webp",
+    boss2_27: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_27.webp",
+    boss2_28: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_28.webp",
+    boss2_29: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_29.webp",
+    boss2_30: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_30.webp",
+    boss2_31: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_31.webp",
+    boss2_32: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_32.webp",
+    boss2_33: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_33.webp",
+    boss2_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_34.webp",
+    boss2_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_35.webp",
+    boss2_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_36.webp",
     rocket:          "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket.webp?cb=2",
+    rocket_flight_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_01.webp?cb=2",
+    rocket_flight_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_02.webp?cb=2",
+    rocket_flight_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_03.webp?cb=2",
+    rocket_flight_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_04.webp?cb=2",
+    rocket_flight_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_05.webp?cb=2",
+    rocket_flight_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_06.webp?cb=2",
+    rocket_flight_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_07.webp?cb=2",
+    rocket_flight_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_08.webp?cb=2",
+    rocket_flight_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_09.webp?cb=2",
+    rocket_flight_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_10.webp?cb=2",
+    rocket_flight_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_11.webp?cb=2",
+    rocket_flight_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_12.webp?cb=2",
+    rocket_flight_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_13.webp?cb=2",
+    rocket_flight_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_14.webp?cb=2",
+    rocket_flight_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_15.webp?cb=2",
+    rocket_flight_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_16.webp?cb=2",
+    rocket_flight_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_17.webp?cb=2",
+    rocket_flight_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_18.webp?cb=2",
+    rocket_flight_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_19.webp?cb=2",
+    rocket_flight_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_20.webp?cb=2",
+    rocket_flight_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_21.webp?cb=2",
+    rocket_flight_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_22.webp?cb=2",
+    rocket_flight_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_23.webp?cb=2",
+    rocket_flight_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_24.webp?cb=2",
+    rocket_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_25.webp?cb=2",
     heartPickup:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/heartPickup.webp?cb=2",
     bomb:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bomb.webp?cb=2",
     boss_throw_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
@@ -1795,6 +1886,42 @@ flyBtn.addEventListener("click", startGame);
     boss4:      "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4.webp?cb=2",
     boss5:      "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss5.webp?cb=2",
     mini_blimp: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp.webp?cb=2",
+    mini_blimp2_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_01.webp",
+    mini_blimp2_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_02.webp",
+    mini_blimp2_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_03.webp",
+    mini_blimp2_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_04.webp",
+    mini_blimp2_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_05.webp",
+    mini_blimp2_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_06.webp",
+    mini_blimp2_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_07.webp",
+    mini_blimp2_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_08.webp",
+    mini_blimp2_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_09.webp",
+    mini_blimp2_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_10.webp",
+    mini_blimp2_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_11.webp",
+    mini_blimp2_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_12.webp",
+    mini_blimp2_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_13.webp",
+    mini_blimp2_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_14.webp",
+    mini_blimp2_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_15.webp",
+    mini_blimp2_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_16.webp",
+    mini_blimp2_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_17.webp",
+    mini_blimp2_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_18.webp",
+    mini_blimp2_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_19.webp",
+    mini_blimp2_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_20.webp",
+    mini_blimp2_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_21.webp",
+    mini_blimp2_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_22.webp",
+    mini_blimp2_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_23.webp",
+    mini_blimp2_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_24.webp",
+    mini_blimp2_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_25.webp",
+    mini_blimp2_26: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_26.webp",
+    mini_blimp2_27: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_27.webp",
+    mini_blimp2_28: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_28.webp",
+    mini_blimp2_29: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_29.webp",
+    mini_blimp2_30: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_30.webp",
+    mini_blimp2_31: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_31.webp",
+    mini_blimp2_32: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_32.webp",
+    mini_blimp2_33: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_33.webp",
+    mini_blimp2_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_34.webp",
+    mini_blimp2_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_35.webp",
+    mini_blimp2_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_36.webp",
     mini_tank:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_tank.webp?cb=2",
     mini_heli:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli.webp?cb=2",
     mini_ebomb: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_ebomb.webp?cb=2",
@@ -1947,12 +2074,14 @@ flyBtn.addEventListener("click", startGame);
 
   const OBSTACLE_ANIM_FRAME_COUNT = 36;
   const OBSTACLE_ANIM_FPS = 18;
+  const BOSS2_FRAME_KEYS = Array.from({ length: 36 }, (_, i) => `boss2_${String(i + 1).padStart(2, "0")}`);
+  const BOSS2_ANIM_FPS = 16;
   const BIRD_A_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, (_, i) => `bird_a_${String(i + 1).padStart(2, "0")}`);
   const BIRD_B_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, (_, i) => `bird_b_${String(i + 1).padStart(2, "0")}`);
   const BALLOON_ANIM_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, (_, i) => `balloon_anim_${String(i + 1).padStart(2, "0")}`);
   // mini lead-in enemies for bosses 2-5 — single static sprite repeated across the
   // frame slots (no per-frame animation art yet), so they still bob/drift normally
-  const MINI_BLIMP_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, () => "mini_blimp");
+  const MINI_BLIMP_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, (_, i) => `mini_blimp2_${String(i + 1).padStart(2, "0")}`);
   const MINI_TANK_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, () => "mini_tank");
   const MINI_HELI_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, () => "mini_heli");
   const MINI_EBOMB_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, () => "mini_ebomb");
@@ -1987,7 +2116,7 @@ flyBtn.addEventListener("click", startGame);
         if (assetsLoaded === assetKeys.length) {
           onDone();
           if (failedAssetKeys.length) {
-            console.warn("Airborne Aces: " + failedAssetKeys.length + " asset(s) failed to load:", failedAssetKeys);
+            console.warn("Airborne Aces: " + failedAssetKeys.length + " asset(s) missing from the repo, using placeholder art:", failedAssetKeys);
             // on-screen banner disabled for now — check the console list above if something's missing
           }
         }
@@ -1995,7 +2124,15 @@ flyBtn.addEventListener("click", startGame);
       img.onload = settle;
       img.onerror = () => {
         failedAssetKeys.push(key);
-        settle(); // don't let one bad file hang the whole game forever
+        if (!PLACEHOLDER_MODE) {
+          // the real asset is missing/renamed in the repo — fall back to the
+          // hand-drawn placeholder so the sprite doesn't just vanish
+          img.onerror = settle; // guard against a loop if even that somehow fails
+          img.removeAttribute("crossorigin");
+          img.src = renderPlaceholder(key);
+        } else {
+          settle();
+        }
       };
       img.src = PLACEHOLDER_MODE ? renderPlaceholder(key) : ASSET_SOURCES[key];
       images[key] = img;
@@ -2804,6 +2941,8 @@ flyBtn.addEventListener("click", startGame);
   let rockets = [];
   let rocketTimer = 0;
   const ROCKET_SPEED = 300;
+  const ROCKET_FLIGHT_KEYS = Array.from({ length: 25 }, (_, i) => `rocket_flight_${String(i + 1).padStart(2, "0")}`);
+  const ROCKET_ANIM_FPS = 20;
 
   // Bomb-throw animation: 0 = idle pose, 1-25 = mid-throw sequence
   let bossThrowFrame = 0;
@@ -3026,7 +3165,7 @@ flyBtn.addEventListener("click", startGame);
     obstacles = []; // clear the sky for the encounter
 
     const isGround = cfg.kind === "tank";
-    const bossImg = images[bossImgKey(num)] || images.boss;
+    const bossImg = num === 2 ? (images[BOSS2_FRAME_KEYS[0]] || images.boss2) : (images[bossImgKey(num)] || images.boss);
     const aspect = imgAspect(bossImg);
     const sizeMult = 1 + (num - 1) * 0.06; // each boss reads a touch bigger/tougher than the last
     // boss 2's sprite is a wide blimp silhouette (short + very wide), so the normal
@@ -3054,7 +3193,9 @@ flyBtn.addEventListener("click", startGame);
       arrived: false,
       variant: num,
       kind: cfg.kind,
-      attackTimer: 1.6
+      attackTimer: 1.6,
+      animFrame: 0,
+      animTimer: 0
     };
 
     bombTimer = 1.5;
@@ -3099,6 +3240,16 @@ flyBtn.addEventListener("click", startGame);
       boss.bobPhase += dt * 1.1;
       boss.y = H * 0.3 + Math.sin(boss.bobPhase) * (H * 0.1);
 
+      if (boss.variant === 2) {
+        // boss 2 has a real 36-frame idle animation — cycle through it
+        boss.animTimer += dt;
+        const frameDur = 1 / BOSS2_ANIM_FPS;
+        while (boss.animTimer >= frameDur) {
+          boss.animTimer -= frameDur;
+          boss.animFrame = (boss.animFrame + 1) % BOSS2_FRAME_KEYS.length;
+        }
+      }
+
       boss.attackTimer -= dt;
       if (boss.attackTimer <= 0) {
         boss.attackTimer = (boss.kind === "heli" ? 1.4 : 1.7) + Math.random() * 1.0;
@@ -3115,7 +3266,9 @@ flyBtn.addEventListener("click", startGame);
           r: Math.min(18, W * 0.045),
           health: Math.random() < 0.5 ? 2 : 3,
           maxHealth: 3,
-          angle: Math.atan2(dy, dx)
+          angle: Math.atan2(dy, dx),
+          animFrame: 0,
+          animTimer: Math.random() * (1 / ROCKET_ANIM_FPS) // desync multiple rockets' flame flicker
         });
       }
     } else if (boss.kind === "octopus") {
@@ -3214,6 +3367,13 @@ flyBtn.addEventListener("click", startGame);
     rockets.forEach(r => {
       r.x += r.vx * dt;
       r.y += r.vy * dt;
+
+      r.animTimer += dt;
+      const frameDur = 1 / ROCKET_ANIM_FPS;
+      while (r.animTimer >= frameDur) {
+        r.animTimer -= frameDur;
+        r.animFrame = (r.animFrame + 1) % ROCKET_FLIGHT_KEYS.length;
+      }
     });
     rockets = rockets.filter(r => r.x > -40 && r.x < W + 40 && r.y > -40 && r.y < H + 40);
 
@@ -3230,8 +3390,8 @@ flyBtn.addEventListener("click", startGame);
   }
 
   function drawRockets() {
-    const img = images.rocket;
     rockets.forEach(r => {
+      const img = images[ROCKET_FLIGHT_KEYS[r.animFrame]] || images.rocket;
       if (!img || !img.naturalWidth) return;
       const aspect = imgAspect(img);
       const w = r.r * 3.6;
@@ -3289,7 +3449,9 @@ flyBtn.addEventListener("click", startGame);
     if (!boss) return;
     const img = (boss.kind === "bomber" && bossThrowFrame > 0)
       ? images[`boss_throw_${String(bossThrowFrame).padStart(2, "0")}`]
-      : images[bossImgKey(boss.variant)];
+      : (boss.variant === 2
+        ? images[BOSS2_FRAME_KEYS[boss.animFrame]]
+        : images[bossImgKey(boss.variant)]);
     if (!img || !img.naturalWidth) return;
 
     // brief shake offset while recently hit
