@@ -2574,7 +2574,7 @@ flyBtn.addEventListener("click", startGame);
         if (!bossActive) {
           const next = nextBossConfig();
           // checkpoint: show floating banner 15-20 points before each boss
-          if (next && !checkpoint && !checkpointTriggeredFor.includes(next.num)) {
+          if (next && !checkpointPickup && !checkpointTriggeredFor.includes(next.num)) {
             const checkpointStart = next.threshold - 8; // appears right before boss
             if (gameplayScore >= checkpointStart && gameplayScore < next.threshold) {
               checkpointTriggeredFor.push(next.num);
