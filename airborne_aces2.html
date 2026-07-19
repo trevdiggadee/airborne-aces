@@ -2524,7 +2524,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function updateObstacles(dt) {
-    if (!bossActive && !bonusActive) {
+    if (!bossActive && !bonusActive && !bonusPending) {
       spawnTimer += dt;
       if (spawnTimer >= spawnInterval) {
         spawnTimer = 0;
@@ -2575,14 +2575,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
         spawnInterval = Math.max(0.95, 1.7 - score * 0.03);
         if (!bossActive) {
           const next = nextBossConfig();
-          // checkpoint: show floating banner 15-20 points before each boss
-          if (next && !checkpointPickup && !checkpointTriggeredFor.includes(next.num)) {
-            const checkpointStart = next.threshold - 8; // appears right before boss
-            if (gameplayScore >= checkpointStart && gameplayScore < next.threshold) {
-              checkpointTriggeredFor.push(next.num);
-              spawnCheckpointPickup(next.num);
-            }
-          }
+          // checkpoint now unlocks after bonus round, not before boss
+          // (see defeatBoss and endBonusRound)
           if (next && gameplayScore >= next.threshold) {
             triggerBoss(next.num);
           }
@@ -3127,11 +3121,12 @@ flyBtn.addEventListener("click", () => { startGame(); });
     // resume the normal spawn cadence cleanly
     spawnTimer = 0;
 
-    // After bonus round, update checkpoint to next boss threshold
-    // so the player's second life respawns at the appropriate difficulty level
+    // After bonus round, spawn a checkpoint pickup for the player to collect
+    // This saves progress for the NEXT boss level
     const next = nextBossConfig();
-    if (next && checkpointReached > 0) {
-      checkpointReached = next.num;
+    if (next) {
+      spawnCheckpointPickup(next.num);
+      showBanner("CHECKPOINT APPEARS! COLLECT IT!", 2000);
     }
   }
 
@@ -3251,8 +3246,9 @@ flyBtn.addEventListener("click", () => { startGame(); });
       checkpointPickup.collected = true;
       checkpointReached = Math.max(checkpointReached, checkpointPickup.targetNum);
       checkpointScore = score; // save score at checkpoint for restart
+      checkpointLevel = checkpointPickup.targetNum; // save which level this checkpoint is for
       sfxPowerup();
-      showBanner("CHECKPOINT! BOSS " + checkpointPickup.targetNum + " NEAR!", 2000);
+      showBanner("CHECKPOINT SAVED! LEVEL " + checkpointPickup.targetNum + "!", 2000);
       // heal 1 pip as a reward for collecting it
       if (health < MAX_HEALTH + MAX_BONUS_HEARTS) {
         health = Math.min(MAX_HEALTH + MAX_BONUS_HEARTS, health + 1);
@@ -3727,9 +3723,15 @@ function triggerBoss(num) {
     sfxBossDefeat();
     setMusicTheme(THEME_NORMAL);
     const cfg = bossConfig(bossNumber);
+
+    // Save checkpoint score when boss is defeated (before bonus round)
+    checkpointScore = score;
+
     bossActive = false;
     boss = null;
     bossNumber = 0;
+    obstacles = []; // clear any remaining enemies
+    bullets = [];   // clear player bullets
     bombs = [];
     rockets = [];
     playerBombs = [];
@@ -4404,6 +4406,7 @@ function triggerBoss(num) {
   let checkpointTriggeredFor = []; // which bosses we've already shown checkpoint pickups for
   let checkpointReached = 0; // highest boss number whose checkpoint was collected (0 = none)
   let checkpointScore = 0; // score stored when checkpoint was collected — enables second life
+  let checkpointLevel = 0; // which boss level the checkpoint is for (1-5, 0 = none)
 
   const startOverlay = document.getElementById("startOverlay");
   const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -4522,6 +4525,7 @@ function triggerBoss(num) {
     checkpointTriggeredFor = [];
     checkpointReached = 0;
     checkpointScore = 0;
+    checkpointLevel = 0;
     bossNumber = 0;
     bossActive = false;
     boss = null;
@@ -4573,7 +4577,6 @@ function triggerBoss(num) {
   function crash() {
     if (state !== "playing") return;
     state = "over";
-    state = "over";
     sfxCrash();
     stopMusic();
     if (score > best) {
@@ -4582,6 +4585,14 @@ function triggerBoss(num) {
     }
     document.getElementById("finalScore").textContent = score;
     document.getElementById("bestScoreLine").textContent = "Best: " + best;
+
+    // Show/hide Continue button based on whether player COLLECTED a checkpoint
+    // checkpointLevel is only set when the player actively collects the floating CP orb
+    const checkpointBtn = document.getElementById("checkpointBtn");
+    if (checkpointBtn) {
+      checkpointBtn.style.display = (checkpointLevel > 0) ? "" : "none";
+    }
+
     gameOverOverlay.classList.remove("hidden");
   }
 
@@ -4609,6 +4620,13 @@ function triggerBoss(num) {
 
   function restartFromCheckpoint() {
     // Resume game from last checkpoint — keep score, reset health, clear threats
+    // Guard: only proceed if player actually collected a checkpoint
+    if (checkpointLevel <= 0) {
+      // No checkpoint collected - just restart normally
+      startGame();
+      return;
+    }
+
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
     startMusic();
@@ -4616,6 +4634,29 @@ function triggerBoss(num) {
     // Restore score to checkpoint level
     score = checkpointScore;
     scoreVal.textContent = score;
+
+    // Start at the BEGINNING of the checkpoint level
+    // This means: just after the previous boss, with normal obstacle gameplay
+    // until you reach the next boss naturally
+    if (checkpointLevel > 1) {
+      // Find the previous boss config
+      const prevBoss = BOSSES.find(b => b.num === checkpointLevel - 1);
+      if (prevBoss) {
+        gameplayScore = prevBoss.threshold + 1; // start just after previous boss
+        lastBossTriggered = checkpointLevel - 1; // mark previous boss as defeated
+      } else {
+        gameplayScore = score;
+        lastBossTriggered = 0;
+      }
+    } else if (checkpointLevel === 1) {
+      // First boss level - start from beginning
+      gameplayScore = 0;
+      lastBossTriggered = 0;
+    } else {
+      // No checkpoint level set, use score
+      gameplayScore = score;
+      lastBossTriggered = checkpointReached;
+    }
 
     // Reset health
     health = MAX_HEALTH;
@@ -4682,6 +4723,13 @@ function triggerBoss(num) {
     stormActive = false;
     stormClouds = [];
     updateStormMeterDisplay();
+
+    // Reset rain
+    rainDrops = [];
+    rainSpawnAccum = 0;
+    lightningState = null;
+    lightningTimer = 3 + Math.random() * 3;
+    thunderFlashUntil = 0;
 
     // Reset player
     resetPlayer();
