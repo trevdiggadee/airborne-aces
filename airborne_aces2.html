@@ -55,6 +55,7 @@ html, body {
   z-index: 1;
   opacity: 0.5;
   pointer-events: none;
+  filter: blur(0.5px);
 }
 
 .cloudLayer.cA {
@@ -100,6 +101,7 @@ html, body {
   display: block;
   width: 100%;
   height: 100%;
+  filter: blur(0.5px);
 }
 
 /* HERO BLIMP — floats alone in the open sky area, no frame/scenery/vignette.
@@ -113,7 +115,7 @@ html, body {
   transform: translateX(-50%);
   z-index: 2;
   animation: floatHero 3s ease-in-out infinite;
-  filter: drop-shadow(0 5px 6px rgba(0,0,0,0.3));
+  filter: blur(0.5px) drop-shadow(0 5px 6px rgba(0,0,0,0.3));
 }
 
 .heroBlimpWrap img {
@@ -261,6 +263,7 @@ html, body {
   opacity: 0;
   transition: opacity 0.15s ease-out;
   pointer-events: none;
+  filter: blur(0.4px);
 }
 
 .numBtn.active img {
@@ -380,6 +383,7 @@ input[type=range].tapSlider::-moz-range-thumb {
     width: 100%;
     height: 100%;
     display: block;
+    filter: blur(0.5px);
   }
 
   .scoreFrame {
@@ -414,6 +418,7 @@ input[type=range].tapSlider::-moz-range-thumb {
   #healthMeter img {
     display: block;
     width: 100%;
+    filter: blur(0.4px);
   }
 
   #healthMeter.hit {
@@ -441,7 +446,7 @@ input[type=range].tapSlider::-moz-range-thumb {
   #bonusHearts img {
     width: 14px;
     display: block;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+    filter: blur(0.4px) drop-shadow(0 2px 3px rgba(0,0,0,0.5));
     animation: bonusHeartPop 0.3s ease-out;
   }
 
@@ -471,6 +476,7 @@ input[type=range].tapSlider::-moz-range-thumb {
     width: 100%;
     opacity: 0.92;
     transition: opacity 0.2s ease-out;
+    filter: blur(0.4px);
   }
 
   #stormMeter.ready {
@@ -2248,6 +2254,31 @@ flyBtn.addEventListener("click", () => { startGame(); });
     return fallback != null ? fallback : 0.7;
   }
 
+  // EDGE FEATHER — every sprite is redrawn once through a canvas with a
+  // hairline blur applied, then swapped back in as the cached image. This
+  // softens the hard/jagged pixel edges the source PNGs show at their
+  // scaled-up display sizes, without visibly softening the artwork itself.
+  // Runs once per asset at load time (not per-frame), so it's free at runtime.
+  function featherSpriteEdges(key, sourceImg, cb) {
+    try {
+      const w = sourceImg.naturalWidth, h = sourceImg.naturalHeight;
+      if (!w || !h) { cb(); return; }
+      const off = document.createElement("canvas");
+      off.width = w;
+      off.height = h;
+      const octx = off.getContext("2d");
+      octx.filter = "blur(0.75px)";
+      octx.drawImage(sourceImg, 0, 0, w, h);
+      const dataUrl = off.toDataURL("image/png");
+      const feathered = new Image();
+      feathered.onload = () => { images[key] = feathered; cb(); };
+      feathered.onerror = cb; // if anything goes wrong, keep the original sprite
+      feathered.src = dataUrl;
+    } catch (e) {
+      cb(); // canvas may be tainted (e.g. CORS) — fall back to the unfeathered sprite
+    }
+  }
+
   function loadAssets(onDone) {
     assetKeys.forEach(key => {
       const img = new Image();
@@ -2262,7 +2293,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
           }
         }
       };
-      img.onload = settle;
+      img.onload = () => featherSpriteEdges(key, img, settle);
       img.onerror = () => {
         failedAssetKeys.push(key);
         if (!PLACEHOLDER_MODE) {
@@ -3717,6 +3748,7 @@ function triggerBoss(num) {
 
     if (boss && bossActive) {
       playerBombs = playerBombs.filter(b => {
+        if (!boss) return true; // boss was just defeated by an earlier bomb this same pass
         const dx = Math.abs(b.x - (boss.x + boss.w / 2));
         const dy = Math.abs(b.y - (boss.y + boss.h / 2));
         if (dx < boss.w * 0.38 && dy < boss.h * 0.42) {
@@ -4412,6 +4444,7 @@ function triggerBoss(num) {
 
     if (boss && bossActive) {
       bullets = bullets.filter(b => {
+        if (!boss) return true; // boss was just defeated by an earlier bullet this same pass
         const dx = Math.abs(b.x - (boss.x + boss.w / 2));
         const dy = Math.abs(b.y - (boss.y + boss.h / 2));
         if (dx < boss.w * 0.38 && dy < boss.h * 0.42) {
