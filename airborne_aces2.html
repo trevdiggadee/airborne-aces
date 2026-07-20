@@ -438,11 +438,11 @@ input[type=range].tapSlider::-moz-range-thumb {
     100% { transform: scale(1); }
   }
 
-  /* STORM POWER-UP — bottom-right corner, icon only, no box */
+  /* STORM POWER-UP — bottom-left corner, icon only, no box */
   #stormMeter {
     position: fixed;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
-    right: 14px;
+    left: 14px;
     width: 138px;
     z-index: 10;
     pointer-events: none;
@@ -474,6 +474,12 @@ input[type=range].tapSlider::-moz-range-thumb {
     50% { filter: drop-shadow(0 0 14px rgba(255,214,120,0.95)); transform: scale(1.08); }
   }
 
+  @keyframes stormFillPop {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.25); filter: drop-shadow(0 0 8px rgba(255,214,120,0.8)); }
+    100% { transform: scale(1); }
+  }
+
   /* TIMER — upper-right corner, mirrors the health meter's placement */
   #scoreVal.pop {
     display: inline-block;
@@ -488,7 +494,7 @@ input[type=range].tapSlider::-moz-range-thumb {
   #muteBtn {
     position: fixed;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
-    left: 14px;
+    right: 14px;
     width: 40px;
     height: 40px;
     padding: 0;
@@ -1526,6 +1532,14 @@ flyBtn.addEventListener("click", () => { startGame(); });
     });
   }
 
+  // Cool ascending power-up sound for when storm meter is fully charged
+  function sfxStormReady() {
+    [0, 0.08, 0.16, 0.24].forEach((d, i) => {
+      playTone({ freq: 440 * Math.pow(2, (i * 4) / 12), duration: 0.18, type: "triangle", vol: 0.12, sweep: 60, startDelay: d, reverbSend: 0.3 });
+    });
+    playTone({ freq: 880, duration: 0.35, type: "sine", vol: 0.1, sweep: 200, startDelay: 0.32, reverbSend: 0.4 });
+  }
+
   // ---------- Music — original adaptive score, two hand-written 16-step loops ----------
   // (normal flight vs. boss-fight), scheduled with a standard lookahead sequencer
   // so timing stays tight even though we're just calling setInterval.
@@ -1925,7 +1939,44 @@ flyBtn.addEventListener("click", () => { startGame(); });
     mini_blimp2_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_35.webp",
     mini_blimp2_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_blimp2_36.webp",
     mini_tank:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_tank.webp?cb=2",
-    mini_heli:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli.webp?cb=2",
+    mini_heli:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli.webp?cb=2",,
+    // mini_heli animated frames (36 frames)
+    mini_heli_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_01.webp?cb=2",
+    mini_heli_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_02.webp?cb=2",
+    mini_heli_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_03.webp?cb=2",
+    mini_heli_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_04.webp?cb=2",
+    mini_heli_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_05.webp?cb=2",
+    mini_heli_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_06.webp?cb=2",
+    mini_heli_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_07.webp?cb=2",
+    mini_heli_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_08.webp?cb=2",
+    mini_heli_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_09.webp?cb=2",
+    mini_heli_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_10.webp?cb=2",
+    mini_heli_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_11.webp?cb=2",
+    mini_heli_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_12.webp?cb=2",
+    mini_heli_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_13.webp?cb=2",
+    mini_heli_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_14.webp?cb=2",
+    mini_heli_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_15.webp?cb=2",
+    mini_heli_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_16.webp?cb=2",
+    mini_heli_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_17.webp?cb=2",
+    mini_heli_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_18.webp?cb=2",
+    mini_heli_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_19.webp?cb=2",
+    mini_heli_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_20.webp?cb=2",
+    mini_heli_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_21.webp?cb=2",
+    mini_heli_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_22.webp?cb=2",
+    mini_heli_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_23.webp?cb=2",
+    mini_heli_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_24.webp?cb=2",
+    mini_heli_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_25.webp?cb=2",
+    mini_heli_26: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_26.webp?cb=2",
+    mini_heli_27: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_27.webp?cb=2",
+    mini_heli_28: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_28.webp?cb=2",
+    mini_heli_29: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_29.webp?cb=2",
+    mini_heli_30: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_30.webp?cb=2",
+    mini_heli_31: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_31.webp?cb=2",
+    mini_heli_32: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_32.webp?cb=2",
+    mini_heli_33: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_33.webp?cb=2",
+    mini_heli_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_34.webp?cb=2",
+    mini_heli_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_35.webp?cb=2",
+    mini_heli_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_heli_36.webp?cb=2"
     mini_ebomb: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/mini_ebomb.webp?cb=2",
     shieldPickup: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/shieldPickup.webp?cb=2",
     // Storm cloud animation frames (36 frames, 6x6 grid)
@@ -2122,7 +2173,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // frame slots (no per-frame animation art yet), so they still bob/drift normally
   const MINI_BLIMP_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, (_, i) => `mini_blimp2_${String(i + 1).padStart(2, "0")}`);
   const MINI_TANK_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, () => "mini_tank");
-  const MINI_HELI_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, () => "mini_heli");
+  const MINI_HELI_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, (_, i) => `mini_heli_${String(i + 1).padStart(2, "0")}`);
   const MINI_EBOMB_KEYS = Array.from({ length: OBSTACLE_ANIM_FRAME_COUNT }, () => "mini_ebomb");
   const OBSTACLE_ANIM_SETS = {
     bird_a: BIRD_A_KEYS, bird_b: BIRD_B_KEYS, balloon_anim: BALLOON_ANIM_KEYS,
@@ -2471,41 +2522,9 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let spawnInterval = 1.7; // seconds, decreases slightly as score rises
   let obstacleSpeed = 220; // px/s, increases with score
 
-  // ---------- Dodge combo / graze system ----------
-  const GRAZE_THRESHOLD = 16;  // px — how close a non-collision counts as a "graze"
-  const GRAZE_BONUS = 2;
-  const STREAK_MILESTONE = 5;  // award a bonus every N consecutive un-hit dodges
-  const STREAK_BONUS = 10;
-  let dodgeStreak = 0;
-  let comboPopups = []; // floating "GRAZE!" / "5x STREAK!" text
 
-  function spawnComboPopup(x, y, text, color) {
-    comboPopups.push({ x, y, text, color, born: performance.now(), life: 900 });
-  }
 
-  function updateComboPopups() {
-    const now = performance.now();
-    comboPopups = comboPopups.filter(p => now - p.born < p.life);
-  }
-
-  function drawComboPopups() {
-    const now = performance.now();
-    ctx.save();
-    ctx.textAlign = "center";
-    ctx.font = "bold " + Math.max(14, Math.min(20, W * 0.05)) + "px Georgia, serif";
-    ctx.shadowColor = "rgba(0,0,0,0.75)";
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 1;
-    ctx.shadowOffsetY = 2;
-    comboPopups.forEach(p => {
-      const t = (now - p.born) / p.life;
-      const y = p.y - t * 36;
-      ctx.globalAlpha = Math.max(0, 1 - t);
-      ctx.fillStyle = p.color;
-      ctx.fillText(p.text, p.x, y);
-    });
-    ctx.restore();
-  }
+  
 
   function pickObstacleType() {
     const next = nextBossConfig();
@@ -2631,22 +2650,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
           updateStormMeterDisplay();
         }
 
-        // dodge streak + graze bonus
-        dodgeStreak++;
-        if (o.minGap !== undefined) {
-          score += GRAZE_BONUS;
-          document.getElementById("scoreVal").textContent = score;
-          bumpScorePop();
-          spawnComboPopup(player.x, player.y - player.h * 0.7, "GRAZE! +" + GRAZE_BONUS, "#ffffff");
-          sfxStreak();
-        }
-        if (dodgeStreak > 0 && dodgeStreak % STREAK_MILESTONE === 0) {
-          score += STREAK_BONUS;
-          document.getElementById("scoreVal").textContent = score;
-          bumpScorePop();
-          spawnComboPopup(player.x, player.y - player.h * 0.9, dodgeStreak + "x STREAK! +" + STREAK_BONUS, "#800000");
-          sfxStreak();
-        }
+        // obstacle successfully dodged
       }
 
       if (dx < collideX && dy < collideY) {
@@ -2899,19 +2903,19 @@ flyBtn.addEventListener("click", () => { startGame(); });
     });
   }
 
-  // ---------- Storm power-up (gas tank meter, fills every 25 points) ----------
+  // ---------- Storm power-up (gas tank meter, fills by percentage) ----------
   const STORM_MAX = 100;
-  const STORM_CHARGE_PER_MILESTONE = 25; // one gas-tank "notch" every 25 score points
+  const STORM_CHARGE_PER_MILESTONE = 25;
   let stormCharge = 0;
   let lastStormMilestone = 0;
   let stormActive = false;
   let stormUntil = 0;
-  let stormClouds = []; // visual sweep clouds while active
+  let stormClouds = [];
+  let stormReadySoundPlayed = false; // track if we already played the ready sound
   const stormMeterEl = document.getElementById("stormMeter");
   const stormIconDisplayEl = document.getElementById("stormIcon");
 
-  // 5-stage icon set — mirrors the health meter's fill-state pattern.
-  // Stage 0 = empty tank, stage 4 = fully charged/ready (matches storm_icon_1..5.webp)
+  // 5-stage icon set — each stage represents 25% fill
   const STORM_ICON_URLS = [
     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_1.webp?cb=2",
     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_2.webp?cb=2",
@@ -2922,12 +2926,28 @@ flyBtn.addEventListener("click", () => { startGame(); });
 
   function updateStormMeterDisplay() {
     const stage = Math.min(STORM_ICON_URLS.length - 1, Math.floor(stormCharge / STORM_CHARGE_PER_MILESTONE));
+    const isReady = stormCharge >= STORM_MAX && state === "playing" && !stormActive;
+
+    // Animate icon change with a pop effect when stage increases
     if (stormIconDisplayEl && stormIconDisplayEl.dataset.stage !== String(stage)) {
       stormIconDisplayEl.dataset.stage = String(stage);
       stormIconDisplayEl.src = STORM_ICON_URLS[stage];
+      // Heart-like pop animation when filling up
+      stormIconDisplayEl.style.animation = "none";
+      stormIconDisplayEl.offsetHeight; // force reflow
+      stormIconDisplayEl.style.animation = "stormFillPop 0.35s ease-out";
     }
 
-    stormMeterEl.classList.toggle("ready", stormCharge >= STORM_MAX && state === "playing" && !stormActive);
+    // Toggle ready state with glow
+    stormMeterEl.classList.toggle("ready", isReady);
+
+    // Play ready sound once when fully charged
+    if (isReady && !stormReadySoundPlayed) {
+      stormReadySoundPlayed = true;
+      sfxStormReady();
+    } else if (!isReady) {
+      stormReadySoundPlayed = false;
+    }
   }
 
   function activateStorm() {
@@ -2936,11 +2956,12 @@ flyBtn.addEventListener("click", () => { startGame(); });
     stormActive = true;
     stormUntil = performance.now() + 900;
     stormCharge = 0;
+    stormReadySoundPlayed = false;
     updateStormMeterDisplay();
     showBanner("STORM UNLEASHED!", 1400);
     sfxThunder();
 
-    // spawn a few sweeping storm clouds across the sky for the visual effect
+    // spawn sweeping storm clouds across the sky
     stormClouds = [];
     for (let i = 0; i < 4; i++) {
       stormClouds.push({
@@ -3001,7 +3022,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
       });
     });
     ctx.globalAlpha = 1;
-    // occasional full-width lightning flash
     if (Math.random() < 0.25) {
       ctx.fillStyle = "rgba(255,240,180,0.18)";
       ctx.fillRect(0, 0, W, H);
@@ -3009,8 +3029,16 @@ flyBtn.addEventListener("click", () => { startGame(); });
     ctx.restore();
   }
 
-  stormMeterEl.addEventListener("click", activateStorm);
-  stormMeterEl.addEventListener("touchstart", (e) => { e.preventDefault(); activateStorm(); }, { passive: false });
+  // Click handler with proper touch support
+  function onStormClick(e) {
+    if (e && e.cancelable) e.preventDefault();
+    if (stormCharge >= STORM_MAX && state === "playing" && !stormActive) {
+      activateStorm();
+    }
+  }
+
+  stormMeterEl.addEventListener("click", onStormClick);
+  stormMeterEl.addEventListener("touchstart", onStormClick, { passive: false });
 
   let bullets = [];
   let bulletTimer = 0;
@@ -4029,24 +4057,25 @@ function triggerBoss(num) {
       // Spawn floating storm clouds instead of lightning bands
       lightningTimer -= dt;
       if (lightningTimer <= 0) {
-        lightningTimer = 5 + Math.random() * 4;
+        lightningTimer = 8 + Math.random() * 6; // more spread out: 8-14 seconds between clouds
         // Spawn a decorative storm cloud that floats across the screen
         const img = images[STORM_CLOUD_KEYS[0]];
         const aspect = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 0.72;
-        const dispW = Math.min(160, W * 0.28);
+        // Bigger clouds: 25-35% of screen width
+        const dispW = Math.min(280, W * (0.25 + Math.random() * 0.1));
         const dispH = dispW * aspect;
         stormCloudsDecorative.push({
           x: W + dispW,
-          y: H * 0.08 + Math.random() * (H * 0.5),
+          y: H * 0.05 + Math.random() * (H * 0.55), // spread across more vertical area
           w: dispW,
           h: dispH,
-          speed: 40 + Math.random() * 30,
+          speed: 25 + Math.random() * 20, // slower drift for dramatic effect
           animFrame: Math.floor(Math.random() * STORM_CLOUD_FRAME_COUNT),
           animTimer: Math.random() / STORM_CLOUD_FPS,
-          alpha: 0.75 + Math.random() * 0.15
+          alpha: 0.45 + Math.random() * 0.15 // semi-transparent so blimp shows through (0.45-0.6)
         });
         sfxThunder();
-        thunderFlashUntil = performance.now() + 100;
+        thunderFlashUntil = performance.now() + 80;
       }
     }
 
@@ -4088,11 +4117,14 @@ function triggerBoss(num) {
     });
 
     // Draw floating decorative storm clouds (animated, no damage)
+    // Draw clouds with proper alpha so blimp shows through when flying behind
     stormCloudsDecorative.forEach(c => {
       const img = images[STORM_CLOUD_KEYS[c.animFrame]];
       if (!img || !img.naturalWidth) return;
       ctx.save();
       ctx.globalAlpha = c.alpha;
+      // Use lighter composite operation so the cloud blends nicely with the background
+      ctx.globalCompositeOperation = "source-over";
       ctx.drawImage(img, c.x, c.y, c.w, c.h);
       ctx.restore();
     });
@@ -4534,7 +4566,7 @@ function triggerBoss(num) {
     if (performance.now() < invulnerableUntil) return; // still invulnerable from the last hit
 
     health--;
-    dodgeStreak = 0;
+    
     updateHealthDisplay();
     healthMeter.classList.remove("hit");
     void healthMeter.offsetWidth; // restart the pulse animation
@@ -4556,8 +4588,8 @@ function triggerBoss(num) {
     document.getElementById("gameOverOverlay").classList.add("hidden");
     score = 0;
     gameplayScore = 0;
-    dodgeStreak = 0;
-    comboPopups = [];
+    
+    
     shieldPickup = null;
     shieldActive = false;
     shieldSpawnTimer = 25 + Math.random() * 15;
@@ -4727,7 +4759,7 @@ function triggerBoss(num) {
     hitParticles = [];
     explosionBursts = [];
     windParticles = [];
-    comboPopups = [];
+    
 
     // Clear boss state
     bossActive = false;
@@ -4921,7 +4953,7 @@ function triggerBoss(num) {
       updateWindParticles(dt);
       updateStorm(dt);
       updateBonusRound(dt);
-      updateComboPopups();
+      
       updateRain(dt);
     } else if (state === "start" && buildings.length === 0) {
       initBuildings();
@@ -4953,7 +4985,7 @@ function triggerBoss(num) {
     drawCheckpointPickup();
     drawBossBanner();
     drawBonusHUD();
-    drawComboPopups();
+    
     } catch (err) {
       if (!loopErrorShown) {
         loopErrorShown = true;
