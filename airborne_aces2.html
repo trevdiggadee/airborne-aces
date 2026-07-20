@@ -87,7 +87,6 @@ html, body {
   top: 4%;
   left: 50%;
   width: 92%;
-  aspect-ratio: 480 / 319;
   transform: translateX(-50%);
   z-index: 1;
   pointer-events: none;
@@ -96,7 +95,6 @@ html, body {
 .menuBanner img {
   display: block;
   width: 100%;
-  height: 100%;
 }
 
 /* HERO BLIMP — floats alone in the open sky area, no frame/scenery/vignette.
@@ -440,18 +438,19 @@ input[type=range].tapSlider::-moz-range-thumb {
     100% { transform: scale(1); }
   }
 
-  /* STORM POWER-UP — bottom-right corner, icon only, no box */
+  /* STORM POWER-UP — bottom-left corner, icon only, no box */
   #stormMeter {
     position: fixed;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
-    right: 14px;
+    left: 14px;
     width: 138px;
-    z-index: 10;
+    z-index: 30;
     pointer-events: none;
     display: flex;
     align-items: center;
     justify-content: center;
     filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    touch-action: manipulation;
   }
 
   #stormIcon {
@@ -476,6 +475,17 @@ input[type=range].tapSlider::-moz-range-thumb {
     50% { filter: drop-shadow(0 0 14px rgba(255,214,120,0.95)); transform: scale(1.08); }
   }
 
+  /* fires once each time the tank fills another notch — same idea as the heart's "hit" pop */
+  #stormMeter.charge #stormIcon {
+    animation: stormChargePop 0.4s ease-out;
+  }
+
+  @keyframes stormChargePop {
+    0%   { transform: scale(1);    filter: drop-shadow(0 0 2px rgba(255,214,120,0)); }
+    40%  { transform: scale(1.22); filter: drop-shadow(0 0 16px rgba(255,214,120,0.9)); }
+    100% { transform: scale(1);    filter: drop-shadow(0 0 2px rgba(255,214,120,0)); }
+  }
+
   /* TIMER — upper-right corner, mirrors the health meter's placement */
   #scoreVal.pop {
     display: inline-block;
@@ -490,7 +500,7 @@ input[type=range].tapSlider::-moz-range-thumb {
   #muteBtn {
     position: fixed;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
-    left: 14px;
+    right: 14px;
     width: 40px;
     height: 40px;
     padding: 0;
@@ -1526,6 +1536,15 @@ flyBtn.addEventListener("click", () => { startGame(); });
     [0, 0.07].forEach((d, i) => {
       playTone({ freq: 660 * Math.pow(2, (i * 3) / 12), duration: 0.09, type: "triangle", vol: 0.09, sweep: 120, startDelay: d });
     });
+  }
+
+  function sfxStormReady() {
+    // bright rising sparkle + chime — signals the power is charged and tappable
+    [0, 4, 7, 12, 16].forEach((iv, i) => {
+      playTone({ freq: noteFreq(69 + iv), duration: 0.16, type: "triangle", vol: 0.09,
+        sweep: 60, startDelay: i * 0.045, attack: 0.003, reverbSend: 0.4 });
+    });
+    playTone({ freq: 1760, duration: 0.22, type: "sine", vol: 0.07, startDelay: 0.18, reverbSend: 0.45 });
   }
 
   // ---------- Music — original adaptive score, two hand-written 16-step loops ----------
@@ -2590,12 +2609,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
           }
         }
         // storm meter: one gas-tank notch every 25 points, until it's full
-        const milestone = Math.floor(score / STORM_CHARGE_PER_MILESTONE) * STORM_CHARGE_PER_MILESTONE;
-        if (milestone > lastStormMilestone && milestone > 0 && stormCharge < STORM_MAX) {
-          lastStormMilestone = milestone;
-          stormCharge = Math.min(STORM_MAX, stormCharge + STORM_CHARGE_PER_MILESTONE);
-          updateStormMeterDisplay();
-        }
+        addStormChargeForScore(score);
 
         // dodge streak + graze bonus
         dodgeStreak++;
@@ -2603,7 +2617,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
           score += GRAZE_BONUS;
           document.getElementById("scoreVal").textContent = score;
           bumpScorePop();
-          spawnComboPopup(player.x, player.y - player.h * 0.7, "GRAZE! +" + GRAZE_BONUS, "#ffffff");
           sfxStreak();
         }
         if (dodgeStreak > 0 && dodgeStreak % STREAK_MILESTONE === 0) {
@@ -2869,7 +2882,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
   const STORM_MAX = 100;
   const STORM_CHARGE_PER_MILESTONE = 25; // one gas-tank "notch" every 25 score points
   let stormCharge = 0;
-  let lastStormMilestone = 0;
+  let stormMilestoneCount = 0; // how many 25-point thresholds have been counted toward charge so far
+  let stormWasReady = false;   // tracks ready-state transitions so the ready sound only fires once
   let stormActive = false;
   let stormUntil = 0;
   let stormClouds = []; // visual sweep clouds while active
@@ -2886,14 +2900,42 @@ flyBtn.addEventListener("click", () => { startGame(); });
     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_5.webp?cb=2"
   ];
 
-  function updateStormMeterDisplay() {
+  // Counts every 25-point threshold the score has ever crossed and tops the tank up to match.
+  // Using a running count (instead of comparing one recomputed "current milestone" value) means
+  // a score jump that skips past more than one threshold in a single tick — e.g. a dodge point
+  // landing in the same frame as a streak bonus — still credits every notch it passed, so the
+  // tank can never stall a few points short of full.
+  function addStormChargeForScore(currentScore) {
+    const crossedTotal = Math.floor(currentScore / STORM_CHARGE_PER_MILESTONE);
+    if (crossedTotal <= stormMilestoneCount) return;
+    const newNotches = crossedTotal - stormMilestoneCount;
+    stormMilestoneCount = crossedTotal;
+    if (stormCharge >= STORM_MAX) return;
+    stormCharge = Math.min(STORM_MAX, stormCharge + newNotches * STORM_CHARGE_PER_MILESTONE);
+    updateStormMeterDisplay(true);
+  }
+
+  function updateStormMeterDisplay(justCharged) {
     const stage = Math.min(STORM_ICON_URLS.length - 1, Math.floor(stormCharge / STORM_CHARGE_PER_MILESTONE));
     if (stormIconDisplayEl && stormIconDisplayEl.dataset.stage !== String(stage)) {
       stormIconDisplayEl.dataset.stage = String(stage);
       stormIconDisplayEl.src = STORM_ICON_URLS[stage];
     }
 
-    stormMeterEl.classList.toggle("ready", stormCharge >= STORM_MAX && state === "playing" && !stormActive);
+    const isReady = stormCharge >= STORM_MAX && state === "playing" && !stormActive;
+    stormMeterEl.classList.toggle("ready", isReady);
+
+    if (justCharged) {
+      // brief pop each time a notch fills, same idea as the heart's "hit" pulse
+      stormMeterEl.classList.remove("charge");
+      void stormMeterEl.offsetWidth; // restart the animation
+      stormMeterEl.classList.add("charge");
+    }
+
+    if (isReady && !stormWasReady) {
+      sfxStormReady();
+    }
+    stormWasReady = isReady;
   }
 
   function activateStorm() {
@@ -4560,7 +4602,8 @@ function triggerBoss(num) {
     healPickup = null;
     healSpawnTimer = 6 + Math.random() * 5;
     stormCharge = 0;
-    lastStormMilestone = 0;
+    stormMilestoneCount = Math.floor(score / STORM_CHARGE_PER_MILESTONE);
+    stormWasReady = false;
     stormActive = false;
     stormClouds = [];
     updateStormMeterDisplay();
@@ -4681,7 +4724,8 @@ function triggerBoss(num) {
 
     // Reset storm
     stormCharge = 0;
-    lastStormMilestone = 0;
+    stormMilestoneCount = 0;
+    stormWasReady = false;
     stormActive = false;
     stormClouds = [];
     updateStormMeterDisplay();
