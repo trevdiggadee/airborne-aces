@@ -1029,6 +1029,39 @@ function renderPlaceholder(key) {
   } else if (key === "stormCloud") {
     w = 160; h = 120; c = phCanvas(w, h); ctx = c.getContext("2d");
     phDrawStormCloud(ctx, w, h, true);
+  } else if (key.startsWith("storm_cloud_")) {
+    // Storm cloud animation frames - procedural dark storm clouds
+    w = 200; h = 140; c = phCanvas(w, h); ctx = c.getContext("2d");
+    ctx.save();
+    ctx.translate(w / 2, h * 0.42);
+    // Dark stormy cloud body
+    ctx.fillStyle = "#3a3542";
+    [[-0.32, 0.0, 0.26], [0, -0.1, 0.34], [0.32, 0.0, 0.26]].forEach(([x, y, r]) => {
+      ctx.beginPath();
+      ctx.arc(w * x, h * y, w * r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    // Cloud outline
+    ctx.strokeStyle = "#2a2530";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Lightning bolt (varies by frame number for animation)
+    const frameNum = parseInt(key.split("_")[2], 10) || 1;
+    const boltPhase = (frameNum % 12) < 6;
+    if (boltPhase) {
+      ctx.fillStyle = "#ffe066";
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.04, h * 0.12);
+      ctx.lineTo(w * 0.1, h * 0.12);
+      ctx.lineTo(-w * 0.02, h * 0.32);
+      ctx.lineTo(w * 0.06, h * 0.32);
+      ctx.lineTo(-w * 0.14, h * 0.58);
+      ctx.lineTo(-w * 0.02, h * 0.3);
+      ctx.lineTo(-w * 0.1, h * 0.3);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
   } else if (key === "boss3") {
     // ground-based tank — squat hull, treads, cannon pointing left toward the player
     w = 260; h = 170; c = phCanvas(w, h); ctx = c.getContext("2d");
@@ -2038,7 +2071,44 @@ flyBtn.addEventListener("click", () => { startGame(); });
     blimp4_flight_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_22.webp?cb=2",
     blimp4_flight_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_23.webp?cb=2",
     blimp4_flight_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_24.webp?cb=2",
-    blimp4_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_25.webp?cb=2"
+    blimp4_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_25.webp?cb=2",
+    // Storm cloud animation frames (36 frames) for rain level decorative clouds
+    storm_cloud_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_01.webp?cb=2",
+    storm_cloud_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_02.webp?cb=2",
+    storm_cloud_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_03.webp?cb=2",
+    storm_cloud_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_04.webp?cb=2",
+    storm_cloud_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_05.webp?cb=2",
+    storm_cloud_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_06.webp?cb=2",
+    storm_cloud_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_07.webp?cb=2",
+    storm_cloud_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_08.webp?cb=2",
+    storm_cloud_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_09.webp?cb=2",
+    storm_cloud_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_10.webp?cb=2",
+    storm_cloud_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_11.webp?cb=2",
+    storm_cloud_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_12.webp?cb=2",
+    storm_cloud_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_13.webp?cb=2",
+    storm_cloud_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_14.webp?cb=2",
+    storm_cloud_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_15.webp?cb=2",
+    storm_cloud_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_16.webp?cb=2",
+    storm_cloud_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_17.webp?cb=2",
+    storm_cloud_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_18.webp?cb=2",
+    storm_cloud_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_19.webp?cb=2",
+    storm_cloud_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_20.webp?cb=2",
+    storm_cloud_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_21.webp?cb=2",
+    storm_cloud_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_22.webp?cb=2",
+    storm_cloud_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_23.webp?cb=2",
+    storm_cloud_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_24.webp?cb=2",
+    storm_cloud_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_25.webp?cb=2",
+    storm_cloud_26: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_26.webp?cb=2",
+    storm_cloud_27: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_27.webp?cb=2",
+    storm_cloud_28: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_28.webp?cb=2",
+    storm_cloud_29: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_29.webp?cb=2",
+    storm_cloud_30: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_30.webp?cb=2",
+    storm_cloud_31: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_31.webp?cb=2",
+    storm_cloud_32: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_32.webp?cb=2",
+    storm_cloud_33: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_33.webp?cb=2",
+    storm_cloud_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_34.webp?cb=2",
+    storm_cloud_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_35.webp?cb=2",
+    storm_cloud_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_36.webp?cb=2",
   };
 
   const BOSS_THROW_FRAME_COUNT = 25;
@@ -4003,6 +4073,8 @@ function triggerBoss(num) {
   let lightningState = null; // { phase: "warn"|"strike", bandY, bandH, t }
   let lightningTimer = 3 + Math.random() * 3;
   let thunderFlashUntil = 0;
+  // Storm cloud - floating decorative animated cloud during rain levels (no damage)
+  let stormCloudsDecorative = [];
 
   function isRainLevel() {
     if (state !== "playing") return false;
@@ -4011,89 +4083,108 @@ function triggerBoss(num) {
     return !!(next && next.num === 3);
   }
 
+  // Storm cloud animation - 36 frames for floating decorative cloud during rain
+  const STORM_CLOUD_FRAME_COUNT = 36;
+  const STORM_CLOUD_FPS = 12;
+  const STORM_CLOUD_KEYS = Array.from({ length: STORM_CLOUD_FRAME_COUNT }, (_, i) => `storm_cloud_${String(i + 1).padStart(2, "0")}`);
+
   function updateRain(dt) {
     const raining = isRainLevel();
-
     if (raining) {
-      rainSpawnAccum += dt;
-      while (rainSpawnAccum > 1 / 60) {
-        rainSpawnAccum -= 1 / 60;
-        for (let i = 0; i < 3; i++) {
-          rainDrops.push({
-            x: Math.random() * (W + 120) - 60,
-            y: -10,
-            len: 14 + Math.random() * 10,
-            speed: 480 + Math.random() * 160
-          });
+        rainSpawnAccum += dt;
+        while (rainSpawnAccum > 1 / 60) {
+            rainSpawnAccum -= 1 / 60;
+            for (let i = 0; i < 3; i++) {
+                rainDrops.push({
+                    x: Math.random() * (W + 120) - 60,
+                    y: -10,
+                    len: 14 + Math.random() * 10,
+                    speed: 480 + Math.random() * 160
+                });
+            }
         }
-      }
 
-      lightningTimer -= dt;
-      if (!lightningState && lightningTimer <= 0) {
-        lightningState = { phase: "warn", bandY: H * 0.12 + Math.random() * (H * 0.6), bandH: H * 0.16, t: 0, warnDur: 0.75, strikeDur: 0.18 };
-      }
-      if (lightningState) {
-        lightningState.t += dt;
-        if (lightningState.phase === "warn" && lightningState.t >= lightningState.warnDur) {
-          lightningState.phase = "strike";
-          lightningState.t = 0;
-          thunderFlashUntil = performance.now() + 140;
-          sfxThunder();
-          if (state === "playing" && player.y > lightningState.bandY && player.y < lightningState.bandY + lightningState.bandH) {
-            takeHit();
-          }
-        } else if (lightningState.phase === "strike" && lightningState.t >= lightningState.strikeDur) {
-          lightningState = null;
-          lightningTimer = 4 + Math.random() * 3;
+        // Spawn floating storm clouds instead of lightning bands
+        lightningTimer -= dt;
+        if (lightningTimer <= 0) {
+            lightningTimer = 8 + Math.random() * 6; // more spread out: 8-14 seconds between clouds
+            // Spawn a decorative storm cloud that floats across the screen
+            const img = images[STORM_CLOUD_KEYS[0]];
+            const aspect = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 0.72;
+            // Bigger clouds: 25-35% of screen width
+            const dispW = Math.min(280, W * (0.25 + Math.random() * 0.1));
+            const dispH = dispW * aspect;
+            stormCloudsDecorative.push({
+                x: W + dispW,
+                y: H * 0.05 + Math.random() * (H * 0.55), // spread across more vertical area
+                w: dispW,
+                h: dispH,
+                speed: 25 + Math.random() * 20, // slower drift for dramatic effect
+                animFrame: Math.floor(Math.random() * STORM_CLOUD_FRAME_COUNT),
+                animTimer: Math.random() / STORM_CLOUD_FPS,
+                alpha: 0.45 + Math.random() * 0.15 // semi-transparent so blimp shows through (0.45-0.6)
+            });
+            sfxThunder();
+            thunderFlashUntil = performance.now() + 80;
         }
-      }
-    } else {
-      lightningState = null;
     }
 
+    // Update storm cloud animation
+    const frameDuration = 1 / STORM_CLOUD_FPS;
+    stormCloudsDecorative.forEach(c => {
+        c.x -= c.speed * dt;
+        c.animTimer += dt;
+        while (c.animTimer >= frameDuration) {
+            c.animTimer -= frameDuration;
+            c.animFrame = (c.animFrame + 1) % STORM_CLOUD_FRAME_COUNT;
+        }
+    });
+    stormCloudsDecorative = stormCloudsDecorative.filter(c => c.x + c.w > -50);
+
     rainDrops.forEach(d => {
-      d.y += d.speed * dt;
-      d.x -= d.speed * 0.18 * dt;
+        d.y += d.speed * dt;
+        d.x -= d.speed * 0.18 * dt;
     });
     rainDrops = rainDrops.filter(d => d.y < H + 20);
+
   }
 
   function drawRain() {
     const raining = isRainLevel();
-    if (!raining && rainDrops.length === 0 && !lightningState) return;
-
+    if (!raining && rainDrops.length === 0 && stormCloudsDecorative.length === 0) return;
     if (raining) {
-      ctx.fillStyle = "rgba(20,26,38,0.28)";
-      ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "rgba(20,26,38,0.28)";
+        ctx.fillRect(0, 0, W, H);
     }
 
     ctx.strokeStyle = "rgba(210,225,240,0.5)";
     ctx.lineWidth = 2;
     rainDrops.forEach(d => {
-      ctx.beginPath();
-      ctx.moveTo(d.x, d.y);
-      ctx.lineTo(d.x - d.len * 0.18, d.y - d.len);
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - d.len * 0.18, d.y - d.len);
+        ctx.stroke();
     });
 
-    if (lightningState) {
-      if (lightningState.phase === "warn") {
-        const flicker = 0.3 + 0.3 * Math.sin(performance.now() / 40);
-        ctx.fillStyle = "rgba(255,224,102," + (flicker * 0.35).toFixed(2) + ")";
-        ctx.fillRect(0, lightningState.bandY, W, lightningState.bandH);
-        ctx.strokeStyle = "rgba(255,224,102,0.8)";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(0, lightningState.bandY, W, lightningState.bandH);
-      } else {
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
-        ctx.fillRect(0, lightningState.bandY, W, lightningState.bandH);
-      }
+    // Draw floating decorative storm clouds (animated, no damage)
+    // Draw clouds with proper alpha so blimp shows through when flying behind
+    stormCloudsDecorative.forEach(c => {
+        const img = images[STORM_CLOUD_KEYS[c.animFrame]];
+        if (!img || !img.naturalWidth) return;
+        ctx.save();
+        ctx.globalAlpha = c.alpha;
+        // Use lighter composite operation so the cloud blends nicely with the background
+        ctx.globalCompositeOperation = "source-over";
+        ctx.drawImage(img, c.x, c.y, c.w, c.h);
+        ctx.restore();
+    });
+
+    // Occasional thunder flash across the whole screen
+    if (performance.now() < thunderFlashUntil) {
+        ctx.fillStyle = "rgba(255,255,255,0.15)";
+        ctx.fillRect(0, 0, W, H);
     }
 
-    if (performance.now() < thunderFlashUntil) {
-      ctx.fillStyle = "rgba(255,255,255,0.25)";
-      ctx.fillRect(0, 0, W, H);
-    }
   }
 
   // ---------- Boss hit-feedback (flash + spark particles) ----------
@@ -4556,6 +4647,7 @@ function triggerBoss(num) {
     rainDrops = [];
     lightningState = null;
     lightningTimer = 3 + Math.random() * 3;
+    stormCloudsDecorative = [];
     scoreVal.textContent = "0";
     elapsedMs = 0;
     runStartTime = performance.now();
@@ -4737,6 +4829,7 @@ function triggerBoss(num) {
 
     // Reset storm
     stormCharge = 0;
+    stormCloudsDecorative = [];
     stormMilestoneCount = 0;
     stormWasReady = false;
     stormActive = false;
