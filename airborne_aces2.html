@@ -22,10 +22,6 @@ html, body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
-  /* Smooth scrolling and better rendering */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
 }
 
 #menuScreen {
@@ -42,11 +38,6 @@ html, body {
   max-width: 480px;
   aspect-ratio: 780 / 1398;
   margin: 0 auto;
-  /* Ensure proper containment for child positioning */
-  contain: layout style;
-  /* Prevent layout shifts */
-  overflow: hidden;
-  border-radius: 4px;
 }
 
 .stageBg {
@@ -64,67 +55,46 @@ html, body {
   z-index: 1;
   opacity: 0.5;
   pointer-events: none;
-  /* Smooth rendering */
-  image-rendering: -webkit-optimize-contrast;
-  will-change: transform;
 }
 
 .cloudLayer.cA {
-  top: 2%;
-  left: 4%;
-  width: 48%;
-  animation: driftCloudA 12s ease-in-out infinite;
-  /* Smoother animation with will-change for GPU acceleration */
-  will-change: transform;
+  top: 4%;
+  left: 6%;
+  width: 46%;
+  animation: driftCloudA 9s ease-in-out infinite;
 }
 
 .cloudLayer.cB {
-  top: 8%;
-  right: 2%;
-  width: 44%;
-  animation: driftCloudB 14s ease-in-out infinite;
-  /* Smoother animation with will-change for GPU acceleration */
-  will-change: transform;
+  top: 14%;
+  right: 4%;
+  width: 40%;
+  animation: driftCloudB 11s ease-in-out infinite;
 }
 
 @keyframes driftCloudA {
   0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(3%, -1.5%); }
-  50% { transform: translate(5%, -2.5%); }
-  75% { transform: translate(2%, -1%); }
+  50% { transform: translate(4%, -2%); }
 }
 
 @keyframes driftCloudB {
   0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-3%, 1.5%); }
-  50% { transform: translate(-6%, 2.5%); }
-  75% { transform: translate(-2%, 1%); }
+  50% { transform: translate(-5%, 2%); }
 }
 
 /* MENU BANNER — decorative backdrop behind the hero blimp */
 .menuBanner {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
+  top: 4%;
+  left: 50%;
+  width: 92%;
+  transform: translateX(-50%);
   z-index: 1;
   pointer-events: none;
-  /* The banner image should match the background's top portion exactly */
 }
 
 .menuBanner img {
   display: block;
   width: 100%;
-  height: auto;
-  /* Ensure crisp rendering */
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-.menuBanner img {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 /* HERO BLIMP — floats alone in the open sky area, no frame/scenery/vignette.
@@ -132,16 +102,13 @@ html, body {
    motion-blurred spin rather than a hard frame-to-frame pop. */
 .heroBlimpWrap {
   position: absolute;
-  top: 8%;
+  top: 6%;
   left: 50%;
-  width: 52%;
+  width: 54%;
   transform: translateX(-50%);
   z-index: 2;
-  animation: floatHero 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: floatHero 3s ease-in-out infinite;
   filter: drop-shadow(0 5px 6px rgba(0,0,0,0.3));
-  /* GPU acceleration for smoother animation */
-  will-change: transform;
-  backface-visibility: hidden;
 }
 
 .heroBlimpWrap img {
@@ -171,11 +138,6 @@ html, body {
 @keyframes spinProp {
   from { transform: translate(-50%, -50%) rotate(0deg); }
   to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* Add smooth transition for prop blur opacity */
-.propBlur {
-  transition: opacity 0.3s ease-out;
 }
 
 /* SMOKE PUFFS — soft rising/fading circles staggered from the exhaust tip */
@@ -211,16 +173,13 @@ html, body {
 
 @keyframes puffRise {
   0% { transform: translate(0, 0) scale(0.35); opacity: 0; }
-  8% { opacity: 0.6; }
-  20% { opacity: 0.75; }
+  12% { opacity: 0.7; }
   100% { transform: translate(-75%, -95%) scale(1.9); opacity: 0; }
 }
 
 @keyframes floatHero {
-  0%, 100% { transform: translate(-50%, 0px); }
-  25% { transform: translate(-50%, -6px); }
-  50% { transform: translate(-50%, -10px); }
-  75% { transform: translate(-50%, -4px); }
+  0%,100% { transform: translate(-50%, 0px); }
+  50% { transform: translate(-50%, -8px); }
 }
 
 /* TAKE FLIGHT HOTSPOT — invisible button over the baked-in circle */
@@ -237,10 +196,8 @@ html, body {
   padding: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.12s ease-out;
   z-index: 3;
-  /* GPU acceleration */
-  will-change: transform;
 }
 
 .flyBtn::after {
@@ -277,12 +234,6 @@ html, body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   z-index: 3;
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-  will-change: transform;
-}
-
-.numBtn:active {
-  transform: translate(-50%, -50%) scale(0.92);
 }
 .numBtn.n1 { left: 30.9%; }
 .numBtn.n2 { left: 43.7%; }
@@ -335,12 +286,6 @@ input[type=range].tapSlider {
   margin: 0;
   cursor: pointer;
   display: block;
-  /* Smooth thumb movement */
-  transition: opacity 0.2s ease;
-}
-
-input[type=range].tapSlider:hover {
-  opacity: 0.9;
 }
 
 input[type=range].tapSlider:focus {
@@ -414,9 +359,6 @@ input[type=range].tapSlider::-moz-range-thumb {
     height: 20.39vw; /* locked to the height the 68%-width version rendered at */
     z-index: 15;
     pointer-events: none;
-    /* Smooth transitions */
-    transition: opacity 0.3s ease;
-    will-change: transform;
   }
 
   #hudFrameImg {
@@ -686,13 +628,13 @@ input[type=range].tapSlider::-moz-range-thumb {
 
 <div id="menuScreen">
 <div class="stage">
-  <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_03.webp?cb=2" alt="Airborne Aces" loading="eager" decoding="async" />
+  <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_03.webp?cb=2" alt="Airborne Aces" />
 
   <img class="cloudLayer cA" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_04.webp?cb=2" alt="" />
   <img class="cloudLayer cB" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_05.webp?cb=2" alt="" />
 
   <div class="menuBanner">
-    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/menuBanner.webp?cb=2" alt="" loading="eager" decoding="async" />
+    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/menuBanner.webp?cb=2" alt="" />
   </div>
 
   <div class="heroBlimpWrap">
@@ -1085,39 +1027,6 @@ function renderPlaceholder(key) {
   } else if (key === "stormCloud") {
     w = 160; h = 120; c = phCanvas(w, h); ctx = c.getContext("2d");
     phDrawStormCloud(ctx, w, h, true);
-  } else if (key.startsWith("storm_cloud_")) {
-    // Storm cloud animation frames - procedural dark storm clouds
-    w = 200; h = 140; c = phCanvas(w, h); ctx = c.getContext("2d");
-    ctx.save();
-    ctx.translate(w / 2, h * 0.42);
-    // Dark stormy cloud body
-    ctx.fillStyle = "#3a3542";
-    [[-0.32, 0.0, 0.26], [0, -0.1, 0.34], [0.32, 0.0, 0.26]].forEach(([x, y, r]) => {
-      ctx.beginPath();
-      ctx.arc(w * x, h * y, w * r, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    // Cloud outline
-    ctx.strokeStyle = "#2a2530";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    // Lightning bolt (varies by frame number for animation)
-    const frameNum = parseInt(key.split("_")[2], 10) || 1;
-    const boltPhase = (frameNum % 12) < 6;
-    if (boltPhase) {
-      ctx.fillStyle = "#ffe066";
-      ctx.beginPath();
-      ctx.moveTo(-w * 0.04, h * 0.12);
-      ctx.lineTo(w * 0.1, h * 0.12);
-      ctx.lineTo(-w * 0.02, h * 0.32);
-      ctx.lineTo(w * 0.06, h * 0.32);
-      ctx.lineTo(-w * 0.14, h * 0.58);
-      ctx.lineTo(-w * 0.02, h * 0.3);
-      ctx.lineTo(-w * 0.1, h * 0.3);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
   } else if (key === "boss3") {
     // ground-based tank — squat hull, treads, cannon pointing left toward the player
     w = 260; h = 170; c = phCanvas(w, h); ctx = c.getContext("2d");
@@ -1424,21 +1333,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
 
 (function () {
   "use strict";
-
-  // Performance optimization: use requestAnimationFrame with timestamp for smoother animations
-  let rafId = null;
-  let lastRafTime = 0;
-
-  // Smooth easing function for animations
-  function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
-
-  function easeOutBack(t) {
-    const c1 = 1.70158;
-    const c3 = c1 + 1;
-    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
-  }
 
   // ---------- Sound — layered procedural audio engine, no audio files needed ----------
   // Everything here — SFX and music both — is synthesized live with the Web Audio
@@ -2142,44 +2036,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     blimp4_flight_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_22.webp?cb=2",
     blimp4_flight_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_23.webp?cb=2",
     blimp4_flight_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_24.webp?cb=2",
-    blimp4_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_25.webp?cb=2",
-    // Storm cloud animation frames (36 frames) for rain level decorative clouds
-    storm_cloud_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_01.webp?cb=2",
-    storm_cloud_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_02.webp?cb=2",
-    storm_cloud_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_03.webp?cb=2",
-    storm_cloud_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_04.webp?cb=2",
-    storm_cloud_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_05.webp?cb=2",
-    storm_cloud_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_06.webp?cb=2",
-    storm_cloud_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_07.webp?cb=2",
-    storm_cloud_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_08.webp?cb=2",
-    storm_cloud_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_09.webp?cb=2",
-    storm_cloud_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_10.webp?cb=2",
-    storm_cloud_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_11.webp?cb=2",
-    storm_cloud_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_12.webp?cb=2",
-    storm_cloud_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_13.webp?cb=2",
-    storm_cloud_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_14.webp?cb=2",
-    storm_cloud_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_15.webp?cb=2",
-    storm_cloud_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_16.webp?cb=2",
-    storm_cloud_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_17.webp?cb=2",
-    storm_cloud_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_18.webp?cb=2",
-    storm_cloud_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_19.webp?cb=2",
-    storm_cloud_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_20.webp?cb=2",
-    storm_cloud_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_21.webp?cb=2",
-    storm_cloud_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_22.webp?cb=2",
-    storm_cloud_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_23.webp?cb=2",
-    storm_cloud_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_24.webp?cb=2",
-    storm_cloud_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_25.webp?cb=2",
-    storm_cloud_26: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_26.webp?cb=2",
-    storm_cloud_27: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_27.webp?cb=2",
-    storm_cloud_28: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_28.webp?cb=2",
-    storm_cloud_29: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_29.webp?cb=2",
-    storm_cloud_30: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_30.webp?cb=2",
-    storm_cloud_31: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_31.webp?cb=2",
-    storm_cloud_32: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_32.webp?cb=2",
-    storm_cloud_33: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_33.webp?cb=2",
-    storm_cloud_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_34.webp?cb=2",
-    storm_cloud_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_35.webp?cb=2",
-    storm_cloud_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_36.webp?cb=2",
+    blimp4_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_25.webp?cb=2"
   };
 
   const BOSS_THROW_FRAME_COUNT = 25;
@@ -3314,14 +3171,12 @@ flyBtn.addEventListener("click", () => { startGame(); });
     // resume the normal spawn cadence cleanly
     spawnTimer = 0;
 
-    // Every bonus round completion is a checkpoint — the player has just
-    // cleared a boss and its reward round, so this is a natural safe point
-    // to resume from later (with the score they've earned banked, not an
-    // older pre-boss checkpoint's stale total).
+    // After bonus round, update checkpoint to next boss threshold
+    // so the player's second life respawns at the appropriate difficulty level
     const next = nextBossConfig();
-    checkpointReached = next ? next.num : lastBossTriggered;
-    checkpointScore = score;
-    checkpointGameplayScore = gameplayScore;
+    if (next && checkpointReached > 0) {
+      checkpointReached = next.num;
+    }
   }
 
   function updateBonusRound(dt) {
@@ -3440,7 +3295,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
       checkpointPickup.collected = true;
       checkpointReached = Math.max(checkpointReached, checkpointPickup.targetNum);
       checkpointScore = score; // save score at checkpoint for restart
-      checkpointGameplayScore = gameplayScore;
       sfxPowerup();
       showBanner("CHECKPOINT! BOSS " + checkpointPickup.targetNum + " NEAR!", 2000);
       // heal 1 pip as a reward for collecting it
@@ -4144,8 +3998,6 @@ function triggerBoss(num) {
   let lightningState = null; // { phase: "warn"|"strike", bandY, bandH, t }
   let lightningTimer = 3 + Math.random() * 3;
   let thunderFlashUntil = 0;
-  // Storm cloud - floating decorative animated cloud during rain levels (no damage)
-  let stormCloudsDecorative = [];
 
   function isRainLevel() {
     if (state !== "playing") return false;
@@ -4154,108 +4006,89 @@ function triggerBoss(num) {
     return !!(next && next.num === 3);
   }
 
-  // Storm cloud animation - 36 frames for floating decorative cloud during rain
-  const STORM_CLOUD_FRAME_COUNT = 36;
-  const STORM_CLOUD_FPS = 12;
-  const STORM_CLOUD_KEYS = Array.from({ length: STORM_CLOUD_FRAME_COUNT }, (_, i) => `storm_cloud_${String(i + 1).padStart(2, "0")}`);
-
   function updateRain(dt) {
     const raining = isRainLevel();
-    if (raining) {
-        rainSpawnAccum += dt;
-        while (rainSpawnAccum > 1 / 60) {
-            rainSpawnAccum -= 1 / 60;
-            for (let i = 0; i < 3; i++) {
-                rainDrops.push({
-                    x: Math.random() * (W + 120) - 60,
-                    y: -10,
-                    len: 14 + Math.random() * 10,
-                    speed: 480 + Math.random() * 160
-                });
-            }
-        }
 
-        // Spawn floating storm clouds instead of lightning bands
-        lightningTimer -= dt;
-        if (lightningTimer <= 0) {
-            lightningTimer = 8 + Math.random() * 6; // more spread out: 8-14 seconds between clouds
-            // Spawn a decorative storm cloud that floats across the screen
-            const img = images[STORM_CLOUD_KEYS[0]];
-            const aspect = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 0.72;
-            // Bigger clouds: 25-35% of screen width
-            const dispW = Math.min(280, W * (0.25 + Math.random() * 0.1));
-            const dispH = dispW * aspect;
-            stormCloudsDecorative.push({
-                x: W + dispW,
-                y: H * 0.05 + Math.random() * (H * 0.55), // spread across more vertical area
-                w: dispW,
-                h: dispH,
-                speed: 25 + Math.random() * 20, // slower drift for dramatic effect
-                animFrame: Math.floor(Math.random() * STORM_CLOUD_FRAME_COUNT),
-                animTimer: Math.random() / STORM_CLOUD_FPS,
-                alpha: 0.45 + Math.random() * 0.15 // semi-transparent so blimp shows through (0.45-0.6)
-            });
-            sfxThunder();
-            thunderFlashUntil = performance.now() + 80;
+    if (raining) {
+      rainSpawnAccum += dt;
+      while (rainSpawnAccum > 1 / 60) {
+        rainSpawnAccum -= 1 / 60;
+        for (let i = 0; i < 3; i++) {
+          rainDrops.push({
+            x: Math.random() * (W + 120) - 60,
+            y: -10,
+            len: 14 + Math.random() * 10,
+            speed: 480 + Math.random() * 160
+          });
         }
+      }
+
+      lightningTimer -= dt;
+      if (!lightningState && lightningTimer <= 0) {
+        lightningState = { phase: "warn", bandY: H * 0.12 + Math.random() * (H * 0.6), bandH: H * 0.16, t: 0, warnDur: 0.75, strikeDur: 0.18 };
+      }
+      if (lightningState) {
+        lightningState.t += dt;
+        if (lightningState.phase === "warn" && lightningState.t >= lightningState.warnDur) {
+          lightningState.phase = "strike";
+          lightningState.t = 0;
+          thunderFlashUntil = performance.now() + 140;
+          sfxThunder();
+          if (state === "playing" && player.y > lightningState.bandY && player.y < lightningState.bandY + lightningState.bandH) {
+            takeHit();
+          }
+        } else if (lightningState.phase === "strike" && lightningState.t >= lightningState.strikeDur) {
+          lightningState = null;
+          lightningTimer = 4 + Math.random() * 3;
+        }
+      }
+    } else {
+      lightningState = null;
     }
 
-    // Update storm cloud animation
-    const frameDuration = 1 / STORM_CLOUD_FPS;
-    stormCloudsDecorative.forEach(c => {
-        c.x -= c.speed * dt;
-        c.animTimer += dt;
-        while (c.animTimer >= frameDuration) {
-            c.animTimer -= frameDuration;
-            c.animFrame = (c.animFrame + 1) % STORM_CLOUD_FRAME_COUNT;
-        }
-    });
-    stormCloudsDecorative = stormCloudsDecorative.filter(c => c.x + c.w > -50);
-
     rainDrops.forEach(d => {
-        d.y += d.speed * dt;
-        d.x -= d.speed * 0.18 * dt;
+      d.y += d.speed * dt;
+      d.x -= d.speed * 0.18 * dt;
     });
     rainDrops = rainDrops.filter(d => d.y < H + 20);
-
   }
 
   function drawRain() {
     const raining = isRainLevel();
-    if (!raining && rainDrops.length === 0 && stormCloudsDecorative.length === 0) return;
+    if (!raining && rainDrops.length === 0 && !lightningState) return;
+
     if (raining) {
-        ctx.fillStyle = "rgba(20,26,38,0.28)";
-        ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "rgba(20,26,38,0.28)";
+      ctx.fillRect(0, 0, W, H);
     }
 
     ctx.strokeStyle = "rgba(210,225,240,0.5)";
     ctx.lineWidth = 2;
     rainDrops.forEach(d => {
-        ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x - d.len * 0.18, d.y - d.len);
-        ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x - d.len * 0.18, d.y - d.len);
+      ctx.stroke();
     });
 
-    // Draw floating decorative storm clouds (animated, no damage)
-    // Draw clouds with proper alpha so blimp shows through when flying behind
-    stormCloudsDecorative.forEach(c => {
-        const img = images[STORM_CLOUD_KEYS[c.animFrame]];
-        if (!img || !img.naturalWidth) return;
-        ctx.save();
-        ctx.globalAlpha = c.alpha;
-        // Use lighter composite operation so the cloud blends nicely with the background
-        ctx.globalCompositeOperation = "source-over";
-        ctx.drawImage(img, c.x, c.y, c.w, c.h);
-        ctx.restore();
-    });
-
-    // Occasional thunder flash across the whole screen
-    if (performance.now() < thunderFlashUntil) {
-        ctx.fillStyle = "rgba(255,255,255,0.15)";
-        ctx.fillRect(0, 0, W, H);
+    if (lightningState) {
+      if (lightningState.phase === "warn") {
+        const flicker = 0.3 + 0.3 * Math.sin(performance.now() / 40);
+        ctx.fillStyle = "rgba(255,224,102," + (flicker * 0.35).toFixed(2) + ")";
+        ctx.fillRect(0, lightningState.bandY, W, lightningState.bandH);
+        ctx.strokeStyle = "rgba(255,224,102,0.8)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, lightningState.bandY, W, lightningState.bandH);
+      } else {
+        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.fillRect(0, lightningState.bandY, W, lightningState.bandH);
+      }
     }
 
+    if (performance.now() < thunderFlashUntil) {
+      ctx.fillStyle = "rgba(255,255,255,0.25)";
+      ctx.fillRect(0, 0, W, H);
+    }
   }
 
   // ---------- Boss hit-feedback (flash + spark particles) ----------
@@ -4613,9 +4446,8 @@ function triggerBoss(num) {
   // ---------- Checkpoint pickup — collectible glowing item before each boss ----------
   let checkpointPickup = null; // { x, y, r, bobPhase, targetNum, collected, vx }
   let checkpointTriggeredFor = []; // which bosses we've already shown checkpoint pickups for
-  let checkpointReached = 0; // next boss number the player still has to face (0 = none)
+  let checkpointReached = 0; // highest boss number whose checkpoint was collected (0 = none)
   let checkpointScore = 0; // score stored when checkpoint was collected — enables second life
-  let checkpointGameplayScore = 0; // gameplayScore at that same moment — keeps boss pacing in sync on resume
 
   const startOverlay = document.getElementById("startOverlay");
   const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -4705,9 +4537,6 @@ function triggerBoss(num) {
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
     startMusic();
-    // Reset RAF timing for smooth start
-    lastTime = null;
-    lastRafTime = 0;
     // force hide overlays
     document.getElementById("startOverlay").classList.add("hidden");
     document.getElementById("gameOverOverlay").classList.add("hidden");
@@ -4721,7 +4550,6 @@ function triggerBoss(num) {
     rainDrops = [];
     lightningState = null;
     lightningTimer = 3 + Math.random() * 3;
-    stormCloudsDecorative = [];
     scoreVal.textContent = "0";
     elapsedMs = 0;
     runStartTime = performance.now();
@@ -4738,7 +4566,6 @@ function triggerBoss(num) {
     checkpointTriggeredFor = [];
     checkpointReached = 0;
     checkpointScore = 0;
-    checkpointGameplayScore = 0;
     bossNumber = 0;
     bossActive = false;
     boss = null;
@@ -4791,11 +4618,7 @@ function triggerBoss(num) {
   function crash() {
     if (state !== "playing") return;
     state = "over";
-    // Cancel any pending RAF to prevent frame buildup
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
+    state = "over";
     sfxCrash();
     stopMusic();
     if (score > best) {
@@ -4820,25 +4643,13 @@ function triggerBoss(num) {
   document.getElementById("menuBtn").addEventListener("click", () => {
     ensureAudio();
     sfxClick();
-    // Cancel any pending RAF
-    if (rafId) {
-      cancelAnimationFrame(rafId);
-      rafId = null;
-    }
     state = "start";
     checkpointReached = 0;
     checkpointScore = 0;
-    checkpointGameplayScore = 0;
     gameOverOverlay.classList.add("hidden");
     document.getElementById("gameScreen").style.display = "none";
     const menuScreenEl = document.getElementById("menuScreen");
     menuScreenEl.style.display = "";
-    // Add fade-in effect for menu
-    menuScreenEl.style.opacity = "0";
-    menuScreenEl.style.transition = "opacity 0.3s ease";
-    requestAnimationFrame(() => {
-      menuScreenEl.style.opacity = "1";
-    });
     if (window.__airborneShowMenu) window.__airborneShowMenu();
   });
 
@@ -4851,11 +4662,6 @@ function triggerBoss(num) {
     // Restore score to checkpoint level
     score = checkpointScore;
     scoreVal.textContent = score;
-    // gameplayScore and lastBossTriggered drive boss pacing — without restoring
-    // these too, they'd stay at their pre-crash values (later than the checkpoint),
-    // which could let the player skip straight past a boss they never actually beat
-    gameplayScore = checkpointGameplayScore;
-    lastBossTriggered = Math.max(0, checkpointReached - 1);
 
     // Reset health
     health = MAX_HEALTH;
@@ -4918,7 +4724,6 @@ function triggerBoss(num) {
 
     // Reset storm
     stormCharge = 0;
-    stormCloudsDecorative = [];
     stormMilestoneCount = 0;
     stormWasReady = false;
     stormActive = false;
@@ -5020,15 +4825,10 @@ function triggerBoss(num) {
 
   function loop(ts) {
     try {
-    // Use high-precision timestamp for smoother animations
     if (lastTime === null) lastTime = ts;
     let dt = (ts - lastTime) / 1000;
-    // More aggressive clamping for smoother tab-switch recovery
-    dt = Math.min(dt, 0.05); 
+    dt = Math.min(dt, 0.033); // clamp for tab-switch hitches
     lastTime = ts;
-
-    // Store RAF ID for cleanup
-    rafId = null;
 
     // background — slowly cycles day → dusk → night → dawn as gameplayScore climbs
     const sky = getSkyColors(gameplayScore);
@@ -5105,8 +4905,7 @@ function triggerBoss(num) {
       }
     }
 
-    // Schedule next frame with cleanup support
-    rafId = requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
   }
 
   loadAssets(() => {
