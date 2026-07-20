@@ -2616,15 +2616,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
       const collideX = (player.w / 2) * 0.75 + (o.w / 2) * 0.75;
       const collideY = (player.h / 2) * 0.75 + (o.h / 2) * 0.75;
 
-      // track the closest non-colliding vertical gap while horizontally
-      // in range, so a dodge can be recognized as a "close call" (graze)
-      if (dx < collideX * 1.4) {
-        const gap = dy - collideY;
-        if (gap >= 0 && gap < GRAZE_THRESHOLD && (o.minGap === undefined || gap < o.minGap)) {
-          o.minGap = gap;
-        }
-      }
-
       if (!o.scored && o.x + o.w < player.x - player.w / 2) {
         o.scored = true;
         score++;
@@ -2903,7 +2894,9 @@ flyBtn.addEventListener("click", () => { startGame(); });
     });
   }
 
-  // ---------- Storm power-up (gas tank meter, fills by percentage) ----------
+  const stormMeterEl = document.getElementById("stormMeter");
+  const stormIconDisplayEl = document.getElementById("stormIcon");
+// ---------- Storm power-up (gas tank meter, fills by percentage) ----------
   const STORM_MAX = 100;
   const STORM_CHARGE_PER_MILESTONE = 25;
   let stormCharge = 0;
