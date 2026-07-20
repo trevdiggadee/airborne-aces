@@ -87,6 +87,7 @@ html, body {
   top: 4%;
   left: 50%;
   width: 92%;
+  aspect-ratio: 480 / 319;
   transform: translateX(-50%);
   z-index: 1;
   pointer-events: none;
@@ -95,6 +96,7 @@ html, body {
 .menuBanner img {
   display: block;
   width: 100%;
+  height: 100%;
 }
 
 /* HERO BLIMP — floats alone in the open sky area, no frame/scenery/vignette.
@@ -3171,12 +3173,14 @@ flyBtn.addEventListener("click", () => { startGame(); });
     // resume the normal spawn cadence cleanly
     spawnTimer = 0;
 
-    // After bonus round, update checkpoint to next boss threshold
-    // so the player's second life respawns at the appropriate difficulty level
+    // Every bonus round completion is a checkpoint — the player has just
+    // cleared a boss and its reward round, so this is a natural safe point
+    // to resume from later (with the score they've earned banked, not an
+    // older pre-boss checkpoint's stale total).
     const next = nextBossConfig();
-    if (next && checkpointReached > 0) {
-      checkpointReached = next.num;
-    }
+    checkpointReached = next ? next.num : lastBossTriggered;
+    checkpointScore = score;
+    checkpointGameplayScore = gameplayScore;
   }
 
   function updateBonusRound(dt) {
@@ -3295,6 +3299,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
       checkpointPickup.collected = true;
       checkpointReached = Math.max(checkpointReached, checkpointPickup.targetNum);
       checkpointScore = score; // save score at checkpoint for restart
+      checkpointGameplayScore = gameplayScore;
       sfxPowerup();
       showBanner("CHECKPOINT! BOSS " + checkpointPickup.targetNum + " NEAR!", 2000);
       // heal 1 pip as a reward for collecting it
@@ -4446,8 +4451,9 @@ function triggerBoss(num) {
   // ---------- Checkpoint pickup — collectible glowing item before each boss ----------
   let checkpointPickup = null; // { x, y, r, bobPhase, targetNum, collected, vx }
   let checkpointTriggeredFor = []; // which bosses we've already shown checkpoint pickups for
-  let checkpointReached = 0; // highest boss number whose checkpoint was collected (0 = none)
+  let checkpointReached = 0; // next boss number the player still has to face (0 = none)
   let checkpointScore = 0; // score stored when checkpoint was collected — enables second life
+  let checkpointGameplayScore = 0; // gameplayScore at that same moment — keeps boss pacing in sync on resume
 
   const startOverlay = document.getElementById("startOverlay");
   const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -4566,6 +4572,7 @@ function triggerBoss(num) {
     checkpointTriggeredFor = [];
     checkpointReached = 0;
     checkpointScore = 0;
+    checkpointGameplayScore = 0;
     bossNumber = 0;
     bossActive = false;
     boss = null;
@@ -4646,6 +4653,7 @@ function triggerBoss(num) {
     state = "start";
     checkpointReached = 0;
     checkpointScore = 0;
+    checkpointGameplayScore = 0;
     gameOverOverlay.classList.add("hidden");
     document.getElementById("gameScreen").style.display = "none";
     const menuScreenEl = document.getElementById("menuScreen");
@@ -4662,6 +4670,11 @@ function triggerBoss(num) {
     // Restore score to checkpoint level
     score = checkpointScore;
     scoreVal.textContent = score;
+    // gameplayScore and lastBossTriggered drive boss pacing — without restoring
+    // these too, they'd stay at their pre-crash values (later than the checkpoint),
+    // which could let the player skip straight past a boss they never actually beat
+    gameplayScore = checkpointGameplayScore;
+    lastBossTriggered = Math.max(0, checkpointReached - 1);
 
     // Reset health
     health = MAX_HEALTH;
