@@ -16,7 +16,7 @@ html, body {
   width: 100%;
   height: 100%;
   font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
-  background: #2a1f14;
+  background: linear-gradient(#f5e6c8, #d8c3a5);
   overflow: hidden;
   touch-action: none;
   -webkit-user-select: none;
@@ -2690,7 +2690,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // opacity so the procedural sky gradient still shows/tints through it. ----------
   let skylineX = 0;
   function updateSkyline(dtScale) {
-    const speed = 0.22 * dtScale * obstacleSpeedScale(); // slower than near buildings (0.8) — reads as further away
+    const speed = 0.05 * dtScale * obstacleSpeedScale(); // very slow — reads as far away, but still moving with the scene
     skylineX -= speed;
   }
   function drawSkyline() {
@@ -2700,10 +2700,13 @@ flyBtn.addEventListener("click", () => { startGame(); });
     const dispW = dispH * (img.naturalWidth / img.naturalHeight);
     if (dispW <= 0) return;
     const y = 0;
-    const offset = ((skylineX % dispW) + dispW) % dispW;
+    // skylineX only ever decreases, so it's always <= 0 — JS's % keeps that sign,
+    // landing baseX in (-dispW, 0], which shifts tiles LEFT as time passes (same
+    // direction the buildings scroll, just far slower for the parallax depth feel)
+    const baseX = skylineX % dispW;
     ctx.save();
     ctx.globalAlpha = 0.55;
-    for (let x = -offset - dispW; x < W + dispW; x += dispW) {
+    for (let x = baseX; x < W + dispW; x += dispW) {
       ctx.drawImage(img, x, y, dispW, dispH);
     }
     ctx.restore();
