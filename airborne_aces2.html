@@ -25,26 +25,19 @@ html, body {
 }
 
 #menuScreen {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
 .stage {
   position: relative;
-  flex-shrink: 0;
   width: 100%;
   max-width: 480px;
   aspect-ratio: 780 / 1398;
-  /* JS (fitStageToViewport) overrides width/height above via inline style
-     for true full-screen cover-fit on phones. This aspect-ratio/max-width
-     is only a fallback in case that script doesn't run — it keeps the menu
-     visible and correctly proportioned either way. */
+  margin: 0 auto;
 }
 
 .stageBg {
@@ -1423,17 +1416,11 @@ function stopMenuMusicImmediately() {
 }
 
 // autoplay is usually blocked until the user interacts with the page — try
-// right away, and again on the first interaction anywhere on the menu.
-// Safari in particular only reliably treats click/touchend as a valid
-// "user gesture" for unlocking audio — a delegated pointerdown listener
-// alone isn't always enough — so we retry on several event types and also
-// call startMenuMusic() directly from element-level handlers below.
+// right away, and again on the first tap/click anywhere on the menu
 startMenuMusic();
-["pointerdown", "click", "touchend"].forEach(evt => {
-  document.addEventListener(evt, function unlockMenuMusic() {
-    if (!menuMusicUnlocked) startMenuMusic();
-  }, { passive: true });
-});
+document.addEventListener("pointerdown", function unlockMenuMusic() {
+  if (!menuMusicUnlocked) startMenuMusic();
+}, { passive: true });
 
 window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenuMusic(); };
 
@@ -1443,7 +1430,6 @@ function setEffect(effect) {
 }
 
 function selectBlimp(key, el) {
-  startMenuMusic(); // direct call inside a trusted element click handler — most reliable unlock path
   selectedBlimp = key;
   const data = BLIMP_DATA[key];
 
@@ -1484,42 +1470,10 @@ function fadeOutMenuMusic() {
   })();
 }
 
-// The stage's art is built at a fixed 780:1398 aspect ratio, but phone
-// screens vary — sizing it to always CONTAIN inside the viewport left empty
-// bars top/bottom on tall/narrow phones. Instead, cover the full screen
-// (cropping whichever axis has slack) so the background always fills edge
-// to edge. On wide desktop windows, fall back to the original capped,
-// centered "phone frame" presentation rather than blowing the UI up huge.
-function fitStageToViewport() {
-  try {
-    const stage = document.querySelector(".stage");
-    if (!stage) return;
-    const ratio = 780 / 1398; // width / height
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-
-    if (vw <= 480) {
-      const width = Math.max(vw, vh * ratio);
-      const height = Math.max(vh, vw / ratio);
-      stage.style.width = width + "px";
-      stage.style.height = height + "px";
-    } else {
-      stage.style.width = "480px";
-      stage.style.height = (480 / ratio) + "px";
-    }
-  } catch (e) {
-    // CSS fallback (aspect-ratio + max-width) keeps the menu visible even if this fails
-  }
-}
-window.addEventListener("resize", fitStageToViewport);
-window.addEventListener("orientationchange", fitStageToViewport);
-fitStageToViewport();
-
 const flyBtn = document.getElementById("flyBtn");
 flyBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   flyBtn.classList.add("pressed");
-  if (!menuMusicUnlocked) startMenuMusic();
 });
 ["pointerup", "pointercancel", "pointerleave"].forEach(evt => {
   flyBtn.addEventListener(evt, () => flyBtn.classList.remove("pressed"));
@@ -2863,7 +2817,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     ctx.save();
     ctx.translate(player.x, player.y);
     ctx.rotate(player.rotation);
-    if (performance.now() < hitFlashUntil) {
+    if (performance.now() < invulnerableUntil) {
       // fast blink while briefly invulnerable after a hit
       ctx.globalAlpha = (Math.floor(performance.now() / 90) % 2 === 0) ? 1 : 0.35;
     }
@@ -4970,8 +4924,7 @@ function triggerBoss(num) {
   const healthImg = document.getElementById("healthImg");
   const bonusHeartsEl = document.getElementById("bonusHearts");
   let health = MAX_HEALTH;
-  let invulnerableUntil = 0; // timestamp (ms) — no damage taken before this (collision immunity)
-  let hitFlashUntil = 0; // timestamp (ms) — drives the "just got hit" blink visual specifically
+  let invulnerableUntil = 0; // timestamp (ms) — no damage taken before this
 
   function updateHealthDisplay() {
     healthImg.src = HEART_IMAGES[Math.max(0, Math.min(MAX_HEALTH, health))];
@@ -5006,7 +4959,6 @@ function triggerBoss(num) {
     void healthMeter.offsetWidth; // restart the pulse animation
     healthMeter.classList.add("hit");
     invulnerableUntil = performance.now() + 1200;
-    hitFlashUntil = invulnerableUntil;
     sfxHit();
 
     if (health <= 0) {
@@ -5038,7 +4990,6 @@ function triggerBoss(num) {
     updateTimerDisplay();
     health = MAX_HEALTH;
     invulnerableUntil = 0;
-    hitFlashUntil = 0;
     updateHealthDisplay();
     obstacles = [];
     spawnTimer = 0;
@@ -5155,7 +5106,6 @@ function triggerBoss(num) {
     // Reset health
     health = MAX_HEALTH;
     invulnerableUntil = performance.now() + 2000;
-    hitFlashUntil = 0; // spawn protection, not a hit — no blink visual
     updateHealthDisplay();
 
     // Clear all threats
