@@ -781,10 +781,104 @@ input[type=range].tapSlider::-moz-range-thumb {
     box-shadow: 0 1px 0 #3a2a10, 0 2px 5px rgba(0,0,0,0.5);
   }
 
+
+  /* ===== Screen Effects ===== */
+  .screen-vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    background: radial-gradient(ellipse at center, transparent 55%, rgba(20,12,5,0.35) 100%);
+    transition: opacity 0.8s ease;
+  }
+  .screen-vignette.boss-active {
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(60,10,10,0.5) 100%);
+  }
+  .screen-vignette.bonus-active {
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(40,30,5,0.4) 100%);
+  }
+  .screen-vignette.storm-active {
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(15,15,30,0.55) 100%);
+  }
+
+  .screen-chromatic {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    mix-blend-mode: screen;
+  }
+  .screen-chromatic.active {
+    opacity: 0.08;
+  }
+  .screen-chromatic::before,
+  .screen-chromatic::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;
+  }
+  .screen-chromatic::before {
+    transform: translateX(-2px);
+    background: rgba(255,0,0,0.15);
+  }
+  .screen-chromatic::after {
+    transform: translateX(2px);
+    background: rgba(0,100,255,0.15);
+  }
+
+  .screen-grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 98;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+  }
+
+  .screen-scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 97;
+    opacity: 0.03;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+  }
+
+  .screen-flash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 101;
+    background: #fff;
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+  }
+  .screen-flash.active {
+    opacity: 0.25;
+    transition: opacity 0.05s ease-in;
+  }
 </style>
 </head>
 
 <body>
+
+<!-- Screen Effects Overlay Layers -->
+<div id="screenVignette" class="screen-vignette"></div>
+<div id="screenChromatic" class="screen-chromatic"></div>
+<div id="screenGrain" class="screen-grain"></div>
+<div id="screenScanlines" class="screen-scanlines"></div>
+<div id="screenFlash" class="screen-flash"></div>
+
 
 <div id="menuScreen">
 <audio id="menuMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/victory_brass_step.mp3"></audio>
@@ -2916,6 +3010,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
       if (!img.naturalWidth) return;
       const top = groundY - b.h;
       ctx.drawImage(img, b.x, top, b.w, b.h);
+      drawBuildingWindows(b, top, groundY);
     });
     // ground strip to visually connect building bases
     ctx.fillStyle = "#2c1d10";
@@ -3064,22 +3159,26 @@ flyBtn.addEventListener("click", () => { startGame(); });
     }
 
     maybeEmitWind(player.x - player.w * 0.32, player.y, player.w * 0.5, player.h, 10, dt);
-  }
+  
+    updateBlimpPersonality(dt);}
 
   function drawPlayer() {
     const img = currentPlayerImage();
     if (!img || !img.naturalWidth) return;
     // motion blur trail
     drawMotionBlur(img, player.x, player.y, player.w, player.h, player.rotation, -player.vy * 0.3, player.vy);
-    ctx.save();
+        drawBlimpPersonality();
+    drawBlimpPropBlur();
+ctx.save();
     ctx.translate(player.x, player.y);
     ctx.rotate(player.rotation);
     if (performance.now() < invulnerableUntil) {
       // fast blink while briefly invulnerable after a hit
       ctx.globalAlpha = (Math.floor(performance.now() / 90) % 2 === 0) ? 1 : 0.35;
     }
+    ctx.scale(blimpPersonality.squashX, blimpPersonality.squashY);
     ctx.drawImage(img, -player.w / 2, -player.h / 2, player.w, player.h);
-    ctx.restore();
+        ctx.restore();
   }
 
   // ---------- Obstacles ----------
@@ -3235,7 +3334,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
         if (!bossActive) {
           const next = nextBossConfig();
           if (next && gameplayScore >= next.threshold) {
-            triggerBoss(next.num);
+            triggerBossWarning(next.num);
+          setTimeout(function() { if (state === 'playing' && !bossActive) triggerBoss(next.num); }, BOSS_WARNING_DURATION);
           }
         }
         // storm meter: one gas-tank notch every 25 points, until it's full
@@ -3577,6 +3677,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     updateStormMeterDisplay();
     showBanner("STORM UNLEASHED!", 1400);
     sfxThunder();
+    triggerScreenFlash(0.15, 200);
+    triggerScreenShake(5, 350);
 
     // spawn a few sweeping storm clouds across the sky for the visual effect
     stormClouds = [];
@@ -3643,6 +3745,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     if (Math.random() < 0.25) {
       ctx.fillStyle = "rgba(255,240,180,0.18)";
       ctx.fillRect(0, 0, W, H);
+    const tod = drawSunMoon(gameplayScore);
     }
     ctx.restore();
   }
@@ -4435,8 +4538,13 @@ function triggerBoss(num) {
   function defeatBoss() {
     if (boss) {
       triggerBigExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.w * 0.8, boss.h * 0.8);
+    defeatSlowMo = true;
+    defeatSlowMoUntil = performance.now() + DEFEAT_SLOWMO_DURATION;
+    spawnDefeatDebris(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.w, boss.h);
     }
     sfxBossDefeat();
+    triggerScreenShake(6, 400);
+    triggerScreenFlash(0.2, 300);
     setMusicTheme(THEME_NORMAL);
     const cfg = bossConfig(bossNumber);
     bossActive = false;
@@ -4853,6 +4961,7 @@ function triggerBoss(num) {
   // ~0.5s, plus a much larger particle count than a normal hit.
   function triggerBigExplosion(cx, cy, spreadW, spreadH) {
     sfxExplosion(Math.min(1.5, spreadW / 60));
+    if (spreadW > 50) triggerScreenShake(Math.min(8, spreadW / 20), 250);
     const burstCount = 6;
     for (let i = 0; i < burstCount; i++) {
       explosionBursts.push({
@@ -5261,6 +5370,7 @@ function triggerBoss(num) {
     healthMeter.classList.add("hit");
     invulnerableUntil = performance.now() + 1200;
     sfxHit();
+    triggerScreenShake(4, 200);
 
     if (health <= 0) {
       crash();
@@ -5342,9 +5452,18 @@ function triggerBoss(num) {
     stormActive = false;
     stormClouds = [];
     updateStormMeterDisplay();
+    defeatDebris = [];
+    defeatSlowMo = false;
     resetPlayer();
+    blimpPersonality.squashX = 1;
+    blimpPersonality.squashY = 1;
+    blimpPersonality.exhaustParticles = [];
+    blimpPersonality.propAngle = 0;
+    blimpPersonality.propBlurOpacity = 0;
     initBuildings();
     initClouds();
+    initParallaxLayers();
+    initAtmosphericParticles();
     state = "playing";
     startOverlay.classList.add("hidden");
     gameOverOverlay.classList.add("hidden");
@@ -5355,7 +5474,11 @@ function triggerBoss(num) {
     state = "over";
     state = "over";
     sfxCrash();
+    triggerScreenShake(10, 600);
+    triggerScreenFlash(0.4, 400);
     stopMusic();
+    defeatDebris = [];
+    defeatSlowMo = false;
     if (score > best) {
       best = score;
       try { localStorage.setItem("aa_best", String(best)); } catch (e) {}
@@ -5471,9 +5594,16 @@ function triggerBoss(num) {
     stormActive = false;
     stormClouds = [];
     updateStormMeterDisplay();
+    defeatDebris = [];
+    defeatSlowMo = false;
 
     // Reset player
     resetPlayer();
+    blimpPersonality.squashX = 1;
+    blimpPersonality.squashY = 1;
+    blimpPersonality.exhaustParticles = [];
+    blimpPersonality.propAngle = 0;
+    blimpPersonality.propBlurOpacity = 0;
 
     // Reset buildings and clouds
     initBuildings();
@@ -5524,6 +5654,709 @@ function triggerBoss(num) {
       if (state === "playing") flap();
     }
   });
+
+
+  // =====================================================================
+  // FEATURE ADDITIONS: Screen Effects, Atmospheric Particles, 
+  // Parallax Layers, Blimp Personality
+  // =====================================================================
+
+  // ---------- Screen Effects System ----------
+  const screenVignette = document.getElementById('screenVignette');
+  const screenChromatic = document.getElementById('screenChromatic');
+  const screenFlash = document.getElementById('screenFlash');
+  let screenShakeIntensity = 0;
+  let screenShakeDecay = 0;
+  let screenShakeOffsetX = 0;
+  let screenShakeOffsetY = 0;
+
+  function triggerScreenShake(intensity, durationMs) {
+    screenShakeIntensity = intensity;
+    screenShakeDecay = intensity / (durationMs / 1000);
+  }
+
+  function updateScreenEffects(dt) {
+    // Vignette reacts to game state
+    if (screenVignette) {
+      screenVignette.classList.toggle('boss-active', bossActive);
+      screenVignette.classList.toggle('bonus-active', bonusActive);
+      screenVignette.classList.toggle('storm-active', stormActive);
+    }
+
+    // Chromatic aberration on high-speed moments
+    if (screenChromatic) {
+      const speed = Math.abs(player.vy);
+      const chromaIntensity = Math.min(1, (speed - 300) / 400);
+      screenChromatic.classList.toggle('active', chromaIntensity > 0.3 || bossActive);
+      screenChromatic.style.opacity = (0.05 + chromaIntensity * 0.08).toFixed(3);
+    }
+
+    // Screen shake decay
+    if (screenShakeIntensity > 0) {
+      screenShakeIntensity -= screenShakeDecay * dt;
+      if (screenShakeIntensity < 0) screenShakeIntensity = 0;
+      screenShakeOffsetX = (Math.random() - 0.5) * screenShakeIntensity * 2;
+      screenShakeOffsetY = (Math.random() - 0.5) * screenShakeIntensity * 2;
+      canvas.style.transform = 'translate(' + screenShakeOffsetX.toFixed(1) + 'px,' + screenShakeOffsetY.toFixed(1) + 'px)';
+    } else {
+      canvas.style.transform = '';
+    }
+  }
+
+  function triggerScreenFlash(opacity, durationMs) {
+    if (!screenFlash) return;
+    screenFlash.style.opacity = opacity;
+    screenFlash.style.transition = 'opacity ' + (durationMs * 0.3) + 'ms ease-in, opacity ' + (durationMs * 0.7) + 'ms ease-out ' + (durationMs * 0.3) + 'ms';
+    requestAnimationFrame(() => {
+      screenFlash.style.opacity = '0';
+    });
+  }
+
+  // ---------- Atmospheric Particles (dust, pollen, fireflies) ----------
+  let atmosParticles = [];
+  const ATMOS_MAX = 60;
+  const ATMOS_TYPES = ['dust', 'pollen', 'firefly'];
+
+  function initAtmosphericParticles() {
+    atmosParticles = [];
+    for (let i = 0; i < ATMOS_MAX; i++) {
+      spawnAtmosphericParticle(true);
+    }
+  }
+
+  function spawnAtmosphericParticle(randomX) {
+    const type = ATMOS_TYPES[Math.floor(Math.random() * ATMOS_TYPES.length)];
+    const p = {
+      type: type,
+      x: randomX ? Math.random() * W : W + 20,
+      y: Math.random() * H,
+      vx: -(15 + Math.random() * 35),
+      vy: (Math.random() - 0.5) * 12,
+      size: type === 'firefly' ? 1.5 + Math.random() * 2 : 0.8 + Math.random() * 1.8,
+      alpha: type === 'firefly' ? 0.4 + Math.random() * 0.5 : 0.15 + Math.random() * 0.25,
+      phase: Math.random() * Math.PI * 2,
+      phaseSpeed: 0.5 + Math.random() * 2,
+      life: 3 + Math.random() * 5
+    };
+    if (type === 'firefly') {
+      p.vx *= 0.4;
+      p.vy = (Math.random() - 0.5) * 25;
+      p.phaseSpeed = 2 + Math.random() * 4;
+    }
+    atmosParticles.push(p);
+  }
+
+  function updateAtmosphericParticles(dt) {
+    atmosParticles.forEach(function(p) {
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.phase += p.phaseSpeed * dt;
+      p.life -= dt;
+
+      if (p.type === 'firefly') {
+        p.y += Math.sin(p.phase) * 8 * dt;
+        p.x += Math.cos(p.phase * 0.7) * 5 * dt;
+      }
+      if (p.type === 'pollen') {
+        p.vy -= 2 * dt;
+        p.x += Math.sin(p.phase) * 3 * dt;
+      }
+    });
+
+    atmosParticles = atmosParticles.filter(function(p) {
+      return p.x > -20 && p.y > -20 && p.y < H + 20 && p.life > 0;
+    });
+    while (atmosParticles.length < ATMOS_MAX) {
+      spawnAtmosphericParticle(false);
+    }
+  }
+
+  function drawAtmosphericParticles() {
+    atmosParticles.forEach(function(p) {
+      const flicker = p.type === 'firefly' ? 0.5 + 0.5 * Math.sin(p.phase * 3) : 1;
+      const alpha = p.alpha * flicker * Math.min(1, p.life);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      if (p.type === 'firefly') {
+        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
+        glow.addColorStop(0, 'rgba(255,240,120,' + alpha + ')');
+        glow.addColorStop(0.5, 'rgba(255,200,60,' + (alpha * 0.4) + ')');
+        glow.addColorStop(1, 'rgba(255,200,60,0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,220,' + alpha + ')';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (p.type === 'pollen') {
+        ctx.fillStyle = 'rgba(220,190,120,' + alpha + ')';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = 'rgba(200,190,170,' + alpha + ')';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+
+  // ---------- Parallax Background Layers (4 depth levels) ----------
+  let parallaxLayers = [];
+
+  function initParallaxLayers() {
+    parallaxLayers = [
+      { depth: 0.03, items: [], color: 'rgba(80,65,50,0.25)', itemH: H * 0.35, density: 0.008 },
+      { depth: 0.08, items: [], yBase: H * 0.68, color: 'rgba(100,80,55,0.35)', itemH: H * 0.22, density: 0.012 },
+      { depth: 0.18, items: [], yBase: H * 0.78, color: 'rgba(70,55,35,0.45)', itemH: H * 0.14, density: 0.018 },
+      { depth: 0.35, items: [], yBase: H * 0.88, color: 'rgba(50,40,25,0.55)', itemH: H * 0.08, density: 0.025 }
+    ];
+    parallaxLayers.forEach(function(layer) {
+      var x = 0;
+      while (x < W + 400) {
+        var w = 40 + Math.random() * 80;
+        layer.items.push({
+          x: x,
+          w: w,
+          h: layer.itemH * (0.6 + Math.random() * 0.8),
+          shape: Math.floor(Math.random() * 3)
+        });
+        x += w + (10 + Math.random() * 60) / layer.density;
+      }
+    });
+  }
+
+  function updateParallaxLayers(dtScale) {
+    var speed = obstacleSpeedScale();
+    parallaxLayers.forEach(function(layer) {
+      layer.items.forEach(function(item) {
+        item.x -= layer.depth * dtScale * speed * 220;
+      });
+      while (layer.items.length && layer.items[0].x + layer.items[0].w < -50) {
+        layer.items.shift();
+      }
+      var last = layer.items[layer.items.length - 1];
+      if (!last || last.x + last.w < W + 100) {
+        var w = 40 + Math.random() * 80;
+        var startX = last ? last.x + last.w + (10 + Math.random() * 60) / layer.density : 0;
+        layer.items.push({
+          x: startX,
+          w: w,
+          h: layer.itemH * (0.6 + Math.random() * 0.8),
+          shape: Math.floor(Math.random() * 3)
+        });
+      }
+    });
+  }
+
+  function drawParallaxLayers() {
+    var groundY = H - 6;
+    parallaxLayers.forEach(function(layer) {
+      ctx.save();
+      layer.items.forEach(function(item) {
+        var top = groundY - item.h;
+        ctx.fillStyle = layer.color;
+        if (item.shape === 0) {
+          ctx.beginPath();
+          ctx.moveTo(item.x, groundY);
+          ctx.quadraticCurveTo(item.x + item.w * 0.5, top - item.h * 0.3, item.x + item.w, groundY);
+          ctx.closePath();
+          ctx.fill();
+        } else if (item.shape === 1) {
+          ctx.beginPath();
+          ctx.moveTo(item.x, groundY);
+          ctx.lineTo(item.x + item.w * 0.3, top);
+          ctx.lineTo(item.x + item.w * 0.5, top + item.h * 0.3);
+          ctx.lineTo(item.x + item.w * 0.7, top);
+          ctx.lineTo(item.x + item.w, groundY);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillRect(item.x, top + item.h * 0.2, item.w, item.h * 0.8);
+        }
+      });
+      ctx.restore();
+    });
+  }
+
+  // ---------- Blimp Personality (squash/stretch, exhaust, propeller blur) ----------
+  let blimpPersonality = {
+    squashX: 1, squashY: 1,
+    squashTargetX: 1, squashTargetY: 1,
+    exhaustTimer: 0,
+    exhaustParticles: [],
+    propAngle: 0,
+    propSpeed: 0,
+    propBlurOpacity: 0
+  };
+
+  function updateBlimpPersonality(dt) {
+    var sel = typeof selectedBlimp !== 'undefined' ? selectedBlimp : 'blimp1';
+    var data = BLIMP_DATA[sel];
+
+    var vNorm = player.vy / MAX_FALL_SPEED;
+    blimpPersonality.squashTargetX = 1 + vNorm * 0.12;
+    blimpPersonality.squashTargetY = 1 - vNorm * 0.15;
+
+    blimpPersonality.squashTargetX = Math.max(0.82, Math.min(1.18, blimpPersonality.squashTargetX));
+    blimpPersonality.squashTargetY = Math.max(0.78, Math.min(1.22, blimpPersonality.squashTargetY));
+
+    var lerp = 8 * dt;
+    blimpPersonality.squashX += (blimpPersonality.squashTargetX - blimpPersonality.squashX) * lerp;
+    blimpPersonality.squashY += (blimpPersonality.squashTargetY - blimpPersonality.squashY) * lerp;
+
+    if (data && data.effect === 'propeller') {
+      blimpPersonality.propSpeed = 25 + Math.abs(player.vy) * 0.04;
+      blimpPersonality.propAngle += blimpPersonality.propSpeed * dt;
+      blimpPersonality.propBlurOpacity = Math.min(0.9, 0.5 + Math.abs(player.vy) * 0.001);
+    } else {
+      blimpPersonality.propBlurOpacity *= 0.95;
+    }
+
+    if (data && (data.effect === 'propeller' || data.effect === 'smoke')) {
+      blimpPersonality.exhaustTimer += dt;
+      var emitRate = 0.06 + Math.abs(player.vy) * 0.0001;
+      while (blimpPersonality.exhaustTimer > emitRate) {
+        blimpPersonality.exhaustTimer -= emitRate;
+        var exhaustX = player.x - player.w * 0.38;
+        var exhaustY = player.y + player.h * 0.15;
+        blimpPersonality.exhaustParticles.push({
+          x: exhaustX + (Math.random() - 0.5) * 6,
+          y: exhaustY + (Math.random() - 0.5) * 4,
+          vx: -(40 + Math.random() * 30 + Math.abs(player.vy) * 0.05),
+          vy: (Math.random() - 0.5) * 15 - 10,
+          size: 2 + Math.random() * 4,
+          alpha: 0.35 + Math.random() * 0.25,
+          life: 0.5 + Math.random() * 0.6,
+          age: 0,
+          color: data.effect === 'smoke' ? '200,190,180' : '180,170,160'
+        });
+      }
+    }
+
+    blimpPersonality.exhaustParticles.forEach(function(p) {
+      p.age += dt;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.size += 3 * dt;
+      p.vy -= 8 * dt;
+    });
+    blimpPersonality.exhaustParticles = blimpPersonality.exhaustParticles.filter(function(p) {
+      return p.age < p.life;
+    });
+  }
+
+  function drawBlimpPersonality() {
+    blimpPersonality.exhaustParticles.forEach(function(p) {
+      var t = 1 - p.age / p.life;
+      ctx.save();
+      ctx.globalAlpha = p.alpha * t * t;
+      var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      grad.addColorStop(0, 'rgba(' + p.color + ',' + (p.alpha * t) + ')');
+      grad.addColorStop(1, 'rgba(' + p.color + ',0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function drawBlimpPropBlur() {
+    var sel = typeof selectedBlimp !== 'undefined' ? selectedBlimp : 'blimp1';
+    var data = BLIMP_DATA[sel];
+    if (!data || data.effect !== 'propeller') return;
+    if (blimpPersonality.propBlurOpacity < 0.05) return;
+
+    ctx.save();
+    ctx.translate(player.x - player.w * 0.32, player.y + player.h * 0.05);
+    ctx.rotate(blimpPersonality.propAngle);
+    ctx.globalAlpha = blimpPersonality.propBlurOpacity;
+
+    var r = player.w * 0.18;
+    var grad = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r);
+    grad.addColorStop(0, 'rgba(40,30,20,0.3)');
+    grad.addColorStop(0.6, 'rgba(40,30,20,0.15)');
+    grad.addColorStop(1, 'rgba(40,30,20,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    for (var i = 0; i < 3; i++) {
+      var angle = (i / 3) * Math.PI * 2 + blimpPersonality.propAngle * 2;
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.fillStyle = 'rgba(60,50,40,0.25)';
+      ctx.fillRect(-r * 0.08, -r, r * 0.16, r * 2);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // =====================================================================
+
+
+
+  // =====================================================================
+  // LIGHTING THAT TELLS TIME
+  // =====================================================================
+
+  // ---------- Sun / Moon position tracking ----------
+  function getTimeOfDay(gpScore) {
+    const cycle = ((gpScore % 240) + 240) % 240;
+    let timeName = 'day';
+    let sunAngle = 0; // 0 = sunrise, 0.5 = noon, 1 = sunset
+    let sunY = 0;
+    let sunX = 0;
+    let isNight = false;
+
+    if (cycle < 70) {
+      timeName = 'day';
+      sunAngle = cycle / 70; // 0 to 1
+      sunX = W * 0.1 + (cycle / 70) * W * 0.8;
+      sunY = H * 0.15 + Math.sin(sunAngle * Math.PI) * H * 0.25;
+      isNight = false;
+    } else if (cycle < 120) {
+      timeName = 'dusk';
+      const t = (cycle - 70) / 50;
+      sunX = W * 0.9 - t * W * 0.3;
+      sunY = H * 0.4 + t * H * 0.35;
+      isNight = false;
+    } else if (cycle < 190) {
+      timeName = 'night';
+      const t = (cycle - 120) / 70;
+      sunX = W * 0.6 + Math.cos(t * Math.PI) * W * 0.3;
+      sunY = H * 0.08 + Math.sin(t * Math.PI) * H * 0.06;
+      isNight = true;
+    } else {
+      timeName = 'dawn';
+      const t = (cycle - 190) / 50;
+      sunX = W * 0.1 + t * W * 0.3;
+      sunY = H * 0.75 - t * H * 0.35;
+      isNight = false;
+    }
+
+    return { cycle, timeName, sunX, sunY, isNight, sunAngle };
+  }
+
+  function drawSunMoon(gpScore) {
+    const tod = getTimeOfDay(gpScore);
+    if (tod.isNight) {
+      // Draw moon
+      ctx.save();
+      ctx.globalAlpha = 0.85;
+      // Moon glow
+      const moonGlow = ctx.createRadialGradient(tod.sunX, tod.sunY, 8, tod.sunX, tod.sunY, 45);
+      moonGlow.addColorStop(0, 'rgba(240,240,255,0.4)');
+      moonGlow.addColorStop(0.5, 'rgba(200,200,230,0.15)');
+      moonGlow.addColorStop(1, 'rgba(200,200,230,0)');
+      ctx.fillStyle = moonGlow;
+      ctx.beginPath();
+      ctx.arc(tod.sunX, tod.sunY, 45, 0, Math.PI * 2);
+      ctx.fill();
+      // Moon body
+      ctx.fillStyle = '#e8e8f0';
+      ctx.beginPath();
+      ctx.arc(tod.sunX, tod.sunY, 14, 0, Math.PI * 2);
+      ctx.fill();
+      // Moon crater shadow
+      ctx.fillStyle = 'rgba(180,180,200,0.3)';
+      ctx.beginPath();
+      ctx.arc(tod.sunX - 3, tod.sunY + 2, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      // Draw sun
+      ctx.save();
+      // Sun glow
+      const sunGlow = ctx.createRadialGradient(tod.sunX, tod.sunY, 10, tod.sunX, tod.sunY, 70);
+      sunGlow.addColorStop(0, 'rgba(255,240,180,0.5)');
+      sunGlow.addColorStop(0.4, 'rgba(255,200,80,0.2)');
+      sunGlow.addColorStop(1, 'rgba(255,200,80,0)');
+      ctx.fillStyle = sunGlow;
+      ctx.beginPath();
+      ctx.arc(tod.sunX, tod.sunY, 70, 0, Math.PI * 2);
+      ctx.fill();
+      // Sun body
+      ctx.fillStyle = '#ffe066';
+      ctx.beginPath();
+      ctx.arc(tod.sunX, tod.sunY, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    return tod;
+  }
+
+  // ---------- Building window lights at night ----------
+  function drawBuildingWindows(b, top, groundY) {
+    const tod = getTimeOfDay(gameplayScore);
+    if (!tod.isNight && tod.timeName !== 'dusk') return;
+
+    const lightChance = tod.isNight ? 0.55 : 0.25;
+    const windowWarmth = tod.isNight ? [255, 220, 140] : [255, 190, 100];
+    const rows = Math.floor(b.h / 18);
+    const cols = Math.max(2, Math.floor(b.w / 22));
+    const winW = b.w / (cols + 1) * 0.55;
+    const winH = 10;
+    const gapX = b.w / (cols + 1);
+    const gapY = b.h / (rows + 2);
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        // Deterministic pseudo-random based on building position
+        const seed = Math.sin(b.x * 13.37 + r * 7.11 + c * 3.73) * 43758.5453;
+        const frac = seed - Math.floor(seed);
+        if (frac > lightChance) continue;
+
+        const flicker = 0.7 + 0.3 * Math.sin(performance.now() * 0.003 + seed);
+        const wx = b.x + gapX * (c + 0.5) - winW / 2;
+        const wy = top + gapY * (r + 1.2);
+
+        ctx.save();
+        ctx.globalAlpha = flicker * (tod.isNight ? 0.85 : 0.5);
+        // Window glow
+        const winGlow = ctx.createRadialGradient(wx + winW/2, wy + winH/2, 0, wx + winW/2, wy + winH/2, winW * 1.5);
+        winGlow.addColorStop(0, 'rgba(' + windowWarmth[0] + ',' + windowWarmth[1] + ',' + windowWarmth[2] + ',0.9)');
+        winGlow.addColorStop(1, 'rgba(' + windowWarmth[0] + ',' + windowWarmth[1] + ',' + windowWarmth[2] + ',0)');
+        ctx.fillStyle = winGlow;
+        ctx.fillRect(wx - winW * 0.5, wy - winH * 0.5, winW * 2, winH * 2);
+        // Window body
+        ctx.fillStyle = 'rgba(' + windowWarmth[0] + ',' + windowWarmth[1] + ',' + windowWarmth[2] + ',' + flicker + ')';
+        ctx.fillRect(wx, wy, winW, winH);
+        ctx.restore();
+      }
+    }
+  }
+
+  // ---------- Blimp headlight cone beam ----------
+  function drawBlimpHeadlight() {
+    const tod = getTimeOfDay(gameplayScore);
+    const needsLight = tod.isNight || tod.timeName === 'dusk';
+    if (!needsLight) return;
+
+    const beamLength = W * 0.35;
+    const beamWidth = player.h * 0.8;
+    const sourceX = player.x + player.w * 0.35;
+    const sourceY = player.y - player.h * 0.05;
+    const aimAngle = player.rotation * 0.5;
+
+    ctx.save();
+    ctx.translate(sourceX, sourceY);
+    ctx.rotate(aimAngle);
+
+    // Cone gradient
+    const beamGrad = ctx.createLinearGradient(0, 0, beamLength, 0);
+    const alpha = tod.isNight ? 0.18 : 0.08;
+    beamGrad.addColorStop(0, 'rgba(255,250,220,' + alpha + ')');
+    beamGrad.addColorStop(0.3, 'rgba(255,245,200,' + (alpha * 0.6) + ')');
+    beamGrad.addColorStop(1, 'rgba(255,240,180,0)');
+
+    ctx.fillStyle = beamGrad;
+    ctx.beginPath();
+    ctx.moveTo(0, -3);
+    ctx.lineTo(beamLength, -beamWidth / 2);
+    ctx.lineTo(beamLength, beamWidth / 2);
+    ctx.lineTo(0, 3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Light source glow
+    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 12);
+    glow.addColorStop(0, 'rgba(255,250,220,0.9)');
+    glow.addColorStop(1, 'rgba(255,250,220,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+
+  // =====================================================================
+  // BOSS PRESENCE
+  // =====================================================================
+
+  // ---------- Boss shadow cast on buildings ----------
+  function drawBossShadow() {
+    if (!boss || !bossActive) return;
+    const groundY = H - 6;
+    const shadowY = groundY - 2;
+    const shadowW = boss.w * 0.7;
+    const shadowH = boss.h * 0.15;
+    const shadowX = boss.x + boss.w * 0.15;
+
+    ctx.save();
+    ctx.globalAlpha = 0.12;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(shadowX + shadowW / 2, shadowY, shadowW / 2, shadowH / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // ---------- Boss warning indicator before entry ----------
+  let bossWarning = null; // { startTime, duration, num }
+  const BOSS_WARNING_DURATION = 2500; // ms before boss appears
+
+  function triggerBossWarning(num) {
+    bossWarning = {
+      startTime: performance.now(),
+      duration: BOSS_WARNING_DURATION,
+      num: num
+    };
+  }
+
+  function updateBossWarning(dt) {
+    if (!bossWarning) return;
+    const elapsed = performance.now() - bossWarning.startTime;
+    if (elapsed >= bossWarning.duration) {
+      bossWarning = null;
+      return;
+    }
+    // The warning stays active until the boss actually triggers
+    if (bossActive) {
+      bossWarning = null;
+    }
+  }
+
+  function drawBossWarning() {
+    if (!bossWarning) return;
+    const elapsed = performance.now() - bossWarning.startTime;
+    const progress = elapsed / bossWarning.duration;
+    const urgency = 1 - progress;
+
+    // Pulsing red border vignette
+    const pulse = 0.3 + 0.7 * Math.abs(Math.sin(elapsed * 0.008));
+    ctx.save();
+    ctx.globalAlpha = pulse * urgency * 0.5;
+
+    // Top warning bar
+    const barH = Math.max(20, H * 0.035);
+    const barGrad = ctx.createLinearGradient(0, 0, W, 0);
+    barGrad.addColorStop(0, 'rgba(180,30,30,0)');
+    barGrad.addColorStop(0.3, 'rgba(180,30,30,0.7)');
+    barGrad.addColorStop(0.7, 'rgba(180,30,30,0.7)');
+    barGrad.addColorStop(1, 'rgba(180,30,30,0)');
+    ctx.fillStyle = barGrad;
+    ctx.fillRect(0, 0, W, barH);
+
+    // Warning text
+    ctx.textAlign = 'center';
+    ctx.font = 'bold ' + Math.max(14, Math.min(22, W * 0.05)) + 'px Georgia, serif';
+    ctx.fillStyle = 'rgba(255,220,220,' + (pulse * urgency) + ')';
+    ctx.shadowColor = 'rgba(180,30,30,0.8)';
+    ctx.shadowBlur = 10;
+    const bossNames = ['', 'BOMBER', 'ROCKET BLIMP', 'TANK', 'HELICOPTER', 'OCTOPUS'];
+    ctx.fillText('⚠ WARNING: ' + bossNames[bossWarning.num] + ' INCOMING!', W / 2, barH * 0.7);
+    ctx.shadowBlur = 0;
+
+    // Side chevrons
+    const chevronSize = 18 + pulse * 8;
+    const chevronAlpha = pulse * urgency * 0.6;
+    ctx.fillStyle = 'rgba(200,40,40,' + chevronAlpha + ')';
+    for (let side = -1; side <= 1; side += 2) {
+      const cx = side === -1 ? W * 0.08 : W * 0.92;
+      ctx.beginPath();
+      ctx.moveTo(cx + side * chevronSize, barH + 10);
+      ctx.lineTo(cx, barH + 10 + chevronSize * 0.6);
+      ctx.lineTo(cx + side * chevronSize, barH + 10 + chevronSize * 1.2);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  // ---------- Slow-motion defeat with flyable debris ----------
+  let defeatDebris = [];
+  let defeatSlowMo = false;
+  let defeatSlowMoUntil = 0;
+  const DEFEAT_SLOWMO_DURATION = 1200; // ms of slow-mo
+  const DEFEAT_TIME_SCALE = 0.25; // quarter speed
+
+  function spawnDefeatDebris(cx, cy, w, h) {
+    const pieceCount = 12 + Math.floor(Math.random() * 8);
+    for (let i = 0; i < pieceCount; i++) {
+      const angle = (i / pieceCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
+      const speed = 80 + Math.random() * 200;
+      const size = 8 + Math.random() * 18;
+      defeatDebris.push({
+        x: cx + (Math.random() - 0.5) * w * 0.5,
+        y: cy + (Math.random() - 0.5) * h * 0.5,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 30,
+        rot: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 10,
+        size: size,
+        color: ['#8b1e1e', '#5e1212', '#c9a66b', '#3a2410', '#6b4a2b'][Math.floor(Math.random() * 5)],
+        life: 1.5 + Math.random() * 1.5,
+        age: 0,
+        type: Math.random() < 0.3 ? 'shard' : 'chunk'
+      });
+    }
+  }
+
+  function updateDefeatDebris(dt) {
+    if (defeatSlowMo && performance.now() < defeatSlowMoUntil) {
+      dt *= DEFEAT_TIME_SCALE;
+    } else {
+      defeatSlowMo = false;
+    }
+
+    defeatDebris.forEach(function(d) {
+      d.age += dt;
+      d.x += d.vx * dt;
+      d.y += d.vy * dt;
+      d.vy += 180 * dt; // gravity
+      d.vx *= 0.995; // air drag
+      d.rot += d.rotSpeed * dt;
+    });
+
+    defeatDebris = defeatDebris.filter(function(d) {
+      return d.age < d.life && d.y < H + 50;
+    });
+  }
+
+  function drawDefeatDebris() {
+    defeatDebris.forEach(function(d) {
+      const t = 1 - d.age / d.life;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, t);
+      ctx.translate(d.x, d.y);
+      ctx.rotate(d.rot);
+      ctx.fillStyle = d.color;
+
+      if (d.type === 'shard') {
+        // Sharp triangular shard
+        ctx.beginPath();
+        ctx.moveTo(-d.size / 2, -d.size / 3);
+        ctx.lineTo(d.size / 2, 0);
+        ctx.lineTo(-d.size / 2, d.size / 3);
+        ctx.closePath();
+        ctx.fill();
+        // Edge highlight
+        ctx.strokeStyle = 'rgba(255,200,100,0.4)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        // Chunky irregular piece
+        ctx.beginPath();
+        ctx.moveTo(-d.size * 0.4, -d.size * 0.3);
+        ctx.lineTo(d.size * 0.3, -d.size * 0.4);
+        ctx.lineTo(d.size * 0.4, d.size * 0.2);
+        ctx.lineTo(-d.size * 0.2, d.size * 0.4);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
 
   // ---------- Main loop ----------
   let lastTime = null;
@@ -5582,11 +6415,16 @@ function triggerBoss(num) {
 
     const dtScale = dt * 60; // normalize movement speeds tuned at 60fps baseline
 
+    updateParallaxLayers(dtScale);
     updateSkyline(dtScale);
+    updateParallaxLayers(dtScale);
+    drawParallaxLayers();
     drawSkyline();
 
     updateClouds(dtScale);
+    updateAtmosphericParticles(dt);
     drawClouds();
+    drawAtmosphericParticles();
     updatePlayerBlimpAnimation(dt);
 
     if (state === "playing") {
@@ -5612,15 +6450,28 @@ function triggerBoss(num) {
       updateBonusRound(dt);
       updateComboPopups();
       updateRain(dt);
+      updateDefeatDebris(dt);
+      updateBossWarning(dt);
+      updateScreenEffects(dt);
     } else if (state === "start" && buildings.length === 0) {
       initBuildings();
       initClouds();
+      initParallaxLayers();
+      initAtmosphericParticles();
       resetPlayer();
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
+      updateDefeatDebris(dt);
+      updateBossWarning(dt);
+      updateParallaxLayers(dtScale * 0.4);
+      updateAtmosphericParticles(dt);
+      updateScreenEffects(dt);
     }
 
+    drawParallaxLayers();
     drawBuildings();
+    drawBossShadow();
+    drawBossShadow();
     drawObstacles();
     if (bossActive) {
       drawBoss();
@@ -5635,12 +6486,16 @@ function triggerBoss(num) {
     drawHealPickup();
     drawShieldPickup();
     drawWindParticles();
+    drawBlimpHeadlight();
     drawPlayer();
     drawShieldEffect();
     drawStorm();
     drawRain();
     drawCheckpointPickup();
+    drawBossWarning();
     drawBossBanner();
+    drawDefeatDebris();
+    drawDefeatDebris();
     drawBonusHUD();
     drawComboPopups();
     } catch (err) {
@@ -5658,6 +6513,8 @@ function triggerBoss(num) {
       resize();
       initBuildings();
       initClouds();
+      initParallaxLayers();
+      initAtmosphericParticles();
       resetPlayer();
       requestAnimationFrame(loop);
       if (pendingStart) {
