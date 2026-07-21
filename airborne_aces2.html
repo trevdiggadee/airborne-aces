@@ -38,9 +38,13 @@ html, body {
 .stage {
   position: relative;
   flex-shrink: 0;
-  /* width/height are set precisely in JS (fitStageToViewport) so the
-     background always fully covers the screen on phones (cropping
-     whichever axis has slack) instead of leaving empty letterbox bars. */
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 780 / 1398;
+  /* JS (fitStageToViewport) overrides width/height above via inline style
+     for true full-screen cover-fit on phones. This aspect-ratio/max-width
+     is only a fallback in case that script doesn't run — it keeps the menu
+     visible and correctly proportioned either way. */
 }
 
 .stageBg {
@@ -1487,20 +1491,24 @@ function fadeOutMenuMusic() {
 // to edge. On wide desktop windows, fall back to the original capped,
 // centered "phone frame" presentation rather than blowing the UI up huge.
 function fitStageToViewport() {
-  const stage = document.querySelector(".stage");
-  if (!stage) return;
-  const ratio = 780 / 1398; // width / height
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  try {
+    const stage = document.querySelector(".stage");
+    if (!stage) return;
+    const ratio = 780 / 1398; // width / height
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-  if (vw <= 480) {
-    const width = Math.max(vw, vh * ratio);
-    const height = Math.max(vh, vw / ratio);
-    stage.style.width = width + "px";
-    stage.style.height = height + "px";
-  } else {
-    stage.style.width = "480px";
-    stage.style.height = (480 / ratio) + "px";
+    if (vw <= 480) {
+      const width = Math.max(vw, vh * ratio);
+      const height = Math.max(vh, vw / ratio);
+      stage.style.width = width + "px";
+      stage.style.height = height + "px";
+    } else {
+      stage.style.width = "480px";
+      stage.style.height = (480 / ratio) + "px";
+    }
+  } catch (e) {
+    // CSS fallback (aspect-ratio + max-width) keeps the menu visible even if this fails
   }
 }
 window.addEventListener("resize", fitStageToViewport);
