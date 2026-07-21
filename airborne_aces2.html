@@ -1819,6 +1819,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   const ASSET_SOURCES = {
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
+    skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
     bldg_newspaper:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_newspaper.webp?cb=2",
@@ -1889,6 +1890,31 @@ flyBtn.addEventListener("click", () => { startGame(); });
     rocket_flight_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_23.webp?cb=2",
     rocket_flight_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_24.webp?cb=2",
     rocket_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/rocket_flight_25.webp?cb=2",
+    boss4_rocket_flight_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_01.webp",
+    boss4_rocket_flight_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_02.webp",
+    boss4_rocket_flight_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_03.webp",
+    boss4_rocket_flight_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_04.webp",
+    boss4_rocket_flight_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_05.webp",
+    boss4_rocket_flight_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_06.webp",
+    boss4_rocket_flight_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_07.webp",
+    boss4_rocket_flight_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_08.webp",
+    boss4_rocket_flight_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_09.webp",
+    boss4_rocket_flight_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_10.webp",
+    boss4_rocket_flight_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_11.webp",
+    boss4_rocket_flight_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_12.webp",
+    boss4_rocket_flight_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_13.webp",
+    boss4_rocket_flight_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_14.webp",
+    boss4_rocket_flight_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_15.webp",
+    boss4_rocket_flight_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_16.webp",
+    boss4_rocket_flight_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_17.webp",
+    boss4_rocket_flight_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_18.webp",
+    boss4_rocket_flight_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_19.webp",
+    boss4_rocket_flight_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_20.webp",
+    boss4_rocket_flight_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_21.webp",
+    boss4_rocket_flight_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_22.webp",
+    boss4_rocket_flight_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_23.webp",
+    boss4_rocket_flight_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_24.webp",
+    boss4_rocket_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_25.webp",
     heartPickup:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/heartPickup.webp?cb=2",
     bomb:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bomb.webp?cb=2",
     boss_throw_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
@@ -2658,6 +2684,32 @@ flyBtn.addEventListener("click", () => { startGame(); });
     }
   }
 
+  // ---------- Distant skyline (decorative, no collision) — a soft, hazy
+  // silhouette layer that sits behind the near buildings and scrolls slower
+  // than everything else, for a parallax depth feel. Drawn at partial
+  // opacity so the procedural sky gradient still shows/tints through it. ----------
+  let skylineX = 0;
+  function updateSkyline(dtScale) {
+    const speed = 0.22 * dtScale * obstacleSpeedScale(); // slower than near buildings (0.8) — reads as further away
+    skylineX -= speed;
+  }
+  function drawSkyline() {
+    const img = images.skylineFar;
+    if (!img || !img.naturalWidth) return;
+    const dispH = H * 0.62;
+    const dispW = dispH * (img.naturalWidth / img.naturalHeight);
+    if (dispW <= 0) return;
+    const groundY = H - 6;
+    const y = groundY - dispH;
+    const offset = ((skylineX % dispW) + dispW) % dispW;
+    ctx.save();
+    ctx.globalAlpha = 0.55;
+    for (let x = -offset - dispW; x < W + dispW; x += dispW) {
+      ctx.drawImage(img, x, y, dispW, dispH);
+    }
+    ctx.restore();
+  }
+
   // ---------- Clouds (decorative, no collision) ----------
   let clouds = [];
   function initClouds() {
@@ -3354,6 +3406,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let rocketTimer = 0;
   const ROCKET_SPEED = 300;
   const ROCKET_FLIGHT_KEYS = Array.from({ length: 25 }, (_, i) => `rocket_flight_${String(i + 1).padStart(2, "0")}`);
+  const BOSS4_ROCKET_FLIGHT_KEYS = Array.from({ length: 25 }, (_, i) => `boss4_rocket_flight_${String(i + 1).padStart(2, "0")}`);
   const ROCKET_ANIM_FPS = 20;
 
   // Bomb-throw animation: 0 = idle pose, 1-25 = mid-throw sequence
@@ -3885,7 +3938,8 @@ function triggerBoss(num) {
           maxHealth: 3,
           angle: Math.atan2(dy, dx),
           animFrame: 0,
-          animTimer: Math.random() * (1 / ROCKET_ANIM_FPS) // desync multiple rockets' flame flicker
+          animTimer: Math.random() * (1 / ROCKET_ANIM_FPS), // desync multiple rockets' flame flicker
+          frameKeys: boss.variant === 4 ? BOSS4_ROCKET_FLIGHT_KEYS : ROCKET_FLIGHT_KEYS
         });
       }
     } else if (boss.kind === "octopus") {
@@ -3989,9 +4043,10 @@ function triggerBoss(num) {
 
       r.animTimer += dt;
       const frameDur = 1 / ROCKET_ANIM_FPS;
+      const frames = r.frameKeys || ROCKET_FLIGHT_KEYS;
       while (r.animTimer >= frameDur) {
         r.animTimer -= frameDur;
-        r.animFrame = (r.animFrame + 1) % ROCKET_FLIGHT_KEYS.length;
+        r.animFrame = (r.animFrame + 1) % frames.length;
       }
     });
     rockets = rockets.filter(r => r.x > -40 && r.x < W + 40 && r.y > -40 && r.y < H + 40);
@@ -4010,7 +4065,8 @@ function triggerBoss(num) {
 
   function drawRockets() {
     rockets.forEach(r => {
-      const img = images[ROCKET_FLIGHT_KEYS[r.animFrame]] || images.rocket;
+      const frames = r.frameKeys || ROCKET_FLIGHT_KEYS;
+      const img = images[frames[r.animFrame]] || images.rocket;
       if (!img || !img.naturalWidth) return;
       let aspect = imgAspect(img);
       const w = r.r * 3.6;
@@ -5224,6 +5280,9 @@ function triggerBoss(num) {
     ctx.fillRect(0, 0, W, H);
 
     const dtScale = dt * 60; // normalize movement speeds tuned at 60fps baseline
+
+    updateSkyline(dtScale);
+    drawSkyline();
 
     updateClouds(dtScale);
     drawClouds();
