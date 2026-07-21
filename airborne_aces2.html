@@ -1270,7 +1270,7 @@ if (PLACEHOLDER_MODE) {
 
 const BLIMP_DATA = {
   blimp1: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_06.webp?cb=2", key: "asset_extra_06", name: "Zeppelin Ace", effect: "propeller" },
-  blimp2: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp2_main.webp?cb=2", key: "blimp2_main", name: "Deco Liner", effect: "smoke" },
+  blimp2: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp2_main.webp?cb=2", key: "blimp2_main", name: "Deco Liner", effect: null },
   blimp3: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp3_main.webp?cb=2", key: "blimp3_main", name: "Aero Slicer", effect: null },
   blimp4: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_main.webp?cb=2", key: "blimp4_main", name: "Steampunk", effect: null }
 };
@@ -2696,11 +2696,10 @@ flyBtn.addEventListener("click", () => { startGame(); });
   function drawSkyline() {
     const img = images.skylineFar;
     if (!img || !img.naturalWidth) return;
-    const dispH = H * 0.62;
+    const dispH = H; // full screen height, edge to edge
     const dispW = dispH * (img.naturalWidth / img.naturalHeight);
     if (dispW <= 0) return;
-    const groundY = H - 6;
-    const y = groundY - dispH;
+    const y = 0;
     const offset = ((skylineX % dispW) + dispW) % dispW;
     ctx.save();
     ctx.globalAlpha = 0.55;
