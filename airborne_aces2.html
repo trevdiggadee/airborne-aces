@@ -1304,8 +1304,31 @@ const smokeParticles = document.getElementById("smokeParticles");
 let heroAnimTimer = null;
 let heroAnimFrame = 0;
 let heroActiveLayer = 0;
+let heroAnimGen = 0; // bumped every time startHeroAnimation runs, so a stale
+                      // in-flight priming pass can never clobber a newer one
+
+function preloadImages(sources) {
+  return Promise.all(sources.map(src => new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => (img.decode ? img.decode().then(resolve).catch(resolve) : resolve());
+    img.onerror = resolve;
+    img.src = src;
+  })));
+}
+
+// Cache of animation keys whose full frame set has already been decoded, so
+// re-selecting a blimp (or re-showing the menu) never re-primes needlessly
+const heroAnimPrimed = {};
+function primeHeroAnimation(key) {
+  const anim = HERO_ANIM[key];
+  if (!anim) return Promise.resolve();
+  if (heroAnimPrimed[key]) return Promise.resolve();
+  return preloadImages(anim.urls).then(() => { heroAnimPrimed[key] = true; });
+}
 
 function startHeroAnimation(key) {
+  const gen = ++heroAnimGen;
   if (heroAnimTimer) {
     clearInterval(heroAnimTimer);
     heroAnimTimer = null;
@@ -1326,48 +1349,52 @@ function startHeroAnimation(key) {
   }
 
   heroAnimFrame = 0;
+  // show the first frame immediately so there's never a blank hero card,
+  // even while the rest of the animation's frames are still being primed
   layerA.src = anim.urls[0];
-  // pre-warm the next frame into the hidden layer so the first crossfade has something to fade into
-  layerB.src = anim.urls[1 % anim.urls.length];
 
-  const frameMs = 1000 / anim.fps;
-  const fadeMs = Math.max(40, frameMs * 0.7); // smooth blend, still shorter than the frame interval
+  // Every frame swap in the crossfade below assumes the image is already
+  // downloaded AND decoded, otherwise the browser can briefly show nothing
+  // while it fetches/decodes mid-fade, which reads as blinking. So we fully
+  // prime (fetch + decode) every frame of this animation before the
+  // interval-driven crossfade loop is allowed to start.
+  primeHeroAnimation(key).then(() => {
+    // if the user switched blimps (or the menu was re-shown with a different
+    // selection) while we were priming, abandon this stale start
+    if (gen !== heroAnimGen) return;
 
-  heroAnimTimer = setInterval(() => {
-    heroAnimFrame = (heroAnimFrame + 1) % anim.urls.length;
-    const outgoing = heroBlimpLayers[heroActiveLayer];
-    const incoming = heroBlimpLayers[1 - heroActiveLayer];
+    layerB.src = anim.urls[1 % anim.urls.length];
 
-    incoming.src = anim.urls[heroAnimFrame];
-    incoming.style.transition = "none";
-    outgoing.style.transition = "none";
-    // force layout so the browser commits the "none" transition before we re-enable it below
-    void incoming.offsetWidth;
+    const frameMs = 1000 / anim.fps;
+    const fadeMs = Math.max(40, frameMs * 0.7); // smooth blend, still shorter than the frame interval
 
-    incoming.style.transition = `opacity ${fadeMs}ms linear`;
-    outgoing.style.transition = `opacity ${fadeMs}ms linear`;
-    incoming.style.opacity = 1;
-    outgoing.style.opacity = 0;
+    heroAnimTimer = setInterval(() => {
+      heroAnimFrame = (heroAnimFrame + 1) % anim.urls.length;
+      const outgoing = heroBlimpLayers[heroActiveLayer];
+      const incoming = heroBlimpLayers[1 - heroActiveLayer];
 
-    heroActiveLayer = 1 - heroActiveLayer;
-  }, frameMs);
+      incoming.src = anim.urls[heroAnimFrame];
+      incoming.style.transition = "none";
+      outgoing.style.transition = "none";
+      // force layout so the browser commits the "none" transition before we re-enable it below
+      void incoming.offsetWidth;
+
+      incoming.style.transition = `opacity ${fadeMs}ms linear`;
+      outgoing.style.transition = `opacity ${fadeMs}ms linear`;
+      incoming.style.opacity = 1;
+      outgoing.style.opacity = 0;
+
+      heroActiveLayer = 1 - heroActiveLayer;
+    }, frameMs);
+  });
 }
 
 // Set the default hero image right away (placeholder mode skips the network round trip)
 startHeroAnimation("blimp1");
 
-function preloadImages(sources) {
-  return Promise.all(sources.map(src => new Promise(resolve => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => (img.decode ? img.decode().then(resolve).catch(resolve) : resolve());
-    img.onerror = resolve;
-    img.src = src;
-  })));
-}
-
 // Preload every blimp asset (static hero images + full animation sets) once
-// up front so switching, and the animation itself, never stutters
+// up front so switching, and the animation itself, never stutters. This also
+// warms the browser's image cache for primeHeroAnimation() above.
 preloadImages(Object.values(BLIMP_DATA).map(b => blimpSrc(b)));
 if (!(typeof PLACEHOLDER_MODE !== "undefined" && PLACEHOLDER_MODE)) {
   preloadImages(Object.values(HERO_ANIM).flatMap(a => a.urls));
@@ -2403,10 +2430,64 @@ flyBtn.addEventListener("click", () => { startGame(); });
     blimp4: "blimp4_main"
   };
 
+  // ---------- Animation frame validation — detect and skip near-blank frames ----------
+  // Some frames from the sprite extraction pipeline come out almost fully transparent.
+  // This causes the blimp to "vanish" for an instant (~1 per cycle), which reads as a
+  // hit flash. We pre-scan each animation frame and build a whitelist of "good" frames.
+  const GOOD_FRAMES = {}; // e.g. { blimp1: [0, 1, 3, 4, ...], blimp2: [...] }
+  const FRAME_OPACITY_THRESHOLD = 0.03; // minimum ratio of opaque pixels to total pixels
+
+  function validateAnimationFrames() {
+    const validateCanvas = document.createElement("canvas");
+    const validateCtx = validateCanvas.getContext("2d");
+
+    Object.entries(BLIMP_ANIM).forEach(([blimpName, anim]) => {
+      const good = [];
+      anim.keys.forEach((key, idx) => {
+        const img = images[key];
+        if (!img || !img.naturalWidth || !img.naturalHeight) return;
+
+        // Draw to a small thumbnail to check opacity cheaply
+        const testW = 64;
+        const testH = 64;
+        validateCanvas.width = testW;
+        validateCanvas.height = testH;
+        validateCtx.clearRect(0, 0, testW, testH);
+        validateCtx.drawImage(img, 0, 0, testW, testH);
+
+        try {
+          const data = validateCtx.getImageData(0, 0, testW, testH).data;
+          let opaque = 0;
+          for (let i = 3; i < data.length; i += 4) {
+            if (data[i] > 30) opaque++;
+          }
+          const ratio = opaque / (testW * testH);
+          if (ratio >= FRAME_OPACITY_THRESHOLD) {
+            good.push(idx);
+          }
+        } catch (e) {
+          // CORS tainted canvas — can't read pixels, assume the frame is good
+          good.push(idx);
+        }
+      });
+
+      // If every frame failed validation (e.g. all CORS-blocked), keep them all
+      GOOD_FRAMES[blimpName] = good.length > 0 ? good : anim.keys.map((_, i) => i);
+    });
+  }
+
   function currentPlayerImage() {
     const sel = typeof selectedBlimp !== "undefined" ? selectedBlimp : "blimp1";
     const anim = BLIMP_ANIM[sel];
     if (anim) {
+      const good = GOOD_FRAMES[sel];
+      // If we have a validated good-frame list, map the running frame index to a good frame
+      if (good && good.length > 0) {
+        const mappedFrame = good[playerBlimpFrame % good.length];
+        const animImg = images[anim.keys[mappedFrame]];
+        if (animImg && animImg.naturalWidth) return animImg;
+      }
+      // Fallback: unvalidated path (shouldn't happen after load)
       const frame = playerBlimpFrame % anim.frameCount;
       const animImg = images[anim.keys[frame]];
       if (animImg && animImg.naturalWidth) return animImg;
@@ -2492,6 +2573,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
       const settle = () => {
         assetsLoaded++;
         if (assetsLoaded === assetKeys.length) {
+          validateAnimationFrames();
           onDone();
           if (failedAssetKeys.length) {
             console.warn("Airborne Aces: " + failedAssetKeys.length + " asset(s) missing from the repo, using placeholder art:", failedAssetKeys);
