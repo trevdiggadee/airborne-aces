@@ -561,7 +561,7 @@ input[type=range].tapSlider::-moz-range-thumb {
   .flip-unit {
     position: relative;
     width: clamp(14px, 2.8vw, 18px);
-    height: clamp(18px, 3.6vw, 24px);
+    height: clamp(22px, 4.6vw, 30px);
     perspective: 120px;
   }
 
@@ -586,7 +586,7 @@ input[type=range].tapSlider::-moz-range-thumb {
     background: linear-gradient(to bottom, #3a2512 0%, #2a1a0a 100%);
     color: #f5e6c8;
     font-weight: bold;
-    font-size: clamp(12px, 2.4vw, 16px);
+    font-size: clamp(13px, 2.6vw, 17px);
     line-height: 1;
     display: flex;
     align-items: center;
@@ -2095,6 +2095,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
     skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
+    farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
     bldg_newspaper:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_newspaper.webp?cb=2",
@@ -3027,17 +3028,17 @@ flyBtn.addEventListener("click", () => { startGame(); });
     }
   }
 
-  // ---------- Distant skyline (decorative, no collision) — a soft, hazy
-  // silhouette layer that sits behind the near buildings and scrolls slower
-  // than everything else, for a parallax depth feel. Drawn at partial
-  // opacity so the procedural sky gradient still shows/tints through it. ----------
+  // ---------- Far backdrop (decorative, no collision) — the farthest-back
+  // image layer, sitting behind the skyline parallax layer and everything
+  // else. Drawn at partial opacity so the procedural sky gradient still
+  // shows/tints through it. ----------
   let skylineX = 0;
   function updateSkyline(dtScale) {
     const speed = 0.05 * dtScale * obstacleSpeedScale(); // very slow — reads as far away, but still moving with the scene
     skylineX -= speed;
   }
   function drawSkyline() {
-    const img = images.skylineFar;
+    const img = images.farBg;
     if (!img || !img.naturalWidth) return;
     const dispH = H; // full screen height, edge to edge
     const dispW = dispH * (img.naturalWidth / img.naturalHeight);
@@ -5818,9 +5819,8 @@ function triggerBoss(num) {
         var aspect = img.naturalHeight / img.naturalWidth;
         var tileW = H / aspect;
         layer.items.forEach(function(item) {
-          item.x -= layer.depth * dtScale * speed * 220;
+          item.x -= layer.depth * dtScale * speed;
         });
-        // Remove off-screen tiles
         while (layer.items.length && layer.items[0].x + layer.items[0].w < -50) {
           layer.items.shift();
         }
@@ -5837,7 +5837,7 @@ function triggerBoss(num) {
       } else {
         // Procedural shape layers
         layer.items.forEach(function(item) {
-          item.x -= layer.depth * dtScale * speed * 220;
+          item.x -= layer.depth * dtScale * speed;
         });
         while (layer.items.length && layer.items[0].x + layer.items[0].w < -50) {
           layer.items.shift();
@@ -6395,9 +6395,8 @@ function triggerBoss(num) {
 
     updateParallaxLayers(dtScale);
     updateSkyline(dtScale);
-    updateParallaxLayers(dtScale);
-    drawParallaxLayers();
     drawSkyline();
+    drawParallaxLayers();
 
     updateClouds(dtScale);
     
