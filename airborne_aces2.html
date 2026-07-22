@@ -2095,8 +2095,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
     skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
-    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.PNG",
-    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0741.PNG",
+    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
+    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
     farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
@@ -6269,47 +6269,39 @@ function triggerBoss(num) {
 
   // ---------- Building window lights at night ----------
   
-  // ---------- Blimp headlight cone beam ----------
+  // ---------- Blimp headlight cone beam — only comes on during the level 3 rain ----------
   function drawBlimpHeadlight() {
-    const tod = getTimeOfDay(gameplayScore);
-    const isDark = tod.isNight || tod.timeName === 'dusk';
-    const raining = isRainLevel();
-    const needsLight = isDark || raining;
-    if (!needsLight) return;
+    if (!isRainLevel()) return;
 
     const beamLength = W * 0.35;
     const beamWidth = player.h * 0.8;
     const sourceX = player.x + player.w * 0.35;
     const sourceY = player.y - player.h * 0.05;
     const aimAngle = player.rotation * 0.5;
+    // Start the visible beam past the blimp's own nose so none of the cone
+    // paints over the blimp's body — it reads as emerging from behind/inside
+    // the blimp rather than sitting on top of it.
+    const hiddenStart = player.w * 0.55;
 
     ctx.save();
     ctx.translate(sourceX, sourceY);
     ctx.rotate(aimAngle);
 
     // Cone gradient
-    const beamGrad = ctx.createLinearGradient(0, 0, beamLength, 0);
-    const alpha = tod.isNight ? 0.18 : (raining ? 0.14 : 0.08);
+    const beamGrad = ctx.createLinearGradient(hiddenStart, 0, beamLength, 0);
+    const alpha = 0.14;
     beamGrad.addColorStop(0, 'rgba(255,250,220,' + alpha + ')');
     beamGrad.addColorStop(0.3, 'rgba(255,245,200,' + (alpha * 0.6) + ')');
     beamGrad.addColorStop(1, 'rgba(255,240,180,0)');
 
+    const nearHalfWidth = 3 + (beamWidth / 2 - 3) * (hiddenStart / beamLength);
     ctx.fillStyle = beamGrad;
     ctx.beginPath();
-    ctx.moveTo(0, -3);
+    ctx.moveTo(hiddenStart, -nearHalfWidth);
     ctx.lineTo(beamLength, -beamWidth / 2);
     ctx.lineTo(beamLength, beamWidth / 2);
-    ctx.lineTo(0, 3);
+    ctx.lineTo(hiddenStart, nearHalfWidth);
     ctx.closePath();
-    ctx.fill();
-
-    // Light source glow
-    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 12);
-    glow.addColorStop(0, 'rgba(255,250,220,0.9)');
-    glow.addColorStop(1, 'rgba(255,250,220,0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(0, 0, 12, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.restore();
@@ -6556,7 +6548,6 @@ function triggerBoss(num) {
     updateParallaxLayers(dtScale);
     updateSkyline(dtScale);
     drawSkyline();
-    drawParallaxLayers();
 
     updateClouds(dtScale);
     
@@ -6604,7 +6595,6 @@ function triggerBoss(num) {
       updateStreetlamps(dtScale * 0.4);
       updateDefeatDebris(dt);
       updateBossWarning(dt);
-      updateParallaxLayers(dtScale * 0.4);
       
       updateScreenEffects(dt);
     }
@@ -6612,7 +6602,6 @@ function triggerBoss(num) {
     drawParallaxLayers();
     drawBuildings();
     drawStreetlamps();
-    drawBossShadow();
     drawBossShadow();
     drawWindParticlesBack();
     drawObstacles();
@@ -6638,7 +6627,6 @@ function triggerBoss(num) {
     drawCheckpointPickup();
     drawBossWarning();
     drawBossBanner();
-    drawDefeatDebris();
     drawDefeatDebris();
     drawBonusHUD();
     drawComboPopups();
