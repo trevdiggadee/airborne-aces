@@ -3152,7 +3152,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
       player.vy = 0;
     }
 
-    maybeEmitWind(player.x - player.w * 0.32, player.y, player.w * 0.5, player.h, 10, dt);
+    maybeEmitWind(player.x - player.w * 0.32, player.y, player.w * 0.5, player.h, 10, dt, "player");
   
     updateBlimpPersonality(dt);}
 
@@ -3293,7 +3293,7 @@ ctx.save();
         o.animTimer -= frameDuration;
         o.animFrame = (o.animFrame + 1) % OBSTACLE_ANIM_FRAME_COUNT;
       }
-      maybeEmitWind(o.x + o.w * 0.55, o.y + o.h / 2, o.w * 0.3, o.h, 7, dt);
+      maybeEmitWind(o.x + o.w * 0.55, o.y + o.h / 2, o.w * 0.3, o.h, 7, dt, "obstacle");
     });
 
     obstacles = obstacles.filter(o => o.x + o.w > -20);
@@ -4724,7 +4724,7 @@ function triggerBoss(num) {
   // ---------- Wind streaks — trailing motion lines for flying entities ----------
   let windParticles = [];
 
-  function maybeEmitWind(x, y, w, h, rate, dt) {
+  function maybeEmitWind(x, y, w, h, rate, dt, source) {
     if (Math.random() < rate * dt) {
       windParticles.push({
         x: x + (Math.random() - 0.5) * w * 0.4,
@@ -4733,7 +4733,8 @@ function triggerBoss(num) {
         len: 8 + Math.random() * 12,
         life: 0.22 + Math.random() * 0.16,
         age: 0,
-        alpha: 0.25 + Math.random() * 0.25
+        alpha: 0.25 + Math.random() * 0.25,
+        source: source || "obstacle"
       });
     }
   }
@@ -4746,19 +4747,32 @@ function triggerBoss(num) {
     windParticles = windParticles.filter(p => p.age < p.life);
   }
 
-  function drawWindParticles() {
+  function drawWindParticle(p) {
+    const t = 1 - p.age / p.life;
+    ctx.save();
+    ctx.globalAlpha = p.alpha * t;
+    ctx.strokeStyle = "rgba(255,255,255,0.6)";
+    ctx.lineWidth = 1.2;
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(p.x + p.len * 0.3, p.y);
+    ctx.lineTo(p.x - p.len * 0.7, p.y);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // obstacle-trail streaks — drawn behind obstacle sprites
+  function drawWindParticlesBack() {
     windParticles.forEach(p => {
-      const t = 1 - p.age / p.life;
-      ctx.save();
-      ctx.globalAlpha = p.alpha * t;
-      ctx.strokeStyle = "rgba(255,255,255,0.6)";
-      ctx.lineWidth = 1.2;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(p.x + p.len * 0.3, p.y);
-      ctx.lineTo(p.x - p.len * 0.7, p.y);
-      ctx.stroke();
-      ctx.restore();
+      if (p.source === "obstacle") drawWindParticle(p);
+    });
+  }
+
+  // the player's own trail — drawn after the player so its trailing streaks
+  // (which spawn right behind the blimp's own body) aren't painted over by it
+  function drawWindParticlesFront() {
+    windParticles.forEach(p => {
+      if (p.source === "player") drawWindParticle(p);
     });
   }
 
@@ -6451,7 +6465,7 @@ function triggerBoss(num) {
     drawBuildings();
     drawBossShadow();
     drawBossShadow();
-    drawWindParticles();
+    drawWindParticlesBack();
     drawObstacles();
     if (bossActive) {
       drawBoss();
@@ -6466,6 +6480,7 @@ function triggerBoss(num) {
     drawHealPickup();
     drawShieldPickup();
     drawPlayer();
+    drawWindParticlesFront();
     drawShieldEffect();
     drawStorm();
     drawRain();
