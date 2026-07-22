@@ -783,24 +783,6 @@ input[type=range].tapSlider::-moz-range-thumb {
 
 
   /* ===== Screen Effects ===== */
-  .screen-vignette {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 100;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(20,12,5,0.35) 100%);
-    transition: opacity 0.8s ease;
-  }
-  .screen-vignette.boss-active {
-    background: radial-gradient(ellipse at center, transparent 45%, rgba(60,10,10,0.5) 100%);
-  }
-  .screen-vignette.bonus-active {
-    background: radial-gradient(ellipse at center, transparent 50%, rgba(40,30,5,0.4) 100%);
-  }
-  .screen-vignette.storm-active {
-    background: radial-gradient(ellipse at center, transparent 40%, rgba(15,15,30,0.55) 100%);
-  }
-
   .screen-chromatic {
     position: fixed;
     inset: 0;
@@ -873,7 +855,6 @@ input[type=range].tapSlider::-moz-range-thumb {
 <body>
 
 <!-- Screen Effects Overlay Layers -->
-<div id="screenVignette" class="screen-vignette"></div>
 <div id="screenChromatic" class="screen-chromatic"></div>
 <div id="screenGrain" class="screen-grain"></div>
 <div id="screenScanlines" class="screen-scanlines"></div>
@@ -3010,7 +2991,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
       if (!img.naturalWidth) return;
       const top = groundY - b.h;
       ctx.drawImage(img, b.x, top, b.w, b.h);
-      drawBuildingWindows(b, top, groundY);
     });
     // ground strip to visually connect building bases
     ctx.fillStyle = "#2c1d10";
@@ -3299,7 +3279,7 @@ ctx.save();
         o.animTimer -= frameDuration;
         o.animFrame = (o.animFrame + 1) % OBSTACLE_ANIM_FRAME_COUNT;
       }
-      maybeEmitWind(o.x + o.w * 0.38, o.y + o.h / 2, o.w * 0.3, o.h, 7, dt);
+      maybeEmitWind(o.x + o.w * 0.55, o.y + o.h / 2, o.w * 0.3, o.h, 7, dt);
     });
 
     obstacles = obstacles.filter(o => o.x + o.w > -20);
@@ -4757,12 +4737,12 @@ function triggerBoss(num) {
       const t = 1 - p.age / p.life;
       ctx.save();
       ctx.globalAlpha = p.alpha * t;
-      ctx.strokeStyle = "#ffffff";
-      ctx.lineWidth = 1.4;
+      ctx.strokeStyle = "rgba(255,255,255,0.6)";
+      ctx.lineWidth = 1.2;
       ctx.lineCap = "round";
       ctx.beginPath();
-      ctx.moveTo(p.x, p.y);
-      ctx.lineTo(p.x - p.len, p.y);
+      ctx.moveTo(p.x + p.len * 0.3, p.y);
+      ctx.lineTo(p.x - p.len * 0.7, p.y);
       ctx.stroke();
       ctx.restore();
     });
@@ -5463,7 +5443,7 @@ function triggerBoss(num) {
     initBuildings();
     initClouds();
     initParallaxLayers();
-    initAtmosphericParticles();
+    
     state = "playing";
     startOverlay.classList.add("hidden");
     gameOverOverlay.classList.add("hidden");
@@ -5662,7 +5642,6 @@ function triggerBoss(num) {
   // =====================================================================
 
   // ---------- Screen Effects System ----------
-  const screenVignette = document.getElementById('screenVignette');
   const screenChromatic = document.getElementById('screenChromatic');
   const screenFlash = document.getElementById('screenFlash');
   let screenShakeIntensity = 0;
@@ -5676,13 +5655,6 @@ function triggerBoss(num) {
   }
 
   function updateScreenEffects(dt) {
-    // Vignette reacts to game state
-    if (screenVignette) {
-      screenVignette.classList.toggle('boss-active', bossActive);
-      screenVignette.classList.toggle('bonus-active', bonusActive);
-      screenVignette.classList.toggle('storm-active', stormActive);
-    }
-
     // Chromatic aberration on high-speed moments
     if (screenChromatic) {
       const speed = Math.abs(player.vy);
@@ -5712,110 +5684,31 @@ function triggerBoss(num) {
     });
   }
 
-  // ---------- Atmospheric Particles (dust, pollen, fireflies) ----------
-  let atmosParticles = [];
-  const ATMOS_MAX = 60;
-  const ATMOS_TYPES = ['dust', 'pollen', 'firefly'];
-
-  function initAtmosphericParticles() {
-    atmosParticles = [];
-    for (let i = 0; i < ATMOS_MAX; i++) {
-      spawnAtmosphericParticle(true);
-    }
-  }
-
-  function spawnAtmosphericParticle(randomX) {
-    const type = ATMOS_TYPES[Math.floor(Math.random() * ATMOS_TYPES.length)];
-    const p = {
-      type: type,
-      x: randomX ? Math.random() * W : W + 20,
-      y: Math.random() * H,
-      vx: -(15 + Math.random() * 35),
-      vy: (Math.random() - 0.5) * 12,
-      size: type === 'firefly' ? 1.5 + Math.random() * 2 : 0.8 + Math.random() * 1.8,
-      alpha: type === 'firefly' ? 0.4 + Math.random() * 0.5 : 0.15 + Math.random() * 0.25,
-      phase: Math.random() * Math.PI * 2,
-      phaseSpeed: 0.5 + Math.random() * 2,
-      life: 3 + Math.random() * 5
-    };
-    if (type === 'firefly') {
-      p.vx *= 0.4;
-      p.vy = (Math.random() - 0.5) * 25;
-      p.phaseSpeed = 2 + Math.random() * 4;
-    }
-    atmosParticles.push(p);
-  }
-
-  function updateAtmosphericParticles(dt) {
-    atmosParticles.forEach(function(p) {
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.phase += p.phaseSpeed * dt;
-      p.life -= dt;
-
-      if (p.type === 'firefly') {
-        p.y += Math.sin(p.phase) * 8 * dt;
-        p.x += Math.cos(p.phase * 0.7) * 5 * dt;
-      }
-      if (p.type === 'pollen') {
-        p.vy -= 2 * dt;
-        p.x += Math.sin(p.phase) * 3 * dt;
-      }
-    });
-
-    atmosParticles = atmosParticles.filter(function(p) {
-      return p.x > -20 && p.y > -20 && p.y < H + 20 && p.life > 0;
-    });
-    while (atmosParticles.length < ATMOS_MAX) {
-      spawnAtmosphericParticle(false);
-    }
-  }
-
-  function drawAtmosphericParticles() {
-    atmosParticles.forEach(function(p) {
-      const flicker = p.type === 'firefly' ? 0.5 + 0.5 * Math.sin(p.phase * 3) : 1;
-      const alpha = p.alpha * flicker * Math.min(1, p.life);
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      if (p.type === 'firefly') {
-        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 4);
-        glow.addColorStop(0, 'rgba(255,240,120,' + alpha + ')');
-        glow.addColorStop(0.5, 'rgba(255,200,60,' + (alpha * 0.4) + ')');
-        glow.addColorStop(1, 'rgba(255,200,60,0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = 'rgba(255,255,220,' + alpha + ')';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (p.type === 'pollen') {
-        ctx.fillStyle = 'rgba(220,190,120,' + alpha + ')';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        ctx.fillStyle = 'rgba(200,190,170,' + alpha + ')';
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-    });
-  }
-
   // ---------- Parallax Background Layers (4 depth levels) ----------
   let parallaxLayers = [];
 
   function initParallaxLayers() {
     parallaxLayers = [
-      { depth: 0.03, items: [], color: 'rgba(80,65,50,0.25)', itemH: H * 0.35, density: 0.008 },
-      { depth: 0.08, items: [], yBase: H * 0.68, color: 'rgba(100,80,55,0.35)', itemH: H * 0.22, density: 0.012 },
-      { depth: 0.18, items: [], yBase: H * 0.78, color: 'rgba(70,55,35,0.45)', itemH: H * 0.14, density: 0.018 },
-      { depth: 0.35, items: [], yBase: H * 0.88, color: 'rgba(50,40,25,0.55)', itemH: H * 0.08, density: 0.025 }
+      { depth: 0.03, items: [], imgKey: 'skylineFar', imgX: 0 },
+      { depth: 0.08, items: [], color: 'rgba(100,80,55,0.35)', itemH: H * 0.22, density: 0.012 },
+      { depth: 0.18, items: [], color: 'rgba(70,55,35,0.45)', itemH: H * 0.14, density: 0.018 },
+      { depth: 0.35, items: [], color: 'rgba(50,40,25,0.55)', itemH: H * 0.08, density: 0.025 }
     ];
-    parallaxLayers.forEach(function(layer) {
+    // Layer 0: skylineFar image - tile across screen
+    var layer0 = parallaxLayers[0];
+    var img = images[layer0.imgKey];
+    if (img && img.naturalWidth) {
+      var aspect = img.naturalHeight / img.naturalWidth;
+      var tileW = H / aspect;
+      var x = 0;
+      while (x < W + tileW * 2) {
+        layer0.items.push({ x: x, w: tileW, h: H });
+        x += tileW - 1; // slight overlap to prevent gaps
+      }
+    }
+    // Layers 1-3: procedural shapes
+    for (var li = 1; li < parallaxLayers.length; li++) {
+      var layer = parallaxLayers[li];
       var x = 0;
       while (x < W + 400) {
         var w = 40 + Math.random() * 80;
@@ -5827,59 +5720,98 @@ function triggerBoss(num) {
         });
         x += w + (10 + Math.random() * 60) / layer.density;
       }
-    });
+    }
   }
 
   function updateParallaxLayers(dtScale) {
     var speed = obstacleSpeedScale();
-    parallaxLayers.forEach(function(layer) {
-      layer.items.forEach(function(item) {
-        item.x -= layer.depth * dtScale * speed * 220;
-      });
-      while (layer.items.length && layer.items[0].x + layer.items[0].w < -50) {
-        layer.items.shift();
-      }
-      var last = layer.items[layer.items.length - 1];
-      if (!last || last.x + last.w < W + 100) {
-        var w = 40 + Math.random() * 80;
-        var startX = last ? last.x + last.w + (10 + Math.random() * 60) / layer.density : 0;
-        layer.items.push({
-          x: startX,
-          w: w,
-          h: layer.itemH * (0.6 + Math.random() * 0.8),
-          shape: Math.floor(Math.random() * 3)
+    parallaxLayers.forEach(function(layer, li) {
+      if (li === 0 && layer.imgKey) {
+        // Image layer: scroll all tiles, wrap around
+        var img = images[layer.imgKey];
+        if (!img || !img.naturalWidth) return;
+        var aspect = img.naturalHeight / img.naturalWidth;
+        var tileW = H / aspect;
+        layer.items.forEach(function(item) {
+          item.x -= layer.depth * dtScale * speed * 220;
         });
+        // Remove off-screen tiles
+        while (layer.items.length && layer.items[0].x + layer.items[0].w < -50) {
+          layer.items.shift();
+        }
+        // Spawn new tiles on the right
+        var last = layer.items[layer.items.length - 1];
+        if (last && last.x + last.w < W + 100) {
+          layer.items.push({ x: last.x + last.w - 1, w: tileW, h: H });
+        }
+        // Ensure we always have enough tiles
+        if (layer.items.length < 3) {
+          var rightmost = layer.items.length > 0 ? layer.items[layer.items.length - 1] : { x: 0, w: 0 };
+          layer.items.push({ x: rightmost.x + rightmost.w - 1, w: tileW, h: H });
+        }
+      } else {
+        // Procedural shape layers
+        layer.items.forEach(function(item) {
+          item.x -= layer.depth * dtScale * speed * 220;
+        });
+        while (layer.items.length && layer.items[0].x + layer.items[0].w < -50) {
+          layer.items.shift();
+        }
+        var last = layer.items[layer.items.length - 1];
+        if (!last || last.x + last.w < W + 100) {
+          var w = 40 + Math.random() * 80;
+          var startX = last ? last.x + last.w + (10 + Math.random() * 60) / layer.density : 0;
+          layer.items.push({
+            x: startX,
+            w: w,
+            h: layer.itemH * (0.6 + Math.random() * 0.8),
+            shape: Math.floor(Math.random() * 3)
+          });
+        }
       }
     });
   }
 
   function drawParallaxLayers() {
     var groundY = H - 6;
-    parallaxLayers.forEach(function(layer) {
-      ctx.save();
-      layer.items.forEach(function(item) {
-        var top = groundY - item.h;
-        ctx.fillStyle = layer.color;
-        if (item.shape === 0) {
-          ctx.beginPath();
-          ctx.moveTo(item.x, groundY);
-          ctx.quadraticCurveTo(item.x + item.w * 0.5, top - item.h * 0.3, item.x + item.w, groundY);
-          ctx.closePath();
-          ctx.fill();
-        } else if (item.shape === 1) {
-          ctx.beginPath();
-          ctx.moveTo(item.x, groundY);
-          ctx.lineTo(item.x + item.w * 0.3, top);
-          ctx.lineTo(item.x + item.w * 0.5, top + item.h * 0.3);
-          ctx.lineTo(item.x + item.w * 0.7, top);
-          ctx.lineTo(item.x + item.w, groundY);
-          ctx.closePath();
-          ctx.fill();
-        } else {
-          ctx.fillRect(item.x, top + item.h * 0.2, item.w, item.h * 0.8);
-        }
-      });
-      ctx.restore();
+    parallaxLayers.forEach(function(layer, li) {
+      if (li === 0 && layer.imgKey) {
+        // Image layer: draw skylineFar tiles
+        var img = images[layer.imgKey];
+        if (!img || !img.naturalWidth) return;
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        layer.items.forEach(function(item) {
+          ctx.drawImage(img, item.x, 0, item.w, item.h);
+        });
+        ctx.restore();
+      } else {
+        // Procedural shape layers
+        ctx.save();
+        layer.items.forEach(function(item) {
+          var top = groundY - item.h;
+          ctx.fillStyle = layer.color;
+          if (item.shape === 0) {
+            ctx.beginPath();
+            ctx.moveTo(item.x, groundY);
+            ctx.quadraticCurveTo(item.x + item.w * 0.5, top - item.h * 0.3, item.x + item.w, groundY);
+            ctx.closePath();
+            ctx.fill();
+          } else if (item.shape === 1) {
+            ctx.beginPath();
+            ctx.moveTo(item.x, groundY);
+            ctx.lineTo(item.x + item.w * 0.3, top);
+            ctx.lineTo(item.x + item.w * 0.5, top + item.h * 0.3);
+            ctx.lineTo(item.x + item.w * 0.7, top);
+            ctx.lineTo(item.x + item.w, groundY);
+            ctx.closePath();
+            ctx.fill();
+          } else {
+            ctx.fillRect(item.x, top + item.h * 0.2, item.w, item.h * 0.8);
+          }
+        });
+        ctx.restore();
+      }
     });
   }
 
@@ -6093,46 +6025,7 @@ function triggerBoss(num) {
   }
 
   // ---------- Building window lights at night ----------
-  function drawBuildingWindows(b, top, groundY) {
-    const tod = getTimeOfDay(gameplayScore);
-    if (!tod.isNight && tod.timeName !== 'dusk') return;
-
-    const lightChance = tod.isNight ? 0.55 : 0.25;
-    const windowWarmth = tod.isNight ? [255, 220, 140] : [255, 190, 100];
-    const rows = Math.floor(b.h / 18);
-    const cols = Math.max(2, Math.floor(b.w / 22));
-    const winW = b.w / (cols + 1) * 0.55;
-    const winH = 10;
-    const gapX = b.w / (cols + 1);
-    const gapY = b.h / (rows + 2);
-
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        // Deterministic pseudo-random based on building position
-        const seed = Math.sin(b.x * 13.37 + r * 7.11 + c * 3.73) * 43758.5453;
-        const frac = seed - Math.floor(seed);
-        if (frac > lightChance) continue;
-
-        const flicker = 0.7 + 0.3 * Math.sin(performance.now() * 0.003 + seed);
-        const wx = b.x + gapX * (c + 0.5) - winW / 2;
-        const wy = top + gapY * (r + 1.2);
-
-        ctx.save();
-        ctx.globalAlpha = flicker * (tod.isNight ? 0.85 : 0.5);
-        // Window glow
-        const winGlow = ctx.createRadialGradient(wx + winW/2, wy + winH/2, 0, wx + winW/2, wy + winH/2, winW * 1.5);
-        winGlow.addColorStop(0, 'rgba(' + windowWarmth[0] + ',' + windowWarmth[1] + ',' + windowWarmth[2] + ',0.9)');
-        winGlow.addColorStop(1, 'rgba(' + windowWarmth[0] + ',' + windowWarmth[1] + ',' + windowWarmth[2] + ',0)');
-        ctx.fillStyle = winGlow;
-        ctx.fillRect(wx - winW * 0.5, wy - winH * 0.5, winW * 2, winH * 2);
-        // Window body
-        ctx.fillStyle = 'rgba(' + windowWarmth[0] + ',' + windowWarmth[1] + ',' + windowWarmth[2] + ',' + flicker + ')';
-        ctx.fillRect(wx, wy, winW, winH);
-        ctx.restore();
-      }
-    }
-  }
-
+  
   // ---------- Blimp headlight cone beam ----------
   function drawBlimpHeadlight() {
     const tod = getTimeOfDay(gameplayScore);
@@ -6422,9 +6315,9 @@ function triggerBoss(num) {
     drawSkyline();
 
     updateClouds(dtScale);
-    updateAtmosphericParticles(dt);
+    
     drawClouds();
-    drawAtmosphericParticles();
+    
     updatePlayerBlimpAnimation(dt);
 
     if (state === "playing") {
@@ -6457,14 +6350,14 @@ function triggerBoss(num) {
       initBuildings();
       initClouds();
       initParallaxLayers();
-      initAtmosphericParticles();
+      
       resetPlayer();
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
       updateDefeatDebris(dt);
       updateBossWarning(dt);
       updateParallaxLayers(dtScale * 0.4);
-      updateAtmosphericParticles(dt);
+      
       updateScreenEffects(dt);
     }
 
@@ -6486,11 +6379,11 @@ function triggerBoss(num) {
     drawHealPickup();
     drawShieldPickup();
     drawWindParticles();
-    drawBlimpHeadlight();
     drawPlayer();
     drawShieldEffect();
     drawStorm();
     drawRain();
+    drawBlimpHeadlight();
     drawCheckpointPickup();
     drawBossWarning();
     drawBossBanner();
@@ -6514,7 +6407,7 @@ function triggerBoss(num) {
       initBuildings();
       initClouds();
       initParallaxLayers();
-      initAtmosphericParticles();
+      
       resetPlayer();
       requestAnimationFrame(loop);
       if (pendingStart) {
