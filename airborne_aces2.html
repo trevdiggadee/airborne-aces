@@ -2739,13 +2739,22 @@ flyBtn.addEventListener("click", () => { startGame(); });
       const frame = playerBlimpFrame % anim.frameCount;
       const animImg = images[anim.keys[frame]];
       if (animImg && animImg.naturalWidth) return animImg;
+      // Last resort before giving up on this blimp's own animation entirely:
+      // scan every frame it has for the first one that's actually loaded. This
+      // guards against a bad GOOD_FRAMES mapping ever fully blanking the blimp.
+      for (let i = 0; i < anim.keys.length; i++) {
+        const img = images[anim.keys[i]];
+        if (img && img.naturalWidth) return img;
+      }
     }
     // fall back to the static hero image if there's no animation set for
     // this blimp (or its frames haven't loaded)
     const heroKey = BLIMP_HERO_KEYS[sel];
     const heroImg = heroKey && images[heroKey];
     if (heroImg && heroImg.naturalWidth) return heroImg;
-    return images[PLAYER_BLIMP_KEYS[playerBlimpFrame]] || images.blimp;
+    const defaultFrameImg = images[PLAYER_BLIMP_KEYS[playerBlimpFrame]];
+    if (defaultFrameImg && defaultFrameImg.naturalWidth) return defaultFrameImg;
+    return images.blimp;
   }
   let playerBlimpFrame = 0; // 0-based index into the active blimp's animation keys
   let playerBlimpFrameTimer = 0;
@@ -2795,6 +2804,10 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // scaled-up display sizes, without visibly softening the artwork itself.
   // Runs once per asset at load time (not per-frame), so it's free at runtime.
   function featherSpriteEdges(key, sourceImg, cb) {
+    // Always have a usable image for this key from the start — feathering is
+    // a pure enhancement, so if anything about it fails we fall back to the
+    // original (unfeathered) sprite rather than leaving images[key] unset.
+    images[key] = sourceImg;
     try {
       const w = sourceImg.naturalWidth, h = sourceImg.naturalHeight;
       if (!w || !h) { cb(); return; }
@@ -2807,10 +2820,10 @@ flyBtn.addEventListener("click", () => { startGame(); });
       const dataUrl = off.toDataURL("image/png");
       const feathered = new Image();
       feathered.onload = () => { images[key] = feathered; cb(); };
-      feathered.onerror = cb; // if anything goes wrong, keep the original sprite
+      feathered.onerror = cb; // keep the original sprite already assigned above
       feathered.src = dataUrl;
     } catch (e) {
-      cb(); // canvas may be tainted (e.g. CORS) — fall back to the unfeathered sprite
+      cb(); // canvas may be tainted (e.g. CORS) — keep the original sprite already assigned above
     }
   }
 
@@ -4748,6 +4761,78 @@ function triggerBoss(num) {
     });
   }
 
+  // ---------- Ambient dust motes — soft floating particles for atmospheric depth ----------
+  // Each mote has a "depth" (0 = far/faint/slow/small, 1 = near/bright/fast/large) so the
+  // field reads as real drifting dust in open air rather than a uniform particle grid:
+  // closer motes drift faster and glow brighter, matching the parallax speed of the scene,
+  // while every mote also bobs and sways slightly on its own independent sine cycle so the
+  // motion never looks mechanically synced across particles.
+  const DUST_PARTICLE_COUNT = 42;
+  let dustParticles = [];
+  let dustInitialized = false;
+
+  function makeDustParticle(spawnAnywhereX) {
+    const depth = Math.random();
+    const size = 0.7 + depth * 2.2; // core radius in px
+    return {
+      x: spawnAnywhereX ? Math.random() * W : W + size * 8 + Math.random() * 40,
+      y: Math.random() * H,
+      depth,
+      size,
+      baseAlpha: 0.05 + depth * 0.14,
+      driftSpeed: 9 + depth * 24, // px/s leftward at baseline scroll speed
+      bobAmp: 3 + Math.random() * 9,
+      bobFreq: 0.35 + Math.random() * 0.55,
+      bobPhase: Math.random() * Math.PI * 2,
+      swayAmp: 1.5 + Math.random() * 3.5,
+      swayFreq: 0.12 + Math.random() * 0.22,
+      flickerPhase: Math.random() * Math.PI * 2,
+      flickerFreq: 0.6 + Math.random() * 1.1
+    };
+  }
+
+  function initDustParticles() {
+    dustParticles = [];
+    for (let i = 0; i < DUST_PARTICLE_COUNT; i++) {
+      dustParticles.push(makeDustParticle(true));
+    }
+    dustInitialized = true;
+  }
+
+  function updateDustParticles(dt) {
+    if (!dustInitialized) initDustParticles();
+    const scrollSpeed = obstacleSpeedScale();
+    dustParticles.forEach(p => {
+      p.x -= p.driftSpeed * scrollSpeed * dt;
+      if (p.x < -p.size * 10) {
+        Object.assign(p, makeDustParticle(false));
+      }
+    });
+  }
+
+  function drawDustParticles() {
+    const now = performance.now() / 1000;
+    ctx.save();
+    dustParticles.forEach(p => {
+      const y = p.y + Math.sin(now * p.bobFreq + p.bobPhase) * p.bobAmp;
+      const x = p.x + Math.sin(now * p.swayFreq + p.bobPhase * 1.7) * p.swayAmp;
+      // a gentle per-particle flicker keeps the brightness from feeling static
+      const flicker = 0.85 + 0.15 * Math.sin(now * p.flickerFreq + p.flickerPhase);
+      const alpha = p.baseAlpha * flicker;
+      if (alpha <= 0.004) return;
+      const r = p.size * 3.4; // soft glow radius, well past the opaque core
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+      grad.addColorStop(0, `rgba(235, 219, 188, ${alpha})`);
+      grad.addColorStop(0.45, `rgba(214, 196, 162, ${alpha * 0.5})`);
+      grad.addColorStop(1, "rgba(200,182,148,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
+  }
+
   // ---------- Rain level — plays while approaching and fighting the tank (boss 3) ----------
   let rainDrops = [];
   let rainSpawnAccum = 0;
@@ -6318,6 +6403,8 @@ function triggerBoss(num) {
     
     drawClouds();
     
+    updateDustParticles(dt);
+    
     updatePlayerBlimpAnimation(dt);
 
     if (state === "playing") {
@@ -6365,6 +6452,7 @@ function triggerBoss(num) {
     drawBuildings();
     drawBossShadow();
     drawBossShadow();
+    drawWindParticles();
     drawObstacles();
     if (bossActive) {
       drawBoss();
@@ -6378,12 +6466,12 @@ function triggerBoss(num) {
     drawBullets();
     drawHealPickup();
     drawShieldPickup();
-    drawWindParticles();
     drawPlayer();
     drawShieldEffect();
     drawStorm();
     drawRain();
     drawBlimpHeadlight();
+    drawDustParticles();
     drawCheckpointPickup();
     drawBossWarning();
     drawBossBanner();
