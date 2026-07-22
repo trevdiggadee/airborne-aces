@@ -3340,6 +3340,9 @@ ctx.save();
       dispW = Math.min(110, W * 0.22);
       // Force aspect to match player so height matches too
       aspect = playerAspect || aspect;
+    } else if (type === "mini_tank") {
+      // boss 3's mini — twice the size of a normal small obstacle
+      dispW = Math.min(140, W * 0.30);
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -4281,7 +4284,7 @@ function triggerBoss(num) {
 
     boss = {
       x: W + dispW,
-      y: isGround ? groundY - dispH : H * 0.38,
+      y: isGround ? groundY - dispH + dispH * 0.1 : H * 0.38, // ground-based bosses sink in a bit — their sprite tends to have empty padding at the bottom
       w: dispW,
       h: dispH,
       // the bomber's sprite has extra transparent padding on its left (room for the
@@ -4289,7 +4292,7 @@ function triggerBoss(num) {
       // fills roughly the right 65% of dispW — pull the resting position in so he
       // doesn't clip off the right edge
       targetX: W - dispW * 0.55, // boss 2 positioned further right
-      groundBaseY: isGround ? groundY - dispH : null,
+      groundBaseY: isGround ? groundY - dispH + dispH * 0.1 : null,
       health: cfg.maxHealth,
       maxHealth: cfg.maxHealth,
       bobPhase: 0,
@@ -4330,6 +4333,13 @@ function triggerBoss(num) {
       // ground-based: sits on the street and rumbles in place, no bob
       boss.bobPhase += dt * 8;
       boss.y = boss.groundBaseY + Math.sin(boss.bobPhase) * 2;
+
+      // patrol back and forth along the street to simulate tank movement —
+      // up to 50% of the screen width of total travel range, centered on
+      // its resting spot
+      boss.patrolPhase = (boss.patrolPhase || 0) + dt * 0.35;
+      const patrolAmplitude = Math.max(0, Math.min(W * 0.25, boss.targetX - W * 0.3));
+      boss.x = boss.targetX + Math.sin(boss.patrolPhase) * patrolAmplitude;
 
       if (boss.variant === 3) {
         // boss 3 has a real 36-frame idle animation — cycle through it
@@ -4989,8 +4999,8 @@ function triggerBoss(num) {
             // Spawn a decorative storm cloud that floats across the screen
             const img = images[STORM_CLOUD_KEYS[0]];
             const aspect = (img && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 0.72;
-            // Bigger clouds: 25-35% of screen width
-            const dispW = Math.min(280, W * (0.25 + Math.random() * 0.1));
+            // Bigger clouds: 50-70% of screen width (doubled)
+            const dispW = Math.min(560, W * (0.5 + Math.random() * 0.2));
             const dispH = dispW * aspect;
             stormCloudsDecorative.push({
                 x: W + dispW,
@@ -5000,7 +5010,7 @@ function triggerBoss(num) {
                 speed: 25 + Math.random() * 20, // slower drift for dramatic effect
                 animFrame: Math.floor(Math.random() * STORM_CLOUD_FRAME_COUNT),
                 animTimer: Math.random() / STORM_CLOUD_FPS,
-                alpha: 1 // fully opaque — no longer needs to let the blimp show through
+                alpha: 0.5 // semi-transparent so the blimp/obstacles show through when flying behind
             });
             sfxThunder();
             thunderFlashUntil = performance.now() + 80;
@@ -5044,7 +5054,7 @@ function triggerBoss(num) {
         ctx.stroke();
     });
 
-    // Draw floating decorative storm clouds (animated, no damage), fully opaque
+    // Draw floating decorative storm clouds (animated, no damage), semi-transparent
     stormCloudsDecorative.forEach(c => {
         const img = images[STORM_CLOUD_KEYS[c.animFrame]];
         if (!img || !img.naturalWidth) return;
@@ -6275,13 +6285,12 @@ function triggerBoss(num) {
 
     const beamLength = W * 0.35;
     const beamWidth = player.h * 0.8;
-    const sourceX = player.x + player.w * 0.35;
+    const sourceX = player.x + player.w * 0.2;
     const sourceY = player.y - player.h * 0.05;
     const aimAngle = player.rotation * 0.5;
-    // Start the visible beam past the blimp's own nose so none of the cone
-    // paints over the blimp's body — it reads as emerging from behind/inside
-    // the blimp rather than sitting on top of it.
-    const hiddenStart = player.w * 0.55;
+    // Start the visible beam right at the blimp's nose/face so none of the
+    // cone paints over the body, but it doesn't float out past the front either.
+    const hiddenStart = player.w * 0.22;
 
     ctx.save();
     ctx.translate(sourceX, sourceY);
