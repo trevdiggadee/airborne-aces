@@ -3837,7 +3837,7 @@ ctx.save();
   let stormWasReady = false;   // tracks ready-state transitions so the ready sound only fires once
   let stormActive = false;
   let stormUntil = 0;
-  let stormClouds = []; // visual sweep clouds while active
+  let stormCloud = null; // single descending cloud while the ability is active
   let stormLightning = null; // { points, life, age } — the current bolt, if any
   let nextStormLightningAt = 0;
   const stormMeterEl = document.getElementById("stormMeter");
@@ -3895,30 +3895,46 @@ ctx.save();
     if (state !== "playing" || stormActive || stormCharge < STORM_MAX) return;
 
     stormActive = true;
-    stormUntil = performance.now() + 900;
     stormCharge = 0;
     updateStormMeterDisplay();
+    sfxThunder();
+
+    // a single cloud drops in from above down to screen-center, then bursts —
+    // the actual "zap everything" payoff happens on impact, in stormImpact()
+    stormCloud = {
+      phase: "falling", // falling -> impact -> fading
+      t: 0,
+      x: W / 2,
+      startY: -H * 0.3,
+      y: -H * 0.3,
+      targetY: H * 0.4,
+      w: Math.min(340, W * 0.55),
+      animFrame: Math.floor(Math.random() * STORM_CLOUD_FRAME_COUNT),
+      animTimer: 0,
+      glowPhase: 0,
+      ringPhase: 0
+    };
+    stormLightning = null;
+  }
+
+  function stormImpact() {
+    // the moment the cloud reaches center — screen-clear + boss damage payoff
     showBanner("STORM UNLEASHED!", 1400);
     sfxThunder();
-    triggerScreenFlash(0.15, 200);
-    triggerScreenShake(5, 350);
+    triggerScreenFlash(0.22, 220);
+    triggerScreenShake(6, 380);
 
-    // spawn a few sweeping storm clouds across the sky for the visual effect —
-    // reuses the same detailed animated cloud art as the level-3 decorative clouds
-    stormClouds = [];
-    for (let i = 0; i < 4; i++) {
-      stormClouds.push({
-        x: W + i * 140,
-        y: H * (0.08 + i * 0.16),
-        w: 260 + i * 20,
-        speed: 520 + i * 40,
-        animFrame: Math.floor(Math.random() * STORM_CLOUD_FRAME_COUNT),
-        animTimer: Math.random() / STORM_CLOUD_FPS,
-        bobPhase: Math.random() * Math.PI * 2
-      });
+    // a single decisive lightning bolt striking down from the cloud
+    const startX = stormCloud.x;
+    const points = [[startX, stormCloud.y + stormCloud.w * 0.1]];
+    let x = startX, y = points[0][1];
+    const segments = 5 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < segments; i++) {
+      y += (H - y) / (segments - i);
+      x += (Math.random() - 0.5) * W * 0.14;
+      points.push([x, y]);
     }
-    nextStormLightningAt = performance.now() + 120 + Math.random() * 200;
-    stormLightning = null;
+    stormLightning = { points, age: 0, life: 0.3 };
 
     // zap every obstacle currently on screen
     obstacles.forEach(o => {
@@ -3947,78 +3963,120 @@ ctx.save();
   }
 
   function updateStorm(dt) {
-    if (!stormActive) return;
+    if (!stormActive || !stormCloud) return;
     const frameDur = 1 / STORM_CLOUD_FPS;
-    stormClouds.forEach(cl => {
-      cl.x -= cl.speed * dt;
-      cl.bobPhase += dt * 2;
-      cl.animTimer += dt;
-      while (cl.animTimer >= frameDur) {
-        cl.animTimer -= frameDur;
-        cl.animFrame = (cl.animFrame + 1) % STORM_CLOUD_FRAME_COUNT;
-      }
-    });
-
-    // periodic lightning bolts for the duration of the storm
-    if (!stormLightning && performance.now() >= nextStormLightningAt) {
-      const startX = W * (0.15 + Math.random() * 0.7);
-      const points = [[startX, 0]];
-      let x = startX, y = 0;
-      const segments = 5 + Math.floor(Math.random() * 3);
-      for (let i = 0; i < segments; i++) {
-        y += H * (0.5 / segments);
-        x += (Math.random() - 0.5) * W * 0.14;
-        points.push([x, y]);
-      }
-      stormLightning = { points, age: 0, life: 0.28 };
-      sfxThunder();
+    stormCloud.animTimer += dt;
+    while (stormCloud.animTimer >= frameDur) {
+      stormCloud.animTimer -= frameDur;
+      stormCloud.animFrame = (stormCloud.animFrame + 1) % STORM_CLOUD_FRAME_COUNT;
     }
+    stormCloud.glowPhase += dt * 3.5;
+    stormCloud.ringPhase += dt * 4;
+    stormCloud.t += dt;
+
+    if (stormCloud.phase === "falling") {
+      const dur = 0.5;
+      const p = Math.min(1, stormCloud.t / dur);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out — fast start, gentle settle at center
+      stormCloud.y = stormCloud.startY + (stormCloud.targetY - stormCloud.startY) * eased;
+      if (p >= 1) {
+        stormCloud.phase = "impact";
+        stormCloud.t = 0;
+        stormImpact();
+      }
+    } else if (stormCloud.phase === "impact") {
+      if (stormCloud.t >= 0.35) {
+        stormCloud.phase = "fading";
+        stormCloud.t = 0;
+      }
+    } else if (stormCloud.phase === "fading") {
+      if (stormCloud.t >= 0.4) {
+        stormActive = false;
+        stormCloud = null;
+        stormLightning = null;
+        updateStormMeterDisplay();
+        return;
+      }
+    }
+
     if (stormLightning) {
       stormLightning.age += dt;
       if (stormLightning.age >= stormLightning.life) {
         stormLightning = null;
-        nextStormLightningAt = performance.now() + 400 + Math.random() * 500;
       }
-    }
-
-    if (performance.now() >= stormUntil) {
-      stormActive = false;
-      stormClouds = [];
-      stormLightning = null;
-      updateStormMeterDisplay();
     }
   }
 
   function drawStorm() {
-    if (!stormActive) return;
+    if (!stormActive || !stormCloud) return;
     ctx.save();
 
-    // darkening atmosphere overlay so the sweeping storm actually reads as
-    // rolling in over the scene, rather than just a few shapes floating past
+    // darkening atmosphere overlay while the storm cloud is present
     const dusk = ctx.createLinearGradient(0, 0, 0, H);
-    dusk.addColorStop(0, "rgba(30,26,40,0.38)");
-    dusk.addColorStop(0.6, "rgba(30,26,40,0.18)");
-    dusk.addColorStop(1, "rgba(30,26,40,0.05)");
+    dusk.addColorStop(0, "rgba(30,26,40,0.34)");
+    dusk.addColorStop(0.6, "rgba(30,26,40,0.16)");
+    dusk.addColorStop(1, "rgba(30,26,40,0.04)");
     ctx.fillStyle = dusk;
     ctx.fillRect(0, 0, W, H);
 
-    stormClouds.forEach(cl => {
-      const img = images[STORM_CLOUD_KEYS[cl.animFrame]];
-      if (!img || !img.naturalWidth) return;
-      const aspect = img.naturalHeight / img.naturalWidth;
-      const w = cl.w;
-      const h = w * aspect;
-      const y = cl.y + Math.sin(cl.bobPhase) * 6;
+    const img = images[STORM_CLOUD_KEYS[stormCloud.animFrame]];
+    const aspect = (img && img.naturalWidth) ? img.naturalHeight / img.naturalWidth : 0.72;
+    const w = stormCloud.w;
+    const h = w * aspect;
 
-      // faint motion-trail ghosts streaming behind each cloud to sell the sweep speed
-      for (let g = 1; g <= 3; g++) {
-        ctx.globalAlpha = 0.85 * (1 - g / 4) * 0.35;
-        ctx.drawImage(img, cl.x + g * 22, y, w, h);
-      }
+    let cloudAlpha = 1;
+    let scale = 1;
+    if (stormCloud.phase === "fading") {
+      const p = Math.min(1, stormCloud.t / 0.4);
+      cloudAlpha = 1 - p;
+      scale = 1 + p * 0.35; // slight outward pop as it dissolves
+    } else if (stormCloud.phase === "falling") {
+      scale = 0.85 + Math.min(1, stormCloud.t / 0.5) * 0.15;
+    }
 
-      ctx.globalAlpha = 0.92;
-      ctx.drawImage(img, cl.x, y, w, h);
-    });
+    ctx.save();
+    ctx.translate(stormCloud.x, stormCloud.y);
+    ctx.scale(scale, scale);
+    ctx.globalAlpha = cloudAlpha;
+
+    // radial glow behind the cloud — same treatment as the checkpoint coin
+    const glow = ctx.createRadialGradient(0, 0, w * 0.15, 0, 0, w * 0.75);
+    glow.addColorStop(0, "rgba(140,170,255,0.55)");
+    glow.addColorStop(0.5, "rgba(90,110,200,0.28)");
+    glow.addColorStop(1, "rgba(90,110,200,0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.75, 0, Math.PI * 2);
+    ctx.fill();
+
+    // rotating dashed ring (matches the checkpoint pickup's signature look)
+    ctx.save();
+    ctx.rotate(stormCloud.ringPhase * 0.3);
+    ctx.strokeStyle = "rgba(200,215,255,0.5)";
+    ctx.lineWidth = 2.5;
+    ctx.setLineDash([10, 7]);
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.62, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // second, counter-rotating dotted ring
+    ctx.save();
+    ctx.rotate(-stormCloud.ringPhase * 0.5);
+    ctx.strokeStyle = "rgba(160,180,255,0.35)";
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 9]);
+    ctx.beginPath();
+    ctx.arc(0, 0, w * 0.72, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    if (img && img.naturalWidth) {
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+    }
+    ctx.restore();
     ctx.globalAlpha = 1;
 
     // lightning bolt — a real jagged, glowing bolt instead of a flat screen flash
@@ -5212,7 +5270,7 @@ function triggerBoss(num) {
                 speed: 25 + Math.random() * 20, // slower drift for dramatic effect
                 animFrame: Math.floor(Math.random() * STORM_CLOUD_FRAME_COUNT),
                 animTimer: Math.random() / STORM_CLOUD_FPS,
-                alpha: 0.5 // semi-transparent so the blimp/obstacles show through when flying behind
+                alpha: 0.28 // more transparent — the blimp/obstacles should read clearly through it
             });
             sfxThunder();
             thunderFlashUntil = performance.now() + 80;
@@ -5839,7 +5897,7 @@ function triggerBoss(num) {
     stormMilestoneCount = Math.floor(score / STORM_CHARGE_PER_MILESTONE);
     stormWasReady = false;
     stormActive = false;
-    stormClouds = [];
+    stormCloud = null;
     updateStormMeterDisplay();
     defeatDebris = [];
     defeatSlowMo = false;
@@ -5981,7 +6039,7 @@ function triggerBoss(num) {
     stormMilestoneCount = 0;
     stormWasReady = false;
     stormActive = false;
-    stormClouds = [];
+    stormCloud = null;
     updateStormMeterDisplay();
     defeatDebris = [];
     defeatSlowMo = false;
