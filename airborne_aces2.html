@@ -2244,6 +2244,10 @@ flyBtn.addEventListener("click", () => { startGame(); });
     boss4_rocket_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss4_rocket_flight_25.webp",
     heartPickup:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/heartPickup.webp?cb=2",
     bomb:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bomb.webp?cb=2",
+    bomb_blimp1:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0757.png",
+    bomb_blimp2:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0758.png",
+    bomb_blimp3:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0756.png",
+    bomb_blimp4:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0755.png",
     boss_throw_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
     boss_throw_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_02.webp?cb=2",
     boss_throw_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_03.webp?cb=2",
@@ -4741,12 +4745,18 @@ function triggerBoss(num) {
     }
   }
 
+  const PLAYER_BOMB_KEYS = { blimp1: "bomb_blimp1", blimp2: "bomb_blimp2", blimp3: "bomb_blimp3", blimp4: "bomb_blimp4" };
+  function currentPlayerBombImage() {
+    const key = (typeof selectedBlimp !== "undefined" && PLAYER_BOMB_KEYS[selectedBlimp]) || null;
+    return (key && images[key] && images[key].naturalWidth) ? images[key] : images.bomb;
+  }
+
   function drawPlayerBombs() {
-    const img = images.bomb;
+    const img = currentPlayerBombImage();
     playerBombs.forEach(b => {
       if (!img || !img.naturalWidth) return;
       let aspect = imgAspect(img);
-      const w = b.r * 2.1;
+      const w = b.r * 2.1 * 0.5; // half the original bomb's size
       const h = w * aspect;
       ctx.save();
       ctx.translate(b.x, b.y);
@@ -4898,7 +4908,15 @@ function triggerBoss(num) {
 
   function defeatBoss() {
     if (boss) {
-      triggerBigExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.w * 0.8, boss.h * 0.8);
+      const cx = boss.x + boss.w / 2;
+      const cy = boss.y + boss.h / 2;
+      // cascading, multi-point explosion across the boss's body instead of
+      // one single blast — reads as the whole thing coming apart
+      triggerBigExplosion(cx, cy, boss.w * 0.8, boss.h * 0.8);
+      triggerBigExplosion(boss.x + boss.w * 0.22, boss.y + boss.h * 0.3, boss.w * 0.32, boss.h * 0.32);
+      triggerBigExplosion(boss.x + boss.w * 0.78, boss.y + boss.h * 0.65, boss.w * 0.32, boss.h * 0.32);
+      triggerBigExplosion(boss.x + boss.w * 0.5, boss.y + boss.h * 0.15, boss.w * 0.28, boss.h * 0.28);
+      triggerShockwave(cx, cy, Math.max(boss.w, boss.h) * 0.85);
     defeatSlowMo = true;
     defeatSlowMoUntil = performance.now() + DEFEAT_SLOWMO_DURATION;
     spawnDefeatDebris(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.w, boss.h);
@@ -5339,6 +5357,41 @@ function triggerBoss(num) {
   let bossShakeUntil = 0;
   let hitParticles = [];
   let explosionBursts = [];
+  let shockwaves = []; // expanding glow rings — used for the boss-defeat spectacle
+
+  function triggerShockwave(cx, cy, maxR, color) {
+    shockwaves.push({ x: cx, y: cy, age: 0, life: 0.65, maxR, color: color || "255,220,140" });
+  }
+
+  function updateShockwaves(dt) {
+    shockwaves.forEach(s => (s.age += dt));
+    shockwaves = shockwaves.filter(s => s.age < s.life);
+  }
+
+  function drawShockwaves() {
+    shockwaves.forEach(s => {
+      const t = s.age / s.life;
+      const eased = 1 - Math.pow(1 - t, 2); // ease-out — fast expand, gentle finish
+      const r = s.maxR * eased;
+      const alpha = Math.max(0, 1 - t);
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.8;
+      ctx.strokeStyle = `rgba(${s.color},1)`;
+      ctx.lineWidth = 7 * (1 - t) + 2;
+      ctx.shadowColor = `rgba(${s.color},0.9)`;
+      ctx.shadowBlur = 20;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, Math.max(0, r), 0, Math.PI * 2);
+      ctx.stroke();
+      // a second, tighter inner ring for extra depth
+      ctx.globalAlpha = alpha * 0.5;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, Math.max(0, r * 0.7), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
 
   function spawnHitParticles(x, y) {
     // sparks — quick, bright, scatter in all directions
@@ -5900,6 +5953,7 @@ function triggerBoss(num) {
     stormCloud = null;
     updateStormMeterDisplay();
     defeatDebris = [];
+    shockwaves = [];
     defeatSlowMo = false;
     resetPlayer();
     blimpPersonality.squashX = 1;
@@ -5925,6 +5979,7 @@ function triggerBoss(num) {
     triggerScreenFlash(0.4, 400);
     stopMusic();
     defeatDebris = [];
+    shockwaves = [];
     defeatSlowMo = false;
     if (score > best) {
       best = score;
@@ -6042,6 +6097,7 @@ function triggerBoss(num) {
     stormCloud = null;
     updateStormMeterDisplay();
     defeatDebris = [];
+    shockwaves = [];
     defeatSlowMo = false;
 
     // Reset player
@@ -6681,21 +6737,21 @@ function triggerBoss(num) {
   const DEFEAT_TIME_SCALE = 0.25; // quarter speed
 
   function spawnDefeatDebris(cx, cy, w, h) {
-    const pieceCount = 12 + Math.floor(Math.random() * 8);
+    const pieceCount = 22 + Math.floor(Math.random() * 12);
     for (let i = 0; i < pieceCount; i++) {
       const angle = (i / pieceCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
-      const speed = 80 + Math.random() * 200;
-      const size = 8 + Math.random() * 18;
+      const speed = 90 + Math.random() * 260;
+      const size = 8 + Math.random() * 24;
       defeatDebris.push({
         x: cx + (Math.random() - 0.5) * w * 0.5,
         y: cy + (Math.random() - 0.5) * h * 0.5,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed - 30,
+        vy: Math.sin(angle) * speed - 40,
         rot: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 10,
+        rotSpeed: (Math.random() - 0.5) * 12,
         size: size,
         color: ['#8b1e1e', '#5e1212', '#c9a66b', '#3a2410', '#6b4a2b'][Math.floor(Math.random() * 5)],
-        life: 1.5 + Math.random() * 1.5,
+        life: 1.6 + Math.random() * 1.6,
         age: 0,
         type: Math.random() < 0.3 ? 'shard' : 'chunk'
       });
@@ -6852,6 +6908,7 @@ function triggerBoss(num) {
       updateComboPopups();
       updateRain(dt);
       updateDefeatDebris(dt);
+      updateShockwaves(dt);
       updateBossWarning(dt);
       updateScreenEffects(dt);
     } else if (state === "start" && buildings.length === 0) {
@@ -6864,6 +6921,7 @@ function triggerBoss(num) {
       updateBuildings(dtScale * 0.4);
       updateStreetlamps(dtScale * 0.4);
       updateDefeatDebris(dt);
+      updateShockwaves(dt);
       updateBossWarning(dt);
       
       updateScreenEffects(dt);
@@ -6898,6 +6956,7 @@ function triggerBoss(num) {
     drawBossWarning();
     drawBossBanner();
     drawDefeatDebris();
+    drawShockwaves();
     drawBonusHUD();
     drawComboPopups();
     } catch (err) {
