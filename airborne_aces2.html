@@ -2152,6 +2152,13 @@ flyBtn.addEventListener("click", () => { startGame(); });
     bldg_plain:      "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_plain.webp?cb=2",
     bldg_hotel:      "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_hotel.webp?cb=2",
     bldg_library:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_library.webp?cb=2",
+    bldg_l3_factoryrow:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0761.png",
+    bldg_l3_smokestacks: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0762.png",
+    bldg_l3_geartower:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0766.png",
+    bldg_l3_clocktower:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0767.png",
+    bldg_l3_furnacehouse:"https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0768.png",
+    bldg_l3_minetower:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0769.png",
+    bldg_l3_pipeworks:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0770.png",
     streetlamp1:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0734.png",
     boss:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
     boss2:           "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2.webp?cb=2",
@@ -2888,6 +2895,10 @@ flyBtn.addEventListener("click", () => { startGame(); });
     "bldg_cinema", "bldg_apothecary", "bldg_newspaper",
     "bldg_plain", "bldg_hotel", "bldg_library"
   ];
+  const BUILDING_KEYS_L3 = [
+    "bldg_l3_factoryrow", "bldg_l3_smokestacks", "bldg_l3_geartower",
+    "bldg_l3_clocktower", "bldg_l3_furnacehouse", "bldg_l3_minetower", "bldg_l3_pipeworks"
+  ];
 
   const images = {};
   let assetsLoaded = 0;
@@ -3040,10 +3051,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let lastBuildingKey = null;
 
   function pickBuildingKey() {
+    const pool = gameplayScore >= BOSSES[1].threshold ? BUILDING_KEYS_L3 : BUILDING_KEYS;
     let key;
     do {
-      key = BUILDING_KEYS[Math.floor(Math.random() * BUILDING_KEYS.length)];
-    } while (key === lastBuildingKey && BUILDING_KEYS.length > 1);
+      key = pool[Math.floor(Math.random() * pool.length)];
+    } while (key === lastBuildingKey && pool.length > 1);
     lastBuildingKey = key;
     return key;
   }
