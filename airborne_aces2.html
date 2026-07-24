@@ -3086,6 +3086,48 @@ flyBtn.addEventListener("click", () => { startGame(); });
   const canvas = document.getElementById("gameCanvas");
   const ctx = canvas.getContext("2d");
 
+  // ---------- Old-film grain overlay (subtle vintage effect during gameplay) ----------
+  // A small noise texture generated once and tiled across the screen each frame with a
+  // tiny random jitter, so it flickers like real film grain instead of looking static.
+  const grainCanvas = document.createElement("canvas");
+  grainCanvas.width = 180;
+  grainCanvas.height = 180;
+  (function generateFilmGrain() {
+    const gctx = grainCanvas.getContext("2d");
+    const imgData = gctx.createImageData(grainCanvas.width, grainCanvas.height);
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      const v = Math.random() * 255;
+      imgData.data[i] = v;
+      imgData.data[i + 1] = v;
+      imgData.data[i + 2] = v;
+      imgData.data[i + 3] = 18 + Math.random() * 45;
+    }
+    gctx.putImageData(imgData, 0, 0);
+  })();
+  const grainPattern = ctx.createPattern(grainCanvas, "repeat");
+
+  function drawFilmGrain() {
+    ctx.save();
+    // faint vignette first — darkened corners read as "old film" even before the grain
+    const vignette = ctx.createRadialGradient(
+      W / 2, H / 2, Math.min(W, H) * 0.42,
+      W / 2, H / 2, Math.max(W, H) * 0.75
+    );
+    vignette.addColorStop(0, "rgba(10,8,6,0)");
+    vignette.addColorStop(1, "rgba(10,8,6,0.28)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, W, H);
+
+    // jittered grain texture, low opacity so it stays subtle
+    const jx = (Math.random() - 0.5) * 10;
+    const jy = (Math.random() - 0.5) * 10;
+    ctx.globalAlpha = 0.05 + Math.random() * 0.025; // tiny flicker in intensity
+    ctx.translate(jx, jy);
+    ctx.fillStyle = grainPattern;
+    ctx.fillRect(-jx, -jy, W, H);
+    ctx.restore();
+  }
+
   // Offscreen canvas used to composite a "white flash" that's clipped to a
   // sprite's own opaque pixels (not a plain rectangle) — used for hit feedback.
   const flashCanvas = document.createElement("canvas");
@@ -3158,6 +3200,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     return key;
   }
 
+  let roadScrollX = 0; // keeps the sidewalk joints / lane dashes scrolling in sync with the buildings
+
   function makeBuilding(xStart) {
     const key = pickBuildingKey();
     const img = images[key];
@@ -3172,6 +3216,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     buildings = [];
     lastBuildingHeight = 0;
     lastBuildingKey = null;
+    roadScrollX = 0;
     let x = 0;
     while (x < W + 200) {
       const b = makeBuilding(x);
@@ -3184,6 +3229,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   function updateBuildings(dtScale) {
     const speed = 0.8 * dtScale * (obstacleSpeedScale());
     buildings.forEach(b => (b.x -= speed));
+    roadScrollX -= speed;
     while (buildings.length && buildings[0].x + buildings[0].w < -10) {
       buildings.shift();
     }
@@ -3199,17 +3245,67 @@ flyBtn.addEventListener("click", () => { startGame(); });
     return obstacleSpeed / 220;
   }
 
+  // ground band height reserved for the sidewalk + street, buildings sit on top of it
+  function groundBandHeight() { return Math.max(30, H * 0.05); }
+
   function drawBuildings() {
-    const groundY = H - 6;
+    const ROAD_HEIGHT = groundBandHeight();
+    const SIDEWALK_HEIGHT = Math.max(9, ROAD_HEIGHT * 0.34);
+    const buildGroundY = H - ROAD_HEIGHT; // buildings now sit above the road band instead of right at the screen edge
+
     buildings.forEach(b => {
       const img = images[b.key];
       if (!img.naturalWidth) return;
-      const top = groundY - b.h;
+      const top = buildGroundY - b.h;
       ctx.drawImage(img, b.x, top, b.w, b.h);
     });
-    // ground strip to visually connect building bases
-    ctx.fillStyle = "#2c1d10";
-    ctx.fillRect(0, groundY, W, H - groundY);
+
+    // sidewalk — light concrete strip directly beneath the building fronts
+    const sidewalkY = buildGroundY;
+    ctx.fillStyle = "#8f8578";
+    ctx.fillRect(0, sidewalkY, W, SIDEWALK_HEIGHT);
+    // subtle expansion-joint lines, scrolling with the world so it doesn't look static
+    ctx.strokeStyle = "rgba(58,52,44,0.4)";
+    ctx.lineWidth = 1;
+    const jointSpacing = 46;
+    const jointOffset = ((roadScrollX % jointSpacing) + jointSpacing) % jointSpacing;
+    for (let x = -jointOffset; x < W; x += jointSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(x, sidewalkY + 1);
+      ctx.lineTo(x, sidewalkY + SIDEWALK_HEIGHT);
+      ctx.stroke();
+    }
+    // a faint highlight along the top edge of the sidewalk for a bit of depth
+    ctx.fillStyle = "rgba(255,255,255,0.08)";
+    ctx.fillRect(0, sidewalkY, W, 1.5);
+
+    // curb
+    const curbY = sidewalkY + SIDEWALK_HEIGHT;
+    ctx.fillStyle = "#4a433a";
+    ctx.fillRect(0, curbY, W, 3);
+
+    // asphalt road, filling the rest of the way to the bottom of the screen
+    const roadTop = curbY + 3;
+    const roadGrad = ctx.createLinearGradient(0, roadTop, 0, H);
+    roadGrad.addColorStop(0, "#332f2c");
+    roadGrad.addColorStop(1, "#211d1a");
+    ctx.fillStyle = roadGrad;
+    ctx.fillRect(0, roadTop, W, H - roadTop);
+
+    // dashed center lane line, also scrolling with the world
+    const laneY = roadTop + (H - roadTop) * 0.55;
+    ctx.strokeStyle = "rgba(224,196,96,0.6)";
+    ctx.lineWidth = Math.max(1.5, ROAD_HEIGHT * 0.045);
+    const dashLen = 16, gapLen = 12, dashSpacing = dashLen + gapLen;
+    const dashOffset = ((roadScrollX % dashSpacing) + dashSpacing) % dashSpacing;
+    ctx.setLineDash([dashLen, gapLen]);
+    ctx.lineDashOffset = dashOffset;
+    ctx.beginPath();
+    ctx.moveTo(0, laneY);
+    ctx.lineTo(W, laneY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.lineDashOffset = 0;
   }
 
   // ---------- Smokestack smoke (decorative) — level 3 factory buildings puff
@@ -3330,7 +3426,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     if (!isStreetlampLevel()) return;
     const img = images.streetlamp1;
     if (!img || !img.naturalWidth) return;
-    const groundY = H - 6;
+    const groundY = H - groundBandHeight();
     streetlamps.forEach(l => {
       const top = groundY - l.h;
       ctx.drawImage(img, l.x, top, l.w, l.h);
@@ -7855,6 +7951,7 @@ function triggerBoss(num) {
     drawShockwaves();
     drawBonusHUD();
     drawComboPopups();
+    if (state === "playing") drawFilmGrain();
     } catch (err) {
       if (!loopErrorShown) {
         loopErrorShown = true;
