@@ -738,6 +738,83 @@ input[type=range].tapSlider::-moz-range-thumb {
 
   .overlay.hidden { display: none !important; }
 
+  /* CRASHED screen — dramatic red-tinted vignette + floating embers behind a riveted panel */
+  #gameOverOverlay {
+    background: radial-gradient(ellipse at center, rgba(70,14,10,0.5) 0%, rgba(22,10,6,0.82) 65%, rgba(10,5,3,0.94) 100%);
+    overflow: hidden;
+    animation: overlayFadeIn 0.35s ease-out;
+  }
+
+  @keyframes overlayFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #gameOverOverlay .ember {
+    position: absolute;
+    bottom: -4%;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffcf8a, #ff6a2e 55%, transparent 100%);
+    box-shadow: 0 0 7px rgba(255,140,50,0.85);
+    animation-name: emberRise;
+    animation-timing-function: ease-in;
+    animation-iteration-count: infinite;
+    opacity: 0;
+    z-index: 0;
+  }
+
+  @keyframes emberRise {
+    0%   { transform: translateY(0) translateX(0); opacity: 0; }
+    12%  { opacity: 0.95; }
+    100% { transform: translateY(-78vh) translateX(var(--drift, 18px)); opacity: 0; }
+  }
+
+  #gameOverOverlay .overlayPanel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: linear-gradient(#3b2a1a, #21150a);
+    border: 3px solid #6b4a2b;
+    border-radius: 14px;
+    padding: 30px 34px 26px;
+    box-shadow: 0 12px 34px rgba(0,0,0,0.6), inset 0 0 0 2px #8b6b3d, inset 0 2px 10px rgba(0,0,0,0.45);
+    animation: overlayPanelIn 0.45s cubic-bezier(0.22,0.9,0.32,1.25);
+    max-width: 380px;
+  }
+
+  @keyframes overlayPanelIn {
+    0%   { transform: scale(0.82) translateY(18px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  #gameOverOverlay .overlayPanel::before,
+  #gameOverOverlay .overlayPanel::after {
+    content: "";
+    position: absolute;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #e8d5a0, #8b6b3d 70%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(0,0,0,0.3);
+    top: 10px;
+  }
+  #gameOverOverlay .overlayPanel::before { left: 10px; }
+  #gameOverOverlay .overlayPanel::after { right: 10px; }
+
+  #gameOverOverlay h1 {
+    animation: crashFlicker 1.8s ease-in-out infinite;
+    text-shadow: 0 0 14px rgba(255,90,50,0.6), 0 2px 4px rgba(0,0,0,0.7);
+  }
+
+  @keyframes crashFlicker {
+    0%, 100% { opacity: 1; }
+    48% { opacity: 1; }
+    50% { opacity: 0.85; }
+    52% { opacity: 1; }
+  }
+
   .overlay h1 {
     color: #f5e6c8;
     font-size: 34px;
@@ -764,6 +841,18 @@ input[type=range].tapSlider::-moz-range-thumb {
     color: #c9a66b;
     font-size: 16px;
     margin-bottom: 24px;
+  }
+
+  #gameOverOverlay .overlayPanel .gameFlyBtn {
+    animation: overlayBtnIn 0.4s ease-out backwards;
+  }
+  #gameOverOverlay .overlayPanel #retryBtn { animation-delay: 0.15s; }
+  #gameOverOverlay .overlayPanel #checkpointBtn { animation-delay: 0.24s; }
+  #gameOverOverlay .overlayPanel #menuBtn { animation-delay: 0.32s; }
+
+  @keyframes overlayBtnIn {
+    from { transform: translateY(10px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
   }
 
   .gameFlyBtn {
@@ -989,12 +1078,21 @@ input[type=range].tapSlider::-moz-range-thumb {
 </div>
 
 <div id="gameOverOverlay" class="overlay hidden">
-  <h1>CRASHED!</h1>
-  <div class="bigScore" id="finalScore">0</div>
-  <div class="bestScore" id="bestScoreLine">Best: 0</div>
-  <button class="gameFlyBtn" id="retryBtn">RETRY</button>
-  <button class="gameFlyBtn secondaryBtn hidden" id="checkpointBtn">CONTINUE FROM CHECKPOINT</button>
-  <button class="gameFlyBtn secondaryBtn" id="menuBtn">CHANGE BLIMP</button>
+  <span class="ember" style="left:8%; animation-duration:3.4s; animation-delay:0s; --drift:18px;"></span>
+  <span class="ember" style="left:22%; animation-duration:2.8s; animation-delay:0.6s; --drift:-14px;"></span>
+  <span class="ember" style="left:38%; animation-duration:3.8s; animation-delay:0.2s; --drift:22px;"></span>
+  <span class="ember" style="left:58%; animation-duration:3.1s; animation-delay:1.1s; --drift:-20px;"></span>
+  <span class="ember" style="left:74%; animation-duration:3.6s; animation-delay:0.4s; --drift:16px;"></span>
+  <span class="ember" style="left:88%; animation-duration:2.9s; animation-delay:0.9s; --drift:-18px;"></span>
+  <span class="ember" style="left:50%; animation-duration:4.1s; animation-delay:1.5s; --drift:10px;"></span>
+  <div class="overlayPanel">
+    <h1>CRASHED!</h1>
+    <div class="bigScore" id="finalScore">0</div>
+    <div class="bestScore" id="bestScoreLine">Best: 0</div>
+    <button class="gameFlyBtn" id="retryBtn">RETRY</button>
+    <button class="gameFlyBtn secondaryBtn hidden" id="checkpointBtn">CHECKPOINT</button>
+    <button class="gameFlyBtn secondaryBtn" id="menuBtn">CHANGE BLIMP</button>
+  </div>
 </div>
 </div>
 
@@ -3046,15 +3144,12 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // ---------- Buildings (ground obstacles — fly over the rooftops) ----------
   // Each building: { x, w, h, key } — h/w are on-screen display dimensions.
   // Height changes gradually (random walk) so the skyline is fair to react to.
-  // GROUND_BAND reserves room at the very bottom for a street + sidewalk strip
-  // beneath the building bases (buildings sit this many px above the screen edge).
-  const GROUND_BAND = 34;
   let buildings = [];
   let lastBuildingHeight = 0;
   let lastBuildingKey = null;
 
   function pickBuildingKey() {
-    const pool = gameplayScore >= BOSSES[1].threshold ? BUILDING_KEYS_L3 : BUILDING_KEYS;
+    const pool = bossesDefeatedCount >= 2 ? BUILDING_KEYS_L3 : BUILDING_KEYS;
     let key;
     do {
       key = pool[Math.floor(Math.random() * pool.length)];
@@ -3077,7 +3172,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
     buildings = [];
     lastBuildingHeight = 0;
     lastBuildingKey = null;
-    smokestackPuffs = [];
     let x = 0;
     while (x < W + 200) {
       const b = makeBuilding(x);
@@ -3098,9 +3192,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
       const startX = last ? last.x + last.w - 4 : 0;
       buildings.push(makeBuilding(startX));
     }
-    roadDashOffset = (roadDashOffset - speed) % 48;
   }
-  let roadDashOffset = 0; // scrolls the road's lane-dash pattern in lockstep with the buildings
 
   function obstacleSpeedScale() {
     // keep the ground scroll speed in step with the flying-obstacle speed ramp
@@ -3108,104 +3200,82 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function drawBuildings() {
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     buildings.forEach(b => {
       const img = images[b.key];
       if (!img.naturalWidth) return;
       const top = groundY - b.h;
       ctx.drawImage(img, b.x, top, b.w, b.h);
     });
-
-    // sidewalk — light concrete strip directly under the building bases
-    const sidewalkH = GROUND_BAND * 0.42;
-    ctx.fillStyle = "#a89a84";
-    ctx.fillRect(0, groundY, W, sidewalkH);
-    // expansion joints, scrolling with the street
-    ctx.strokeStyle = "rgba(60,50,38,0.35)";
-    ctx.lineWidth = 1;
-    for (let x = roadDashOffset % 40; x < W; x += 40) {
-      ctx.beginPath();
-      ctx.moveTo(x, groundY + 1);
-      ctx.lineTo(x, groundY + sidewalkH - 1);
-      ctx.stroke();
-    }
-    // curb
-    const curbY = groundY + sidewalkH;
-    ctx.fillStyle = "#5c5142";
-    ctx.fillRect(0, curbY, W, 2);
-
-    // road — dark asphalt with a dashed center line
-    const roadY = curbY + 2;
-    ctx.fillStyle = "#2b241d";
-    ctx.fillRect(0, roadY, W, H - roadY);
-    const laneY = roadY + (H - roadY) / 2;
-    ctx.strokeStyle = "rgba(210,180,110,0.55)";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    for (let x = roadDashOffset % 48; x < W; x += 48) {
-      ctx.moveTo(x, laneY);
-      ctx.lineTo(x + 24, laneY);
-    }
-    ctx.stroke();
+    // ground strip to visually connect building bases
+    ctx.fillStyle = "#2c1d10";
+    ctx.fillRect(0, groundY, W, H - groundY);
   }
 
-  // ---------- Smokestack smoke — level 3 factory chimneys puff soft smoke as
-  // they scroll by, matching the skyline's scroll speed so puffs stay pinned
-  // to their stack instead of drifting independently. ----------
-  let smokestackPuffs = [];
+  // ---------- Smokestack smoke (decorative) — level 3 factory buildings puff
+  // smoke from their chimneys as they scroll by. Chimney x-positions below
+  // were measured directly from each building's art (tallest opaque column
+  // near the top edge of the image). ----------
+  const BUILDING_SMOKESTACKS = {
+    bldg_l3_factoryrow:   [0.07, 0.234],
+    bldg_l3_smokestacks:  [0.296, 0.723],
+    bldg_l3_furnacehouse: [0.389],
+    bldg_l3_minetower:    [0.544],
+    bldg_l3_clocktower:   [0.31]
+  };
+  let buildingSmokeParticles = [];
 
-  function updateSmokestackSmoke(dt, dtScale) {
-    const groundY = H - GROUND_BAND;
-    const scrollAmount = 0.8 * dtScale * obstacleSpeedScale();
-    const stackOffsets = [0.68, 0.84]; // two chimneys on the "smokestacks" building
+  function updateBuildingSmoke(dt) {
+    const groundY = H - 6;
+    const worldSpeedPxPerSec = 48 * obstacleSpeedScale(); // matches the buildings' own scroll speed
     buildings.forEach(b => {
-      if (b.key !== "bldg_l3_smokestacks") return;
-      if (b.smokeTimer === undefined) b.smokeTimer = Math.random() * 0.4;
-      b.smokeTimer += dt;
-      const interval = 0.4;
-      if (b.smokeTimer >= interval) {
-        b.smokeTimer -= interval;
+      const stacks = BUILDING_SMOKESTACKS[b.key];
+      if (!stacks) return;
+      if (b.smokeTimer == null) b.smokeTimer = Math.random() * 0.6;
+      b.smokeTimer -= dt;
+      if (b.smokeTimer <= 0) {
+        b.smokeTimer = 0.4 + Math.random() * 0.4;
         const top = groundY - b.h;
-        const offset = stackOffsets[Math.floor(Math.random() * stackOffsets.length)];
-        smokestackPuffs.push({
-          x: b.x + b.w * offset + (Math.random() - 0.5) * b.w * 0.02,
-          y: top + b.h * 0.04,
-          size: b.w * (0.1 + Math.random() * 0.04),
-          age: 0,
-          life: 3 + Math.random() * 1.4,
-          sway: Math.random() * Math.PI * 2
+        stacks.forEach(frac => {
+          buildingSmokeParticles.push({
+            x: b.x + b.w * frac + (Math.random() - 0.5) * 4,
+            y: top + (Math.random() - 0.5) * 3,
+            vx: -worldSpeedPxPerSec + (Math.random() - 0.5) * 10,
+            vy: -20 - Math.random() * 12,
+            size: 5 + Math.random() * 4,
+            life: 2.4 + Math.random() * 1.4,
+            age: 0
+          });
         });
       }
     });
 
-    smokestackPuffs.forEach(p => {
+    buildingSmokeParticles.forEach(p => {
       p.age += dt;
-      p.x -= scrollAmount;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.vy *= 0.992;
+      p.vx *= 0.995;
+      p.size += dt * 5.5; // smoke expands as it rises and disperses
     });
-    smokestackPuffs = smokestackPuffs.filter(p => p.age < p.life && p.x > -80);
+    buildingSmokeParticles = buildingSmokeParticles.filter(p => p.age < p.life);
   }
 
-  function drawSmokestackSmoke() {
-    const now = performance.now() / 1000;
-    ctx.save();
-    smokestackPuffs.forEach(p => {
+  function drawBuildingSmoke() {
+    buildingSmokeParticles.forEach(p => {
       const t = p.age / p.life;
-      const rise = t * 70;
-      const sway = Math.sin(now * 0.8 + p.sway) * 11 * t;
-      const size = p.size * (1 + t * 2.2);
-      const alpha = (1 - t * t) * 0.6;
-      if (alpha <= 0.01) return;
-      const px = p.x + sway, py = p.y - rise;
-      const grad = ctx.createRadialGradient(px, py, 0, px, py, size);
-      grad.addColorStop(0, `rgba(64,58,52,${alpha})`);
-      grad.addColorStop(0.5, `rgba(92,86,80,${alpha * 0.6})`);
-      grad.addColorStop(1, "rgba(110,104,98,0)");
+      const alpha = (1 - t) * 0.32;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      grad.addColorStop(0, "rgba(175,170,162,0.85)");
+      grad.addColorStop(1, "rgba(175,170,162,0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
-      ctx.arc(px, py, size, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     });
-    ctx.restore();
   }
 
   // ---------- Street lamps (decorative, no collision) — level 1 only. A
@@ -3260,7 +3330,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     if (!isStreetlampLevel()) return;
     const img = images.streetlamp1;
     if (!img || !img.naturalWidth) return;
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     streetlamps.forEach(l => {
       const top = groundY - l.h;
       ctx.drawImage(img, l.x, top, l.w, l.h);
@@ -3308,7 +3378,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function drawGroundVehicles() {
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     groundVehicles.forEach(v => {
       const y = groundY - v.h;
       ctx.save();
@@ -3383,7 +3453,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
 
   function checkBuildingCollision() {
     if (bonusActive) return; // invincible during the bonus round
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     const px1 = player.x - (player.w / 2) * 0.7;
     const px2 = player.x + (player.w / 2) * 0.7;
     const pBottom = player.y + (player.h / 2) * 0.7;
@@ -3583,7 +3653,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     const target = Math.max(-0.4, Math.min(0.55, player.vy / 600));
     player.rotation += (target - player.rotation) * 0.15;
 
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     if (player.y + player.h / 2 > groundY) {
       player.y = groundY - player.h / 2;
       takeHit();
@@ -3688,12 +3758,8 @@ ctx.save();
       // boss 3's mini — matches the player blimp's own size
       dispW = Math.min(110, W * 0.22);
     } else if (type === "mini_heli") {
-      // boss 4's mini — same visual parity treatment as mini_blimp, sized and
-      // shaped to match the player blimp
-      const playerImg = currentPlayerImage();
-      const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
+      // boss 4's mini — matches the player blimp's own size
       dispW = Math.min(110, W * 0.22);
-      aspect = playerAspect || aspect;
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -3702,7 +3768,7 @@ ctx.save();
     // Buildings can rise up to maxH (see makeBuilding: H*0.5) above the ground,
     // so keep flying obstacles' full extent (including bob) above that line —
     // clearly in open sky, never dipping down into rooftop territory.
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     const tallestRoofY = groundY - H * 0.5;
     const topMargin = H * 0.035; // use almost the full top of the screen
     const bobBuffer = 20; // max bob amplitude, so bobbing never dips into rooftops
@@ -3751,6 +3817,28 @@ ctx.save();
         o.y += o.deflectVy * dt;
         o.deflectVy *= Math.max(0, 1 - 3.5 * dt);
         if (Math.abs(o.deflectVy) < 4) o.deflectVy = 0;
+      }
+
+      // boss 4's mini crackles with a little electrical charge — refresh the
+      // arcs on a timer so they flicker rather than staying static
+      if (o.type === "mini_heli") {
+        o.chargeTimer = (o.chargeTimer == null ? 0 : o.chargeTimer) - dt;
+        if (o.chargeTimer <= 0) {
+          o.chargeTimer = 0.08 + Math.random() * 0.07;
+          const cx = o.w / 2, cy = o.h / 2;
+          const arcCount = 2 + Math.floor(Math.random() * 2);
+          o.chargeArcs = [];
+          for (let i = 0; i < arcCount; i++) {
+            const a1 = Math.random() * Math.PI * 2;
+            const a2 = a1 + Math.PI * (0.6 + Math.random() * 0.8);
+            const r = Math.max(o.w, o.h) * 0.58;
+            o.chargeArcs.push(buildLightningPath(
+              cx + Math.cos(a1) * r, cy + Math.sin(a1) * r * 0.7,
+              cx + Math.cos(a2) * r, cy + Math.sin(a2) * r * 0.7,
+              12
+            ));
+          }
+        }
       }
     });
 
@@ -3811,13 +3899,8 @@ ctx.save();
       }
 
       if (dx < collideX && dy < collideY) {
-        if (shieldActive && !o.hitDeflected) {
-          // the shield bounces ANY object away with the same kick birds get when shot —
-          // whatever hits the bubble caroms off it instead of just vanishing into a hit flash
-          o.hitDeflected = true;
-          o.deflectVy = (Math.random() < 0.5 ? -1 : 1) * (150 + Math.random() * 90);
-          spawnHitParticles(o.x + o.w / 2, drawY + o.h / 2);
-        } else if ((o.type === "bird_a" || o.type === "bird_b") && !o.hitDeflected) {
+        const isBird = (o.type === "bird_a" || o.type === "bird_b");
+        if ((isBird || shieldActive) && !o.hitDeflected) {
           o.hitDeflected = true;
           o.deflectVy = (Math.random() < 0.5 ? -1 : 1) * (150 + Math.random() * 90);
           spawnHitParticles(o.x + o.w / 2, drawY + o.h / 2);
@@ -3825,48 +3908,6 @@ ctx.save();
         takeHit();
       }
     });
-  }
-
-  // small crackling arcs + orbiting sparks — used to give boss 4's electric
-  // mini-heli a charged, dangerous feel now that it's blimp-sized
-  function drawElectricCharge(cx, cy, w, h, seed) {
-    const t = performance.now() / 1000;
-    const radius = Math.max(w, h) * 0.58;
-    ctx.save();
-    ctx.translate(cx, cy);
-    const boltCount = 3;
-    for (let i = 0; i < boltCount; i++) {
-      let ang = (i / boltCount) * Math.PI * 2 + seed + t * 1.7;
-      let r = radius * 0.5;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r * 0.72);
-      const segments = 4;
-      for (let s = 1; s <= segments; s++) {
-        ang += (Math.random() - 0.5) * 1.0;
-        r = radius * (0.5 + (s / segments) * 0.55);
-        ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r * 0.72);
-      }
-      const alpha = 0.35 + 0.45 * Math.abs(Math.sin(t * 11 + seed + i * 2));
-      ctx.strokeStyle = `rgba(170,225,255,${alpha})`;
-      ctx.lineWidth = 1.5;
-      ctx.shadowColor = "rgba(150,215,255,0.9)";
-      ctx.shadowBlur = 7;
-      ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
-    // small orbiting spark dots ringing the body
-    for (let i = 0; i < 5; i++) {
-      const a = t * 2.6 + seed + i * (Math.PI * 2 / 5);
-      const rr = radius * (0.78 + 0.12 * Math.sin(t * 6 + i));
-      const sx = Math.cos(a) * rr;
-      const sy = Math.sin(a) * rr * 0.7;
-      const flicker = 0.5 + 0.5 * Math.abs(Math.sin(t * 14 + i * 3));
-      ctx.fillStyle = `rgba(215,240,255,${flicker})`;
-      ctx.beginPath();
-      ctx.arc(sx, sy, 1.7, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
   }
 
   function drawObstacles() {
@@ -3878,8 +3919,25 @@ ctx.save();
       const speed = obstacleSpeed * (o.speedMult || 1);
       drawMotionBlur(img, o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, 0, speed, 0);
       ctx.drawImage(img, o.x, drawY, o.w, o.h);
-      if (o.type === "mini_heli") {
-        drawElectricCharge(o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, o.bobPhase);
+
+      if (o.type === "mini_heli" && o.chargeArcs) {
+        ctx.save();
+        ctx.translate(o.x, drawY);
+        o.chargeArcs.forEach(points => {
+          ctx.save();
+          ctx.globalAlpha = 0.5 + Math.random() * 0.4;
+          ctx.strokeStyle = "rgba(150,210,255,0.95)";
+          ctx.lineWidth = 1.6;
+          ctx.shadowColor = "rgba(130,190,255,0.9)";
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          points.forEach(([px, py], i) => {
+            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          });
+          ctx.stroke();
+          ctx.restore();
+        });
+        ctx.restore();
       }
     });
   }
@@ -3894,7 +3952,7 @@ ctx.save();
     const dispW = Math.min(50, W * 0.12);
     const dispH = dispW * aspect;
 
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     const tallestRoofY = groundY - H * 0.5;
     const minY = H * 0.08;
     const maxY = Math.max(minY + 40, tallestRoofY - dispH - 20);
@@ -4010,7 +4068,7 @@ ctx.save();
     const dispW = Math.min(48, W * 0.11);
     const dispH = dispW * aspect;
 
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     const tallestRoofY = groundY - H * 0.5;
     const minY = H * 0.08;
     const maxY = Math.max(minY + 40, tallestRoofY - dispH - 20);
@@ -4195,6 +4253,7 @@ ctx.save();
   let lastBossTriggered = 0;   // 0 = none yet; highest boss number triggered so far
   let bossNumber = 0;          // 0 = none active, else the boss currently on screen
   let bossActive = false;
+  let bossesDefeatedCount = 0; // drives level transitions — only advances once a boss is actually beaten, not just when its score threshold is reached
   let boss = null;
 
   let powerup = null;
@@ -4692,16 +4751,6 @@ ctx.save();
     }
     showBanner(finalMsg, 2000, "defeat");
 
-    // the new level's own banner (if the boss just cleared crossed into a new
-    // background) comes right after this one fades, so the two never overlap
-    if (pendingLevelBanner !== null) {
-      const levelNum = pendingLevelBanner;
-      pendingLevelBanner = null;
-      setTimeout(function() {
-        if (state === "playing") showBanner("LEVEL " + levelNum, 2000, "level");
-      }, 2000);
-    }
-
     bonusType = null;
     // resume the normal spawn cadence cleanly
     spawnTimer = 0;
@@ -4718,6 +4767,7 @@ ctx.save();
       checkpointReached = lastBossTriggered;
       checkpointScore = score;
       checkpointGameplayScore = gameplayScore;
+      checkpointBossesDefeated = bossesDefeatedCount;
     }
   }
 
@@ -4838,6 +4888,7 @@ ctx.save();
       checkpointReached = Math.max(checkpointReached, checkpointPickup.targetNum);
       checkpointScore = score; // save score at checkpoint for restart
       checkpointGameplayScore = gameplayScore;
+      checkpointBossesDefeated = bossesDefeatedCount;
       sfxPowerup();
       showBanner("CHECKPOINT SAVED!", 2000, "checkpoint");
       // heal 1 pip as a reward for collecting it
@@ -4987,7 +5038,7 @@ function triggerBoss(num) {
     const kindSizeScale = num === 2 ? (2 / 3) : 1; // boss 2 at 2x original size
     const dispH = Math.min(H * (isGround ? 0.32 : 0.42) * sizeMult, isGround ? 220 : 300) * kindSizeScale;
     const dispW = dispH / aspect;
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
 
     boss = {
       x: W + dispW,
@@ -5449,6 +5500,7 @@ function triggerBoss(num) {
     triggerScreenFlash(0.2, 300);
     setMusicTheme(THEME_NORMAL);
     const cfg = bossConfig(bossNumber);
+    bossesDefeatedCount++;
     bossActive = false;
     boss = null;
     bossNumber = 0;
@@ -6368,13 +6420,13 @@ function triggerBoss(num) {
   }
 
   const BANNER_THEMES = {
-    boss:       { top: "58,16,14",   bottom: "24,8,7",   text: "245,230,205", glow: "200,90,62",   accent: "chevron" },
-    defeat:     { top: "168,128,42", bottom: "100,74,24", text: "250,238,212", glow: "212,172,100", accent: "burst" },
-    power:      { top: "46,68,108",  bottom: "20,32,62",  text: "222,230,238", glow: "138,172,202", accent: "spark" },
-    bonus:      { top: "118,54,92",  bottom: "68,26,56",  text: "244,224,232", glow: "204,138,172", accent: "confetti" },
-    level:      { top: "120,86,45",  bottom: "70,48,22",  text: "245,230,200", glow: "196,160,102", accent: "gear" },
-    checkpoint: { top: "40,98,60",   bottom: "16,58,34",  text: "228,238,222", glow: "138,190,138", accent: "sparkle" },
-    health:     { top: "158,48,56",  bottom: "98,24,32",  text: "248,230,228", glow: "202,110,108", accent: "heart" },
+    boss:       { top: "92,32,22",   bottom: "46,15,10",  text: "245,228,205", glow: "205,100,60",  accent: "chevron" },
+    defeat:     { top: "150,115,48", bottom: "92,66,26",  text: "252,240,210", glow: "222,178,105", accent: "burst" },
+    power:      { top: "48,78,86",   bottom: "22,40,46",  text: "228,240,238", glow: "145,195,182", accent: "spark" },
+    bonus:      { top: "108,56,74",  bottom: "58,26,40",  text: "245,228,232", glow: "198,140,150", accent: "confetti" },
+    level:      { top: "120,86,45",  bottom: "70,48,22",  text: "245,230,200", glow: "220,180,110", accent: "gear" },
+    checkpoint: { top: "70,94,56",   bottom: "36,50,28",  text: "232,240,218", glow: "168,198,138", accent: "sparkle" },
+    health:     { top: "122,46,54",  bottom: "70,23,30",  text: "248,226,222", glow: "208,120,120", accent: "heart" },
     info:       { top: "60,45,25",   bottom: "35,25,12",  text: "245,230,200", glow: "200,170,120", accent: "none" }
   };
 
@@ -6558,6 +6610,7 @@ function triggerBoss(num) {
   let checkpointReached = 0; // next boss number the player still has to face (0 = none)
   let checkpointScore = 0; // score stored when checkpoint was collected — enables second life
   let checkpointGameplayScore = 0; // gameplayScore at that same moment — keeps boss pacing in sync on resume
+  let checkpointBossesDefeated = 0; // bossesDefeatedCount at that same moment — keeps the level/background in sync on resume
 
   const startOverlay = document.getElementById("startOverlay");
   const gameOverOverlay = document.getElementById("gameOverOverlay");
@@ -6723,7 +6776,9 @@ function triggerBoss(num) {
     checkpointReached = 0;
     checkpointScore = 0;
     checkpointGameplayScore = 0;
+    checkpointBossesDefeated = 0;
     bossNumber = 0;
+    bossesDefeatedCount = 0;
     bossActive = false;
     boss = null;
     powerup = null;
@@ -6769,6 +6824,7 @@ function triggerBoss(num) {
     defeatDebris = [];
     shockwaves = [];
     groundVehicles = [];
+    buildingSmokeParticles = [];
     defeatSlowMo = false;
     resetPlayer();
     blimpPersonality.squashX = 1;
@@ -6799,6 +6855,7 @@ function triggerBoss(num) {
     defeatDebris = [];
     shockwaves = [];
     groundVehicles = [];
+    buildingSmokeParticles = [];
     defeatSlowMo = false;
     if (score > best) {
       best = score;
@@ -6826,6 +6883,7 @@ function triggerBoss(num) {
     checkpointReached = 0;
     checkpointScore = 0;
     checkpointGameplayScore = 0;
+    checkpointBossesDefeated = 0;
     gameOverOverlay.classList.add("hidden");
     document.getElementById("gameScreen").style.display = "none";
     const menuScreenEl = document.getElementById("menuScreen");
@@ -6846,6 +6904,7 @@ function triggerBoss(num) {
     // these too, they'd stay at their pre-crash values (later than the checkpoint),
     // which could let the player skip straight past a boss they never actually beat
     gameplayScore = checkpointGameplayScore;
+    bossesDefeatedCount = checkpointBossesDefeated;
     lastBossTriggered = Math.max(0, checkpointReached - 1);
 
     // Reset health
@@ -6920,6 +6979,7 @@ function triggerBoss(num) {
     defeatDebris = [];
     shockwaves = [];
     groundVehicles = [];
+    buildingSmokeParticles = [];
     defeatSlowMo = false;
 
     // Reset player
@@ -6933,6 +6993,7 @@ function triggerBoss(num) {
     // Reset buildings and clouds
     initBuildings();
     initClouds();
+    initParallaxLayers(); // resync the background to the restored level immediately — no crossfade, no stray "LEVEL X" banner
 
     // Resume
     state = "playing";
@@ -6986,46 +7047,6 @@ function triggerBoss(num) {
   // Parallax Layers, Blimp Personality
   // =====================================================================
 
-  // ---------- Film grain overlay — subtle old-film vintage effect over gameplay ----------
-  let grainTexture = null;
-
-  function initFilmGrain() {
-    grainTexture = document.createElement("canvas");
-    grainTexture.width = 128;
-    grainTexture.height = 128;
-    const gctx = grainTexture.getContext("2d");
-    const imgData = gctx.createImageData(128, 128);
-    for (let i = 0; i < imgData.data.length; i += 4) {
-      const v = Math.random() * 255;
-      imgData.data[i] = v;
-      imgData.data[i + 1] = v;
-      imgData.data[i + 2] = v;
-      imgData.data[i + 3] = 255;
-    }
-    gctx.putImageData(imgData, 0, 0);
-  }
-
-  function drawFilmGrain() {
-    if (!grainTexture) initFilmGrain();
-    ctx.save();
-    ctx.globalCompositeOperation = "overlay";
-    ctx.globalAlpha = 0.045 + Math.random() * 0.02; // faint per-frame flicker
-    const pattern = ctx.createPattern(grainTexture, "repeat");
-    ctx.translate(-Math.random() * 128, -Math.random() * 128); // jitter so the grain animates
-    ctx.fillStyle = pattern;
-    ctx.fillRect(0, 0, W + 128, H + 128);
-    ctx.restore();
-
-    // soft vignette to frame the shot, old-newsreel style
-    ctx.save();
-    const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.78);
-    vg.addColorStop(0, "rgba(20,14,8,0)");
-    vg.addColorStop(1, "rgba(20,14,8,0.25)");
-    ctx.fillStyle = vg;
-    ctx.fillRect(0, 0, W, H);
-    ctx.restore();
-  }
-
   // ---------- Screen Effects System ----------
   const screenChromatic = document.getElementById('screenChromatic');
   const screenFlash = document.getElementById('screenFlash');
@@ -7076,23 +7097,21 @@ function triggerBoss(num) {
   // Each level uses its own far-background image; when the score crosses a
   // boss threshold (i.e. the level changes) the two backgrounds blend into
   // each other over a couple of seconds instead of popping.
-  function currentLevelBgKey(score) {
-    if (score < BOSSES[0].threshold) return 'skylineFar';
-    if (score < BOSSES[1].threshold) return 'skylineFarL2';
+  function currentLevelBgKey() {
+    if (bossesDefeatedCount < 1) return 'skylineFar';
+    if (bossesDefeatedCount < 2) return 'skylineFarL2';
     return 'skylineFarL3'; // level 3 and beyond, until more art is added
   }
   let bgTransition = null; // { from, to, t } while crossfading between two level backgrounds
-  let pendingLevelBanner = null; // level number queued to announce once the boss fight + bonus round finish
 
   function initParallaxLayers() {
     parallaxLayers = [
-      { depth: 0.03, items: [], imgKey: currentLevelBgKey(gameplayScore), imgX: 0 },
+      { depth: 0.03, items: [], imgKey: currentLevelBgKey(), imgX: 0 },
       { depth: 0.08, items: [], color: 'rgba(100,80,55,0.35)', itemH: H * 0.22, density: 0.012 },
       { depth: 0.18, items: [], color: 'rgba(70,55,35,0.45)', itemH: H * 0.14, density: 0.018 },
       { depth: 0.35, items: [], color: 'rgba(50,40,25,0.55)', itemH: H * 0.08, density: 0.025 }
     ];
     bgTransition = null;
-    pendingLevelBanner = null;
     // Layer 0: skylineFar image - tile across screen
     var layer0 = parallaxLayers[0];
     var img = images[layer0.imgKey];
@@ -7127,14 +7146,11 @@ function triggerBoss(num) {
 
     // detect a level change and (re)start the crossfade toward the new background
     var layer0 = parallaxLayers[0];
-    var targetKey = currentLevelBgKey(gameplayScore);
+    var targetKey = currentLevelBgKey();
     if (layer0.imgKey !== targetKey && (!bgTransition || bgTransition.to !== targetKey)) {
       bgTransition = { from: layer0.imgKey, to: targetKey, t: 0 };
       const levelNum = targetKey === 'skylineFar' ? 1 : targetKey === 'skylineFarL2' ? 2 : 3;
-      // don't announce yet — the score crosses this threshold right as the boss
-      // is about to appear; the "LEVEL N" banner should show once that boss
-      // fight and its bonus round are actually behind the player (see endBonusRound)
-      pendingLevelBanner = levelNum;
+      showBanner("LEVEL " + levelNum, 2000, "level");
     }
     if (bgTransition) {
       bgTransition.t += dtScale / 150; // ~2.5s crossfade at a 60fps baseline
@@ -7191,7 +7207,7 @@ function triggerBoss(num) {
   }
 
   function drawParallaxLayers() {
-    var groundY = H - GROUND_BAND;
+    var groundY = H - 6;
     parallaxLayers.forEach(function(layer, li) {
       if (li === 0 && layer.imgKey) {
         // Image layer: draw the far-background tiles, crossfading between
@@ -7510,7 +7526,7 @@ function triggerBoss(num) {
   // ---------- Boss shadow cast on buildings ----------
   function drawBossShadow() {
     if (!boss || !bossActive) return;
-    const groundY = H - GROUND_BAND;
+    const groundY = H - 6;
     const shadowY = groundY - 2;
     const shadowW = boss.w * 0.7;
     const shadowH = boss.h * 0.15;
@@ -7758,7 +7774,7 @@ function triggerBoss(num) {
       elapsedMs = performance.now() - runStartTime;
       updateFlipClock(elapsedMs);
       updateBuildings(dtScale);
-      updateSmokestackSmoke(dt, dtScale);
+      updateBuildingSmoke(dt);
       updateStreetlamps(dtScale);
       updateGroundVehicles(dt, dtScale);
       updatePlayer(dt);
@@ -7794,7 +7810,7 @@ function triggerBoss(num) {
       resetPlayer();
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
-      updateSmokestackSmoke(dt, dtScale * 0.4);
+      updateBuildingSmoke(dt);
       updateStreetlamps(dtScale * 0.4);
       updateGroundVehicles(dt, dtScale * 0.4);
       updateDefeatDebris(dt);
@@ -7806,7 +7822,7 @@ function triggerBoss(num) {
 
     drawParallaxLayers();
     drawBuildings();
-    drawSmokestackSmoke();
+    drawBuildingSmoke();
     drawStreetlamps();
     drawGroundVehicles();
     drawBossShadow();
@@ -7839,7 +7855,6 @@ function triggerBoss(num) {
     drawShockwaves();
     drawBonusHUD();
     drawComboPopups();
-    if (state === "playing") drawFilmGrain();
     } catch (err) {
       if (!loopErrorShown) {
         loopErrorShown = true;
