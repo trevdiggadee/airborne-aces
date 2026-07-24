@@ -3123,20 +3123,22 @@ flyBtn.addEventListener("click", () => { startGame(); });
   function updateSmokestackSmoke(dt, dtScale) {
     const groundY = H - 6;
     const scrollAmount = 0.8 * dtScale * obstacleSpeedScale();
+    const stackOffsets = [0.68, 0.84]; // two chimneys on the "smokestacks" building
     buildings.forEach(b => {
       if (b.key !== "bldg_l3_smokestacks") return;
-      if (b.smokeTimer === undefined) b.smokeTimer = Math.random() * 0.5;
+      if (b.smokeTimer === undefined) b.smokeTimer = Math.random() * 0.4;
       b.smokeTimer += dt;
-      const interval = 0.55;
+      const interval = 0.4;
       if (b.smokeTimer >= interval) {
         b.smokeTimer -= interval;
         const top = groundY - b.h;
+        const offset = stackOffsets[Math.floor(Math.random() * stackOffsets.length)];
         smokestackPuffs.push({
-          x: b.x + b.w * 0.8 + (Math.random() - 0.5) * b.w * 0.03,
-          y: top + b.h * 0.05,
-          size: b.w * (0.07 + Math.random() * 0.03),
+          x: b.x + b.w * offset + (Math.random() - 0.5) * b.w * 0.02,
+          y: top + b.h * 0.04,
+          size: b.w * (0.1 + Math.random() * 0.04),
           age: 0,
-          life: 2.6 + Math.random() * 1.3,
+          life: 3 + Math.random() * 1.4,
           sway: Math.random() * Math.PI * 2
         });
       }
@@ -3154,16 +3156,16 @@ flyBtn.addEventListener("click", () => { startGame(); });
     ctx.save();
     smokestackPuffs.forEach(p => {
       const t = p.age / p.life;
-      const rise = t * 55;
-      const sway = Math.sin(now * 0.8 + p.sway) * 9 * t;
-      const size = p.size * (1 + t * 1.7);
-      const alpha = (1 - t) * 0.38;
+      const rise = t * 70;
+      const sway = Math.sin(now * 0.8 + p.sway) * 11 * t;
+      const size = p.size * (1 + t * 2.2);
+      const alpha = (1 - t * t) * 0.6;
       if (alpha <= 0.01) return;
       const px = p.x + sway, py = p.y - rise;
       const grad = ctx.createRadialGradient(px, py, 0, px, py, size);
-      grad.addColorStop(0, `rgba(96,90,84,${alpha})`);
-      grad.addColorStop(0.55, `rgba(112,106,100,${alpha * 0.5})`);
-      grad.addColorStop(1, "rgba(120,114,108,0)");
+      grad.addColorStop(0, `rgba(64,58,52,${alpha})`);
+      grad.addColorStop(0.5, `rgba(92,86,80,${alpha * 0.6})`);
+      grad.addColorStop(1, "rgba(110,104,98,0)");
       ctx.fillStyle = grad;
       ctx.beginPath();
       ctx.arc(px, py, size, 0, Math.PI * 2);
@@ -4655,6 +4657,16 @@ ctx.save();
       finalMsg = (wasCoin ? "PERFECT HAUL! +" : "PERFECT BONUS! +") + (bonusPoints + BONUS_PERFECT_BONUS);
     }
     showBanner(finalMsg, 2000, "defeat");
+
+    // the new level's own banner (if the boss just cleared crossed into a new
+    // background) comes right after this one fades, so the two never overlap
+    if (pendingLevelBanner !== null) {
+      const levelNum = pendingLevelBanner;
+      pendingLevelBanner = null;
+      setTimeout(function() {
+        if (state === "playing") showBanner("LEVEL " + levelNum, 2000, "level");
+      }, 2000);
+    }
 
     bonusType = null;
     // resume the normal spawn cadence cleanly
@@ -6996,6 +7008,7 @@ function triggerBoss(num) {
     return 'skylineFarL3'; // level 3 and beyond, until more art is added
   }
   let bgTransition = null; // { from, to, t } while crossfading between two level backgrounds
+  let pendingLevelBanner = null; // level number queued to announce once the boss fight + bonus round finish
 
   function initParallaxLayers() {
     parallaxLayers = [
@@ -7005,6 +7018,7 @@ function triggerBoss(num) {
       { depth: 0.35, items: [], color: 'rgba(50,40,25,0.55)', itemH: H * 0.08, density: 0.025 }
     ];
     bgTransition = null;
+    pendingLevelBanner = null;
     // Layer 0: skylineFar image - tile across screen
     var layer0 = parallaxLayers[0];
     var img = images[layer0.imgKey];
@@ -7043,7 +7057,10 @@ function triggerBoss(num) {
     if (layer0.imgKey !== targetKey && (!bgTransition || bgTransition.to !== targetKey)) {
       bgTransition = { from: layer0.imgKey, to: targetKey, t: 0 };
       const levelNum = targetKey === 'skylineFar' ? 1 : targetKey === 'skylineFarL2' ? 2 : 3;
-      showBanner("LEVEL " + levelNum, 2000, "level");
+      // don't announce yet — the score crosses this threshold right as the boss
+      // is about to appear; the "LEVEL N" banner should show once that boss
+      // fight and its bonus round are actually behind the player (see endBonusRound)
+      pendingLevelBanner = levelNum;
     }
     if (bgTransition) {
       bgTransition.t += dtScale / 150; // ~2.5s crossfade at a 60fps baseline
