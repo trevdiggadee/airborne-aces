@@ -3074,6 +3074,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     buildings = [];
     lastBuildingHeight = 0;
     lastBuildingKey = null;
+    smokestackPuffs = [];
     let x = 0;
     while (x < W + 200) {
       const b = makeBuilding(x);
@@ -3112,6 +3113,63 @@ flyBtn.addEventListener("click", () => { startGame(); });
     // ground strip to visually connect building bases
     ctx.fillStyle = "#2c1d10";
     ctx.fillRect(0, groundY, W, H - groundY);
+  }
+
+  // ---------- Smokestack smoke — level 3 factory chimneys puff soft smoke as
+  // they scroll by, matching the skyline's scroll speed so puffs stay pinned
+  // to their stack instead of drifting independently. ----------
+  let smokestackPuffs = [];
+
+  function updateSmokestackSmoke(dt, dtScale) {
+    const groundY = H - 6;
+    const scrollAmount = 0.8 * dtScale * obstacleSpeedScale();
+    buildings.forEach(b => {
+      if (b.key !== "bldg_l3_smokestacks") return;
+      if (b.smokeTimer === undefined) b.smokeTimer = Math.random() * 0.5;
+      b.smokeTimer += dt;
+      const interval = 0.55;
+      if (b.smokeTimer >= interval) {
+        b.smokeTimer -= interval;
+        const top = groundY - b.h;
+        smokestackPuffs.push({
+          x: b.x + b.w * 0.8 + (Math.random() - 0.5) * b.w * 0.03,
+          y: top + b.h * 0.05,
+          size: b.w * (0.07 + Math.random() * 0.03),
+          age: 0,
+          life: 2.6 + Math.random() * 1.3,
+          sway: Math.random() * Math.PI * 2
+        });
+      }
+    });
+
+    smokestackPuffs.forEach(p => {
+      p.age += dt;
+      p.x -= scrollAmount;
+    });
+    smokestackPuffs = smokestackPuffs.filter(p => p.age < p.life && p.x > -80);
+  }
+
+  function drawSmokestackSmoke() {
+    const now = performance.now() / 1000;
+    ctx.save();
+    smokestackPuffs.forEach(p => {
+      const t = p.age / p.life;
+      const rise = t * 55;
+      const sway = Math.sin(now * 0.8 + p.sway) * 9 * t;
+      const size = p.size * (1 + t * 1.7);
+      const alpha = (1 - t) * 0.38;
+      if (alpha <= 0.01) return;
+      const px = p.x + sway, py = p.y - rise;
+      const grad = ctx.createRadialGradient(px, py, 0, px, py, size);
+      grad.addColorStop(0, `rgba(96,90,84,${alpha})`);
+      grad.addColorStop(0.55, `rgba(112,106,100,${alpha * 0.5})`);
+      grad.addColorStop(1, "rgba(120,114,108,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(px, py, size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.restore();
   }
 
   // ---------- Street lamps (decorative, no collision) — level 1 only. A
@@ -3593,6 +3651,13 @@ ctx.save();
     } else if (type === "mini_tank") {
       // boss 3's mini — matches the player blimp's own size
       dispW = Math.min(110, W * 0.22);
+    } else if (type === "mini_heli") {
+      // boss 4's mini — same visual parity treatment as mini_blimp, sized and
+      // shaped to match the player blimp
+      const playerImg = currentPlayerImage();
+      const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
+      dispW = Math.min(110, W * 0.22);
+      aspect = playerAspect || aspect;
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -3710,7 +3775,13 @@ ctx.save();
       }
 
       if (dx < collideX && dy < collideY) {
-        if ((o.type === "bird_a" || o.type === "bird_b") && !o.hitDeflected) {
+        if (shieldActive && !o.hitDeflected) {
+          // the shield bounces ANY object away with the same kick birds get when shot —
+          // whatever hits the bubble caroms off it instead of just vanishing into a hit flash
+          o.hitDeflected = true;
+          o.deflectVy = (Math.random() < 0.5 ? -1 : 1) * (150 + Math.random() * 90);
+          spawnHitParticles(o.x + o.w / 2, drawY + o.h / 2);
+        } else if ((o.type === "bird_a" || o.type === "bird_b") && !o.hitDeflected) {
           o.hitDeflected = true;
           o.deflectVy = (Math.random() < 0.5 ? -1 : 1) * (150 + Math.random() * 90);
           spawnHitParticles(o.x + o.w / 2, drawY + o.h / 2);
@@ -3718,6 +3789,48 @@ ctx.save();
         takeHit();
       }
     });
+  }
+
+  // small crackling arcs + orbiting sparks — used to give boss 4's electric
+  // mini-heli a charged, dangerous feel now that it's blimp-sized
+  function drawElectricCharge(cx, cy, w, h, seed) {
+    const t = performance.now() / 1000;
+    const radius = Math.max(w, h) * 0.58;
+    ctx.save();
+    ctx.translate(cx, cy);
+    const boltCount = 3;
+    for (let i = 0; i < boltCount; i++) {
+      let ang = (i / boltCount) * Math.PI * 2 + seed + t * 1.7;
+      let r = radius * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r * 0.72);
+      const segments = 4;
+      for (let s = 1; s <= segments; s++) {
+        ang += (Math.random() - 0.5) * 1.0;
+        r = radius * (0.5 + (s / segments) * 0.55);
+        ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r * 0.72);
+      }
+      const alpha = 0.35 + 0.45 * Math.abs(Math.sin(t * 11 + seed + i * 2));
+      ctx.strokeStyle = `rgba(170,225,255,${alpha})`;
+      ctx.lineWidth = 1.5;
+      ctx.shadowColor = "rgba(150,215,255,0.9)";
+      ctx.shadowBlur = 7;
+      ctx.stroke();
+    }
+    ctx.shadowBlur = 0;
+    // small orbiting spark dots ringing the body
+    for (let i = 0; i < 5; i++) {
+      const a = t * 2.6 + seed + i * (Math.PI * 2 / 5);
+      const rr = radius * (0.78 + 0.12 * Math.sin(t * 6 + i));
+      const sx = Math.cos(a) * rr;
+      const sy = Math.sin(a) * rr * 0.7;
+      const flicker = 0.5 + 0.5 * Math.abs(Math.sin(t * 14 + i * 3));
+      ctx.fillStyle = `rgba(215,240,255,${flicker})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 1.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
   }
 
   function drawObstacles() {
@@ -3729,6 +3842,9 @@ ctx.save();
       const speed = obstacleSpeed * (o.speedMult || 1);
       drawMotionBlur(img, o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, 0, speed, 0);
       ctx.drawImage(img, o.x, drawY, o.w, o.h);
+      if (o.type === "mini_heli") {
+        drawElectricCharge(o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, o.bobPhase);
+      }
     });
   }
 
@@ -6206,13 +6322,13 @@ function triggerBoss(num) {
   }
 
   const BANNER_THEMES = {
-    boss:       { top: "50,10,10",   bottom: "20,4,4",   text: "255,245,224", glow: "255,80,60",   accent: "chevron" },
-    defeat:     { top: "184,140,40", bottom: "110,80,20", text: "255,248,224", glow: "255,215,120", accent: "burst" },
-    power:      { top: "40,80,190",  bottom: "16,32,110", text: "232,242,255", glow: "130,190,255", accent: "spark" },
-    bonus:      { top: "170,60,170", bottom: "100,20,110", text: "255,234,255", glow: "255,150,255", accent: "confetti" },
-    level:      { top: "120,86,45",  bottom: "70,48,22",  text: "245,230,200", glow: "220,180,110", accent: "gear" },
-    checkpoint: { top: "34,120,70",  bottom: "12,70,40",  text: "234,255,240", glow: "120,255,170", accent: "sparkle" },
-    health:     { top: "190,40,70",  bottom: "120,15,40", text: "255,232,236", glow: "255,120,150", accent: "heart" },
+    boss:       { top: "58,16,14",   bottom: "24,8,7",   text: "245,230,205", glow: "200,90,62",   accent: "chevron" },
+    defeat:     { top: "168,128,42", bottom: "100,74,24", text: "250,238,212", glow: "212,172,100", accent: "burst" },
+    power:      { top: "46,68,108",  bottom: "20,32,62",  text: "222,230,238", glow: "138,172,202", accent: "spark" },
+    bonus:      { top: "118,54,92",  bottom: "68,26,56",  text: "244,224,232", glow: "204,138,172", accent: "confetti" },
+    level:      { top: "120,86,45",  bottom: "70,48,22",  text: "245,230,200", glow: "196,160,102", accent: "gear" },
+    checkpoint: { top: "40,98,60",   bottom: "16,58,34",  text: "228,238,222", glow: "138,190,138", accent: "sparkle" },
+    health:     { top: "158,48,56",  bottom: "98,24,32",  text: "248,230,228", glow: "202,110,108", accent: "heart" },
     info:       { top: "60,45,25",   bottom: "35,25,12",  text: "245,230,200", glow: "200,170,120", accent: "none" }
   };
 
@@ -7551,6 +7667,7 @@ function triggerBoss(num) {
       elapsedMs = performance.now() - runStartTime;
       updateFlipClock(elapsedMs);
       updateBuildings(dtScale);
+      updateSmokestackSmoke(dt, dtScale);
       updateStreetlamps(dtScale);
       updateGroundVehicles(dt, dtScale);
       updatePlayer(dt);
@@ -7586,6 +7703,7 @@ function triggerBoss(num) {
       resetPlayer();
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
+      updateSmokestackSmoke(dt, dtScale * 0.4);
       updateStreetlamps(dtScale * 0.4);
       updateGroundVehicles(dt, dtScale * 0.4);
       updateDefeatDebris(dt);
@@ -7597,6 +7715,7 @@ function triggerBoss(num) {
 
     drawParallaxLayers();
     drawBuildings();
+    drawSmokestackSmoke();
     drawStreetlamps();
     drawGroundVehicles();
     drawBossShadow();
