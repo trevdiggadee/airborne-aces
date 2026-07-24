@@ -3051,7 +3051,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let lastBuildingKey = null;
 
   function pickBuildingKey() {
-    const pool = gameplayScore >= BOSSES[2].threshold ? BUILDING_KEYS_L3 : BUILDING_KEYS;
+    const pool = gameplayScore >= BOSSES[1].threshold ? BUILDING_KEYS_L3 : BUILDING_KEYS;
     let key;
     do {
       key = pool[Math.floor(Math.random() * pool.length)];
@@ -3173,6 +3173,120 @@ flyBtn.addEventListener("click", () => { startGame(); });
     });
   }
 
+  // ---------- Ground vehicles (decorative, no collision) — trucks, buses,
+  // and tanks driving along the street in both directions for variety. Real
+  // art isn't ready yet, so these are drawn procedurally as placeholders;
+  // swap in sprites later by replacing the body of drawGroundVehicles(). ----------
+  let groundVehicles = [];
+  let vehicleSpawnTimer = 3 + Math.random() * 4;
+  const VEHICLE_TYPES = ["truck", "bus", "tank"];
+  const VEHICLE_COLORS = ["#5c4a3a", "#3a5c4a", "#4a4a5c", "#6b4a2b", "#5c3a3a", "#454038"];
+
+  function spawnGroundVehicle() {
+    const type = VEHICLE_TYPES[Math.floor(Math.random() * VEHICLE_TYPES.length)];
+    const dir = Math.random() < 0.5 ? 1 : -1; // 1 = drives left-to-right, -1 = right-to-left
+    const scale = Math.min(1.6, W / 500);
+    const w = (type === "bus" ? 70 : type === "tank" ? 54 : 58) * scale;
+    const h = (type === "tank" ? 26 : 32) * scale;
+    groundVehicles.push({
+      type,
+      x: dir === 1 ? -w - 20 : W + 20,
+      w, h,
+      dir,
+      speed: (26 + Math.random() * 22) * scale,
+      wheelPhase: Math.random() * Math.PI * 2,
+      color: VEHICLE_COLORS[Math.floor(Math.random() * VEHICLE_COLORS.length)]
+    });
+  }
+
+  function updateGroundVehicles(dt, dtScale) {
+    vehicleSpawnTimer -= dt;
+    if (vehicleSpawnTimer <= 0) {
+      vehicleSpawnTimer = 4.5 + Math.random() * 6;
+      if (groundVehicles.length < 3) spawnGroundVehicle();
+    }
+    const worldScroll = 0.8 * dtScale * obstacleSpeedScale(); // same ground-plane speed as buildings
+    groundVehicles.forEach(v => {
+      v.x += v.dir * v.speed * dt - worldScroll;
+      v.wheelPhase += dt * 9;
+    });
+    groundVehicles = groundVehicles.filter(v => v.x > -160 && v.x < W + 160);
+  }
+
+  function drawGroundVehicles() {
+    const groundY = H - 6;
+    groundVehicles.forEach(v => {
+      const y = groundY - v.h;
+      ctx.save();
+      ctx.translate(v.x, y);
+      if (v.dir === -1) ctx.scale(-1, 1); // face its direction of travel
+
+      if (v.type === "tank") {
+        // tracks
+        ctx.fillStyle = "rgba(20,18,16,0.9)";
+        ctx.fillRect(0, v.h * 0.62, v.w, v.h * 0.38);
+        ctx.fillStyle = "rgba(60,55,50,0.9)";
+        const wheelR = v.h * 0.16;
+        for (let i = 0; i < 5; i++) {
+          const wx = v.w * 0.1 + i * (v.w * 0.2);
+          ctx.save();
+          ctx.translate(wx, v.h * 0.82);
+          ctx.rotate(v.wheelPhase);
+          ctx.beginPath(); ctx.arc(0, 0, wheelR, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "rgba(20,18,16,0.9)"; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(-wheelR, 0); ctx.lineTo(wheelR, 0); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, -wheelR); ctx.lineTo(0, wheelR); ctx.stroke();
+          ctx.restore();
+        }
+        // hull + turret
+        ctx.fillStyle = v.color;
+        ctx.fillRect(v.w * 0.06, v.h * 0.32, v.w * 0.88, v.h * 0.32);
+        ctx.beginPath();
+        ctx.arc(v.w * 0.45, v.h * 0.32, v.h * 0.24, Math.PI, 0);
+        ctx.fill();
+        ctx.fillRect(v.w * 0.62, v.h * 0.14, v.w * 0.42, v.h * 0.1); // barrel
+      } else {
+        // wheels
+        ctx.fillStyle = "rgba(20,18,16,0.9)";
+        const wheelR = v.h * 0.19;
+        [v.w * 0.2, v.w * 0.8].forEach(wx => {
+          ctx.save();
+          ctx.translate(wx, v.h * 0.86);
+          ctx.rotate(v.wheelPhase);
+          ctx.beginPath(); ctx.arc(0, 0, wheelR, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "rgba(90,85,80,0.9)"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(-wheelR, 0); ctx.lineTo(wheelR, 0); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, -wheelR); ctx.lineTo(0, wheelR); ctx.stroke();
+          ctx.restore();
+        });
+        // body
+        ctx.fillStyle = v.color;
+        const r = 4;
+        ctx.beginPath();
+        ctx.moveTo(r, v.h * 0.14);
+        ctx.arcTo(v.w, v.h * 0.14, v.w, v.h * 0.68, r);
+        ctx.arcTo(v.w, v.h * 0.68, 0, v.h * 0.68, r);
+        ctx.arcTo(0, v.h * 0.68, 0, v.h * 0.14, r);
+        ctx.arcTo(0, v.h * 0.14, v.w, v.h * 0.14, r);
+        ctx.closePath();
+        ctx.fill();
+        if (v.type === "truck") {
+          ctx.fillRect(-v.w * 0.16, v.h * 0.3, v.w * 0.2, v.h * 0.38); // cab
+        }
+        // windows
+        ctx.fillStyle = "rgba(200,222,235,0.75)";
+        const winCount = v.type === "bus" ? 4 : 2;
+        for (let i = 0; i < winCount; i++) {
+          ctx.fillRect(v.w * (0.08 + i * 0.8 / winCount), v.h * 0.2, v.w * 0.5 / winCount, v.h * 0.22);
+        }
+        // a thin brass-ish trim stripe, matching the game's steampunk palette
+        ctx.fillStyle = "rgba(180,140,80,0.55)";
+        ctx.fillRect(0, v.h * 0.5, v.w, v.h * 0.05);
+      }
+      ctx.restore();
+    });
+  }
+
   function checkBuildingCollision() {
     if (bonusActive) return; // invincible during the bonus round
     const groundY = H - 6;
@@ -3269,7 +3383,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
       const side = i % 2 === 1 ? -1 : 1;
       const rank = Math.ceil(i / 2);
       members.push({
-        ox: -rank * (10 + Math.random() * 4),
+        ox: rank * (10 + Math.random() * 4),
         oy: rank * (5 + Math.random() * 3) * side,
         phase: Math.random() * Math.PI * 2
       });
@@ -3672,16 +3786,16 @@ ctx.save();
         healthMeter.classList.remove("hit");
         void healthMeter.offsetWidth;
         healthMeter.classList.add("hit");
-        showBanner("+25% HEALTH", 1200);
+        showBanner("+25% HEALTH", 1200, "health");
       } else if (health < MAX_HEALTH + MAX_BONUS_HEARTS) {
         health++;
         updateHealthDisplay();
         healthMeter.classList.remove("hit");
         void healthMeter.offsetWidth;
         healthMeter.classList.add("hit");
-        showBanner("+1 EXTRA HEART!", 1400);
+        showBanner("+1 EXTRA HEART!", 1400, "health");
       } else {
-        showBanner("HEARTS FULL!", 900);
+        showBanner("HEARTS FULL!", 900, "health");
       }
       healPickup = null;
     }
@@ -3791,7 +3905,7 @@ ctx.save();
       shieldUntil = performance.now() + SHIELD_DURATION_MS;
       shieldPickup = null;
       sfxPowerup();
-      showBanner("SHIELD ACTIVATED!", 1400);
+      showBanner("SHIELD ACTIVATED!", 1400, "power");
     }
   }
 
@@ -4065,7 +4179,7 @@ ctx.save();
 
   function stormImpact() {
     // the moment the cloud reaches center — screen-clear + boss damage payoff
-    showBanner("STORM UNLEASHED!", 1400);
+    showBanner("STORM UNLEASHED!", 1400, "power");
     sfxThunder();
     triggerScreenFlash(0.22, 220);
     triggerScreenShake(6, 380);
@@ -4388,12 +4502,12 @@ ctx.save();
       hasFirepower = false;
       hasDualFire = false;
       spawnCoinWave();
-      showBanner("BONUS ROUND! GRAB THE COINS!", 1800);
+      showBanner("BONUS ROUND! GRAB THE COINS!", 1800, "bonus");
     } else {
       hasFirepower = true;
       hasDualFire = false;
       spawnBalloonWave();
-      showBanner("BONUS ROUND! POP THE BALLOONS!", 1800);
+      showBanner("BONUS ROUND! POP THE BALLOONS!", 1800, "bonus");
     }
   }
 
@@ -4424,7 +4538,7 @@ ctx.save();
       bumpScorePop();
       finalMsg = (wasCoin ? "PERFECT HAUL! +" : "PERFECT BONUS! +") + (bonusPoints + BONUS_PERFECT_BONUS);
     }
-    showBanner(finalMsg, 2000);
+    showBanner(finalMsg, 2000, "defeat");
 
     bonusType = null;
     // resume the normal spawn cadence cleanly
@@ -4517,8 +4631,8 @@ ctx.save();
 
   let bossBanner = null; // { text, until } — brief on-screen announcement
 
-  function showBanner(text, durationMs) {
-    bossBanner = { text, until: performance.now() + durationMs };
+  function showBanner(text, durationMs, type) {
+    bossBanner = { text, until: performance.now() + durationMs, startedAt: performance.now(), type: type || "info" };
   }
 
   
@@ -4563,7 +4677,7 @@ ctx.save();
       checkpointScore = score; // save score at checkpoint for restart
       checkpointGameplayScore = gameplayScore;
       sfxPowerup();
-      showBanner("CHECKPOINT SAVED!", 2000);
+      showBanner("CHECKPOINT SAVED!", 2000, "checkpoint");
       // heal 1 pip as a reward for collecting it
       if (health < MAX_HEALTH + MAX_BONUS_HEARTS) {
         health = Math.min(MAX_HEALTH + MAX_BONUS_HEARTS, health + 1);
@@ -4744,7 +4858,7 @@ function triggerBoss(num) {
     playerBombs = [];
     playerBombTrailParticles = [];
     arcBombTimer = 0.6;
-    showBanner(cfg.label, 2200);
+    showBanner(cfg.label, 2200, "boss");
 
     // power-up starts drifting in shortly after the boss arrives
     powerup = null;
@@ -5003,7 +5117,7 @@ function triggerBoss(num) {
     playerBombs.forEach(b => {
       if (!img || !img.naturalWidth) return;
       let aspect = imgAspect(img);
-      const w = b.r * 2.1 * 0.625; // 25% bigger than the previous half-size
+      const w = b.r * 2.1 * 1.25; // 2x the previous size
       const h = w * aspect;
       ctx.save();
       ctx.translate(b.x, b.y);
@@ -5198,7 +5312,7 @@ function triggerBoss(num) {
       healthMeter.classList.add("hit");
     }
 
-    showBanner(cfg.defeatLabel + " +" + bonus + " · FULL HEALTH!", 2200);
+    showBanner(cfg.defeatLabel + " +" + bonus + " · FULL HEALTH!", 2200, "defeat");
 
     // each boss is followed by its own bonus round — give the banner above
     // a moment to be read before it kicks off
@@ -5256,13 +5370,13 @@ function triggerBoss(num) {
       if (powerup.kind === "blue") {
         hasFirepower = true;
         hasDualFire = true;
-        showBanner("DUAL CANNONS ACTIVATED!", 1600);
+        showBanner("DUAL CANNONS ACTIVATED!", 1600, "power");
       } else if (powerup.kind === "arcbomb") {
         hasArcBomb = true;
-        showBanner("BOMBARDIER ACTIVATED!", 1600);
+        showBanner("BOMBARDIER ACTIVATED!", 1600, "power");
       } else {
         hasFirepower = true;
-        showBanner("FIREPOWER ACTIVATED!", 1600);
+        showBanner("FIREPOWER ACTIVATED!", 1600, "power");
       }
     }
   }
@@ -6091,19 +6205,180 @@ function triggerBoss(num) {
     });
   }
 
+  const BANNER_THEMES = {
+    boss:       { top: "50,10,10",   bottom: "20,4,4",   text: "255,245,224", glow: "255,80,60",   accent: "chevron" },
+    defeat:     { top: "184,140,40", bottom: "110,80,20", text: "255,248,224", glow: "255,215,120", accent: "burst" },
+    power:      { top: "40,80,190",  bottom: "16,32,110", text: "232,242,255", glow: "130,190,255", accent: "spark" },
+    bonus:      { top: "170,60,170", bottom: "100,20,110", text: "255,234,255", glow: "255,150,255", accent: "confetti" },
+    level:      { top: "120,86,45",  bottom: "70,48,22",  text: "245,230,200", glow: "220,180,110", accent: "gear" },
+    checkpoint: { top: "34,120,70",  bottom: "12,70,40",  text: "234,255,240", glow: "120,255,170", accent: "sparkle" },
+    health:     { top: "190,40,70",  bottom: "120,15,40", text: "255,232,236", glow: "255,120,150", accent: "heart" },
+    info:       { top: "60,45,25",   bottom: "35,25,12",  text: "245,230,200", glow: "200,170,120", accent: "none" }
+  };
+
+  function drawBannerAccent(kind, x, y, size, color, phase) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.fillStyle = `rgba(${color},0.9)`;
+    ctx.strokeStyle = `rgba(${color},0.9)`;
+    if (kind === "chevron") {
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.5, -size * 0.5); ctx.lineTo(size * 0.15, 0); ctx.lineTo(-size * 0.5, size * 0.5);
+      ctx.lineWidth = size * 0.22; ctx.lineJoin = "round"; ctx.lineCap = "round";
+      ctx.stroke();
+    } else if (kind === "burst") {
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + phase;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(a) * size * 0.25, Math.sin(a) * size * 0.25);
+        ctx.lineTo(Math.cos(a) * size * 0.55, Math.sin(a) * size * 0.55);
+        ctx.lineWidth = 1.6; ctx.stroke();
+      }
+    } else if (kind === "spark") {
+      ctx.beginPath();
+      ctx.moveTo(-size * 0.15, -size * 0.55); ctx.lineTo(size * 0.12, -size * 0.05);
+      ctx.lineTo(-size * 0.08, -size * 0.05); ctx.lineTo(size * 0.15, size * 0.55);
+      ctx.lineTo(-size * 0.02, size * 0.05); ctx.lineTo(size * 0.1, size * 0.05);
+      ctx.closePath(); ctx.fill();
+    } else if (kind === "confetti") {
+      for (let i = 0; i < 4; i++) {
+        const a = phase + i * 1.6;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * size * 0.35, Math.sin(a) * size * 0.35, size * 0.09, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (kind === "gear") {
+      const teeth = 8;
+      ctx.beginPath();
+      for (let i = 0; i < teeth; i++) {
+        const a1 = (i / teeth) * Math.PI * 2 + phase * 0.3;
+        const a2 = a1 + Math.PI / teeth;
+        ctx.lineTo(Math.cos(a1) * size * 0.5, Math.sin(a1) * size * 0.5);
+        ctx.lineTo(Math.cos(a2) * size * 0.32, Math.sin(a2) * size * 0.32);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = `rgba(${BANNER_THEMES.level.top},1)`;
+      ctx.beginPath(); ctx.arc(0, 0, size * 0.16, 0, Math.PI * 2); ctx.fill();
+    } else if (kind === "sparkle") {
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.55); ctx.lineTo(size * 0.14, -size * 0.14);
+      ctx.lineTo(size * 0.55, 0); ctx.lineTo(size * 0.14, size * 0.14);
+      ctx.lineTo(0, size * 0.55); ctx.lineTo(-size * 0.14, size * 0.14);
+      ctx.lineTo(-size * 0.55, 0); ctx.lineTo(-size * 0.14, -size * 0.14);
+      ctx.closePath(); ctx.fill();
+    } else if (kind === "heart") {
+      const s = size * 0.32;
+      ctx.beginPath();
+      ctx.moveTo(0, s * 0.6);
+      ctx.bezierCurveTo(-s * 1.3, -s * 0.4, -s * 0.5, -s * 1.3, 0, -s * 0.35);
+      ctx.bezierCurveTo(s * 0.5, -s * 1.3, s * 1.3, -s * 0.4, 0, s * 0.6);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   function drawBossBanner() {
     if (!bossBanner) return;
-    if (performance.now() > bossBanner.until) {
+    const now = performance.now();
+    if (now > bossBanner.until) {
       bossBanner = null;
       return;
     }
+
+    const theme = BANNER_THEMES[bossBanner.type] || BANNER_THEMES.info;
+    const introDur = 220, outroDur = 260;
+    const age = now - bossBanner.startedAt;
+    const totalLife = bossBanner.until - bossBanner.startedAt;
+    const timeLeft = bossBanner.until - now;
+
+    let scale = 1, alpha = 1, dropY = 0;
+    if (age < introDur) {
+      const p = age / introDur;
+      const eased = 1 - Math.pow(1 - p, 3);
+      scale = 0.75 + eased * 0.25;
+      alpha = eased;
+      dropY = (1 - eased) * -14;
+    } else if (timeLeft < outroDur && totalLife > introDur + outroDur) {
+      const p = 1 - Math.max(0, timeLeft) / outroDur;
+      alpha = 1 - p;
+      scale = 1 - p * 0.08;
+      dropY = p * -10;
+    }
+
+    // auto-fit text so it always stays within the screen, regardless of length
+    let fontSize = Math.max(15, Math.min(24, W * 0.062));
+    ctx.font = "bold " + fontSize + "px Georgia, serif";
+    const maxTextWidth = W * 0.78;
+    while (ctx.measureText(bossBanner.text).width > maxTextWidth && fontSize > 11) {
+      fontSize -= 1;
+      ctx.font = "bold " + fontSize + "px Georgia, serif";
+    }
+    const textWidth = ctx.measureText(bossBanner.text).width;
+    const accentSize = fontSize * 1.1;
+    const paddingX = fontSize * 1.4;
+    const boxW = Math.min(W * 0.94, textWidth + paddingX * 2 + (theme.accent !== "none" ? accentSize * 2.4 : 0));
+    const boxH = fontSize + 22;
+    const boxY = H * 0.14 + dropY;
+    const cx = W / 2;
+
     ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(cx, boxY + boxH / 2);
+    ctx.scale(scale, scale);
+    ctx.translate(-cx, -(boxY + boxH / 2));
+
+    // glow halo behind the banner
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.5;
+    const glow = ctx.createRadialGradient(cx, boxY + boxH / 2, 0, cx, boxY + boxH / 2, boxW * 0.6);
+    glow.addColorStop(0, `rgba(${theme.glow},0.35)`);
+    glow.addColorStop(1, `rgba(${theme.glow},0)`);
+    ctx.fillStyle = glow;
+    ctx.fillRect(cx - boxW * 0.7, boxY - boxH * 0.6, boxW * 1.4, boxH * 2.2);
+    ctx.restore();
+
+    // banner body — gradient fill with a bright top edge and dark border, sized to fit the text
+    const bodyGrad = ctx.createLinearGradient(0, boxY, 0, boxY + boxH);
+    bodyGrad.addColorStop(0, `rgba(${theme.top},0.95)`);
+    bodyGrad.addColorStop(1, `rgba(${theme.bottom},0.95)`);
+    const bx = cx - boxW / 2;
+    const r = Math.min(10, boxH * 0.3);
+    ctx.beginPath();
+    ctx.moveTo(bx + r, boxY);
+    ctx.arcTo(bx + boxW, boxY, bx + boxW, boxY + boxH, r);
+    ctx.arcTo(bx + boxW, boxY + boxH, bx, boxY + boxH, r);
+    ctx.arcTo(bx, boxY + boxH, bx, boxY, r);
+    ctx.arcTo(bx, boxY, bx + boxW, boxY, r);
+    ctx.closePath();
+    ctx.fillStyle = bodyGrad;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(${theme.glow},0.55)`;
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
+    // bright top highlight edge
+    ctx.strokeStyle = `rgba(255,255,255,0.22)`;
+    ctx.beginPath();
+    ctx.moveTo(bx + r, boxY + 1.5);
+    ctx.lineTo(bx + boxW - r, boxY + 1.5);
+    ctx.stroke();
+
+    // decorative accent icons flanking the text, unique per banner type
+    const phase = age / 260;
+    if (theme.accent !== "none") {
+      drawBannerAccent(theme.accent, bx + accentSize * 0.9, boxY + boxH / 2, accentSize, theme.glow, phase);
+      drawBannerAccent(theme.accent, bx + boxW - accentSize * 0.9, boxY + boxH / 2, accentSize, theme.glow, phase + 3.1);
+    }
+
+    // text with a soft glow + drop shadow for legibility over any background
     ctx.textAlign = "center";
-    ctx.font = "bold " + Math.max(18, Math.min(28, W * 0.07)) + "px Georgia, serif";
-    ctx.fillStyle = "rgba(20,12,5,0.55)";
-    ctx.fillRect(0, H * 0.14, W, Math.max(18, Math.min(28, W * 0.07)) + 22);
-    ctx.fillStyle = "#f5e6c8";
-    ctx.fillText(bossBanner.text, W / 2, H * 0.14 + Math.max(18, Math.min(28, W * 0.07)) + 6);
+    ctx.textBaseline = "middle";
+    ctx.font = "bold " + fontSize + "px Georgia, serif";
+    ctx.shadowColor = `rgba(${theme.glow},0.8)`;
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = `rgba(${theme.text},1)`;
+    ctx.fillText(bossBanner.text, cx, boxY + boxH / 2 + 1);
+    ctx.shadowBlur = 0;
+
     ctx.restore();
   }
 
@@ -6331,6 +6606,7 @@ function triggerBoss(num) {
     updateStormMeterDisplay();
     defeatDebris = [];
     shockwaves = [];
+    groundVehicles = [];
     defeatSlowMo = false;
     resetPlayer();
     blimpPersonality.squashX = 1;
@@ -6343,7 +6619,7 @@ function triggerBoss(num) {
     birdFlocks = [];
     birdFlockTimer = 6 + Math.random() * 8;
     initParallaxLayers();
-    showBanner("LEVEL 1", 2000);
+    showBanner("LEVEL 1", 2000, "level");
     
     state = "playing";
     startOverlay.classList.add("hidden");
@@ -6360,6 +6636,7 @@ function triggerBoss(num) {
     stopMusic();
     defeatDebris = [];
     shockwaves = [];
+    groundVehicles = [];
     defeatSlowMo = false;
     if (score > best) {
       best = score;
@@ -6480,6 +6757,7 @@ function triggerBoss(num) {
     updateStormMeterDisplay();
     defeatDebris = [];
     shockwaves = [];
+    groundVehicles = [];
     defeatSlowMo = false;
 
     // Reset player
@@ -6498,7 +6776,7 @@ function triggerBoss(num) {
     state = "playing";
     runStartTime = performance.now() - elapsedMs;
     gameOverOverlay.classList.add("hidden");
-    showBanner("RESUMED FROM CHECKPOINT!", 2000);
+    showBanner("RESUMED FROM CHECKPOINT!", 2000, "checkpoint");
   }
 
   const muteBtn = document.getElementById("muteBtn");
@@ -6649,7 +6927,7 @@ function triggerBoss(num) {
     if (layer0.imgKey !== targetKey && (!bgTransition || bgTransition.to !== targetKey)) {
       bgTransition = { from: layer0.imgKey, to: targetKey, t: 0 };
       const levelNum = targetKey === 'skylineFar' ? 1 : targetKey === 'skylineFarL2' ? 2 : 3;
-      showBanner("LEVEL " + levelNum, 2000);
+      showBanner("LEVEL " + levelNum, 2000, "level");
     }
     if (bgTransition) {
       bgTransition.t += dtScale / 150; // ~2.5s crossfade at a 60fps baseline
@@ -7274,6 +7552,7 @@ function triggerBoss(num) {
       updateFlipClock(elapsedMs);
       updateBuildings(dtScale);
       updateStreetlamps(dtScale);
+      updateGroundVehicles(dt, dtScale);
       updatePlayer(dt);
       updateObstacles(dt);
       updateCheckpointPickup(dt);
@@ -7308,6 +7587,7 @@ function triggerBoss(num) {
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
       updateStreetlamps(dtScale * 0.4);
+      updateGroundVehicles(dt, dtScale * 0.4);
       updateDefeatDebris(dt);
       updateShockwaves(dt);
       updateBossWarning(dt);
@@ -7318,6 +7598,7 @@ function triggerBoss(num) {
     drawParallaxLayers();
     drawBuildings();
     drawStreetlamps();
+    drawGroundVehicles();
     drawBossShadow();
     drawWindParticlesBack();
     drawObstacles();
