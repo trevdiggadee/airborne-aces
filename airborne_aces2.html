@@ -7,6 +7,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="format-detection" content="telephone=no" />
 <title>Airborne Aces</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
 <style>
 
@@ -855,6 +858,189 @@ input[type=range].tapSlider::-moz-range-thumb {
     to   { transform: translateY(0); opacity: 1; }
   }
 
+  /* ---------- Pre-boss dialogue screen — retro "Punch-Out!!"-style VS intro ---------- */
+  #bossDialogueOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: #1a1410;
+    image-rendering: pixelated;
+    animation: dlgFadeIn 0.25s ease-out;
+  }
+  #bossDialogueOverlay.hidden { display: none !important; }
+
+  @keyframes dlgFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  #bossDialogueOverlay .dlgStage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    width: 100%;
+  }
+
+  #bossDialogueOverlay .dlgPortrait {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #bossDialogueOverlay .dlgPortraitFrame {
+    width: 96px;
+    height: 96px;
+    background: #2a1f14;
+    border: 4px solid #f5e6c8;
+    box-shadow: 0 0 0 3px #000, 0 4px 10px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #bossDialogueOverlay .dlgPortraitPlayer .dlgPortraitFrame {
+    animation: dlgSlideInLeft 0.4s ease-out backwards;
+    animation-delay: 0.05s;
+  }
+  #bossDialogueOverlay .dlgPortraitBoss .dlgPortraitFrame {
+    animation: dlgSlideInRight 0.4s ease-out backwards;
+    animation-delay: 0.05s;
+  }
+
+  @keyframes dlgSlideInLeft {
+    from { transform: translateX(-60px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes dlgSlideInRight {
+    from { transform: translateX(60px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+
+  #bossDialogueOverlay .dlgPortraitFrame img {
+    max-width: 88%;
+    max-height: 88%;
+    object-fit: contain;
+  }
+  #bossDialogueOverlay .dlgPortraitBoss .dlgPortraitFrame img {
+    transform: scaleX(-1); /* face the player */
+  }
+
+  #bossDialogueOverlay .dlgNamePlate {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px;
+    color: #f5e6c8;
+    background: #000;
+    border: 2px solid #f5e6c8;
+    padding: 4px 8px;
+    letter-spacing: 1px;
+  }
+
+  #bossDialogueOverlay .dlgVs {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 20px;
+    color: #d8342a;
+    text-shadow: 3px 3px 0 #000;
+    animation: dlgVsPulse 0.7s ease-in-out infinite;
+  }
+
+  @keyframes dlgVsPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+
+  #bossDialogueOverlay .dlgBubble {
+    width: min(88vw, 460px);
+    background: #f5e6c8;
+    border: 4px solid #1a1410;
+    box-shadow: 0 0 0 2px #f5e6c8, 0 6px 0 rgba(0,0,0,0.4);
+    padding: 14px 18px;
+    position: relative;
+    animation: dlgBubbleIn 0.25s ease-out;
+  }
+
+  @keyframes dlgBubbleIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  #bossDialogueOverlay .dlgBubble.hidden { display: none !important; }
+
+  #bossDialogueOverlay .dlgBubble p {
+    margin: 0;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    color: #1a1410;
+  }
+
+  #bossDialogueOverlay .dlgBubbleBoss::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    right: 40px;
+    width: 0; height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 14px solid #1a1410;
+  }
+  #bossDialogueOverlay .dlgBubbleBoss::after {
+    content: "";
+    position: absolute;
+    top: -8px;
+    right: 42px;
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 11px solid #f5e6c8;
+  }
+  #bossDialogueOverlay .dlgBubblePlayer::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    left: 40px;
+    width: 0; height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 14px solid #1a1410;
+  }
+  #bossDialogueOverlay .dlgBubblePlayer::after {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 42px;
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 11px solid #f5e6c8;
+  }
+
+  #bossDialogueOverlay .dlgTapHint {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 8px;
+    color: rgba(245,230,200,0.55);
+    letter-spacing: 1px;
+    animation: dlgHintBlink 1.1s steps(1) infinite;
+  }
+
+  @keyframes dlgHintBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.2; }
+  }
+
+  @media (max-width: 420px) {
+    #bossDialogueOverlay .dlgPortraitFrame { width: 76px; height: 76px; }
+    #bossDialogueOverlay .dlgVs { font-size: 16px; }
+    #bossDialogueOverlay .dlgBubble p { font-size: 9.5px; }
+  }
+
   .gameFlyBtn {
     padding: 16px 48px;
     background: linear-gradient(#8b1e1e, #5e1212);
@@ -1093,6 +1279,27 @@ input[type=range].tapSlider::-moz-range-thumb {
     <button class="gameFlyBtn secondaryBtn hidden" id="checkpointBtn">CHECKPOINT</button>
     <button class="gameFlyBtn secondaryBtn" id="menuBtn">CHANGE BLIMP</button>
   </div>
+</div>
+
+<div id="bossDialogueOverlay" class="hidden">
+  <div class="dlgStage">
+    <div class="dlgPortrait dlgPortraitPlayer">
+      <div class="dlgPortraitFrame"><img id="dlgPlayerImg" src="" alt=""></div>
+      <div class="dlgNamePlate">YOU</div>
+    </div>
+    <div class="dlgVs">VS</div>
+    <div class="dlgPortrait dlgPortraitBoss">
+      <div class="dlgPortraitFrame"><img id="dlgBossImg" src="" alt=""></div>
+      <div class="dlgNamePlate" id="dlgBossName">BOSS</div>
+    </div>
+  </div>
+  <div class="dlgBubble dlgBubbleBoss hidden" id="dlgBossBubble">
+    <p id="dlgBossText"></p>
+  </div>
+  <div class="dlgBubble dlgBubblePlayer hidden" id="dlgPlayerBubble">
+    <p id="dlgPlayerText"></p>
+  </div>
+  <div class="dlgTapHint">TAP TO CONTINUE</div>
 </div>
 </div>
 
@@ -3199,17 +3406,80 @@ flyBtn.addEventListener("click", () => { startGame(); });
     return obstacleSpeed / 220;
   }
 
+  // shared ground line — raised up from the very bottom edge so there's room
+  // for a proper street/sidewalk band beneath the buildings instead of just
+  // a flat color strip
+  function groundLevelY() {
+    return H - Math.max(50, H * 0.075);
+  }
+
   function drawBuildings() {
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     buildings.forEach(b => {
       const img = images[b.key];
       if (!img.naturalWidth) return;
       const top = groundY - b.h;
       ctx.drawImage(img, b.x, top, b.w, b.h);
     });
-    // ground strip to visually connect building bases
-    ctx.fillStyle = "#2c1d10";
-    ctx.fillRect(0, groundY, W, H - groundY);
+  }
+
+  // ---------- Street (sidewalk + road) — sits beneath the buildings, gives
+  // the ground plane an actual surface instead of a flat color strip. Scrolls
+  // in sync with the buildings so it reads as one continuous street. ----------
+  let streetScrollX = 0;
+
+  function updateStreet(dtScale) {
+    const speed = 0.8 * dtScale * obstacleSpeedScale();
+    streetScrollX -= speed;
+  }
+
+  function drawStreet() {
+    const groundY = groundLevelY();
+    const bandH = H - groundY;
+    const sidewalkH = bandH * 0.4;
+    const curbH = Math.max(2, bandH * 0.06);
+    const roadY = groundY + sidewalkH;
+    const roadH = bandH - sidewalkH;
+
+    // sidewalk
+    ctx.fillStyle = "#8a7f6c";
+    ctx.fillRect(0, groundY, W, sidewalkH);
+    // sidewalk slab seams
+    ctx.strokeStyle = "rgba(60,52,40,0.35)";
+    ctx.lineWidth = 1.5;
+    const slabW = 46;
+    const slabOffset = ((streetScrollX % slabW) + slabW) % slabW;
+    for (let x = -slabOffset; x < W; x += slabW) {
+      ctx.beginPath();
+      ctx.moveTo(x, groundY + 2);
+      ctx.lineTo(x, groundY + sidewalkH - 1);
+      ctx.stroke();
+    }
+
+    // curb
+    ctx.fillStyle = "#4a4234";
+    ctx.fillRect(0, roadY - curbH, W, curbH);
+
+    // road
+    ctx.fillStyle = "#332a22";
+    ctx.fillRect(0, roadY, W, roadH);
+    // subtle road texture band
+    const grad = ctx.createLinearGradient(0, roadY, 0, roadY + roadH);
+    grad.addColorStop(0, "rgba(0,0,0,0.15)");
+    grad.addColorStop(0.5, "rgba(255,255,255,0.03)");
+    grad.addColorStop(1, "rgba(0,0,0,0.2)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, roadY, W, roadH);
+
+    // dashed center line
+    const dashW = 26, dashGap = 18, dashH = Math.max(2, roadH * 0.1);
+    const dashCycle = dashW + dashGap;
+    const dashOffset = ((streetScrollX % dashCycle) + dashCycle) % dashCycle;
+    ctx.fillStyle = "rgba(196,164,102,0.75)";
+    const dashY = roadY + roadH / 2 - dashH / 2;
+    for (let x = -dashOffset; x < W; x += dashCycle) {
+      ctx.fillRect(x, dashY, dashW, dashH);
+    }
   }
 
   // ---------- Smokestack smoke (decorative) — level 3 factory buildings puff
@@ -3226,7 +3496,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let buildingSmokeParticles = [];
 
   function updateBuildingSmoke(dt) {
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     const worldSpeedPxPerSec = 48 * obstacleSpeedScale(); // matches the buildings' own scroll speed
     buildings.forEach(b => {
       const stacks = BUILDING_SMOKESTACKS[b.key];
@@ -3330,7 +3600,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     if (!isStreetlampLevel()) return;
     const img = images.streetlamp1;
     if (!img || !img.naturalWidth) return;
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     streetlamps.forEach(l => {
       const top = groundY - l.h;
       ctx.drawImage(img, l.x, top, l.w, l.h);
@@ -3378,7 +3648,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function drawGroundVehicles() {
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     groundVehicles.forEach(v => {
       const y = groundY - v.h;
       ctx.save();
@@ -3453,7 +3723,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
 
   function checkBuildingCollision() {
     if (bonusActive) return; // invincible during the bonus round
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     const px1 = player.x - (player.w / 2) * 0.7;
     const px2 = player.x + (player.w / 2) * 0.7;
     const pBottom = player.y + (player.h / 2) * 0.7;
@@ -3653,7 +3923,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     const target = Math.max(-0.4, Math.min(0.55, player.vy / 600));
     player.rotation += (target - player.rotation) * 0.15;
 
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     if (player.y + player.h / 2 > groundY) {
       player.y = groundY - player.h / 2;
       takeHit();
@@ -3768,7 +4038,7 @@ ctx.save();
     // Buildings can rise up to maxH (see makeBuilding: H*0.5) above the ground,
     // so keep flying obstacles' full extent (including bob) above that line —
     // clearly in open sky, never dipping down into rooftop territory.
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     const tallestRoofY = groundY - H * 0.5;
     const topMargin = H * 0.035; // use almost the full top of the screen
     const bobBuffer = 20; // max bob amplitude, so bobbing never dips into rooftops
@@ -3875,7 +4145,7 @@ ctx.save();
           const next = nextBossConfig();
           if (next && gameplayScore >= next.threshold) {
             triggerBossWarning(next.num);
-          setTimeout(function() { if (state === 'playing' && !bossActive) triggerBoss(next.num); }, BOSS_WARNING_DURATION);
+          setTimeout(function() { if (state === 'playing' && !bossActive) startBossDialogue(next.num); }, BOSS_WARNING_DURATION);
           }
         }
         // storm meter: one gas-tank notch every 25 points, until it's full
@@ -3952,7 +4222,7 @@ ctx.save();
     const dispW = Math.min(50, W * 0.12);
     const dispH = dispW * aspect;
 
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     const tallestRoofY = groundY - H * 0.5;
     const minY = H * 0.08;
     const maxY = Math.max(minY + 40, tallestRoofY - dispH - 20);
@@ -4068,7 +4338,7 @@ ctx.save();
     const dispW = Math.min(48, W * 0.11);
     const dispH = dispW * aspect;
 
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     const tallestRoofY = groundY - H * 0.5;
     const minY = H * 0.08;
     const maxY = Math.max(minY + 40, tallestRoofY - dispH - 20);
@@ -5017,6 +5287,92 @@ ctx.save();
     ctx.restore();
   }
 
+// ---------- Pre-boss dialogue (retro VS-screen style) ----------
+const BOSS_TAUNTS = [
+  "You'll never get past me, flyboy!",
+  "Turn back now, while you still can!",
+  "Ha! Another blimp for the scrap heap!",
+  "This sky belongs to ME now!",
+  "You call that flying? Pathetic!",
+  "Prepare to be grounded, permanently!",
+  "I've crushed better pilots than you!",
+  "Say goodbye to your propeller!"
+];
+const PLAYER_RETORTS = [
+  "Not on my watch!",
+  "We'll see about that!",
+  "Bring it on!",
+  "This sky's got room for one more win.",
+  "You talk big for a pile of gears.",
+  "Let's dance, tin can!",
+  "I've flown through worse than you!",
+  "Big talk for something made of scrap!"
+];
+
+let bossDialogueSkip = null;
+
+function startBossDialogue(num) {
+  state = "bossDialogue";
+
+  const overlay = document.getElementById("bossDialogueOverlay");
+  const bossBubble = document.getElementById("dlgBossBubble");
+  const playerBubble = document.getElementById("dlgPlayerBubble");
+
+  const bossImg = bossPortraitImg(num);
+  document.getElementById("dlgBossImg").src = bossImg ? bossImg.src : "";
+  document.getElementById("dlgBossName").textContent = "BOSS " + num;
+  const playerImg = currentPlayerImage();
+  document.getElementById("dlgPlayerImg").src = playerImg ? playerImg.src : "";
+
+  document.getElementById("dlgBossText").textContent = BOSS_TAUNTS[Math.floor(Math.random() * BOSS_TAUNTS.length)];
+  document.getElementById("dlgPlayerText").textContent = PLAYER_RETORTS[Math.floor(Math.random() * PLAYER_RETORTS.length)];
+
+  bossBubble.classList.add("hidden");
+  playerBubble.classList.add("hidden");
+  overlay.classList.remove("hidden");
+
+  let phase = 0; // 0 = nothing shown yet, 1 = boss line shown, 2 = both shown
+  let timer = null;
+
+  function showBossLine() {
+    phase = 1;
+    bossBubble.classList.remove("hidden");
+    timer = setTimeout(showPlayerLine, 1500);
+  }
+  function showPlayerLine() {
+    phase = 2;
+    playerBubble.classList.remove("hidden");
+    timer = setTimeout(finish, 1600);
+  }
+  function finish() {
+    clearTimeout(timer);
+    overlay.classList.add("hidden");
+    overlay.removeEventListener("pointerdown", skip);
+    bossDialogueSkip = null;
+    if (state === "bossDialogue") {
+      state = "playing";
+      triggerBoss(num);
+    }
+  }
+  function skip() {
+    clearTimeout(timer);
+    if (phase === 0) showBossLine();
+    else if (phase === 1) showPlayerLine();
+    else finish();
+  }
+
+  bossDialogueSkip = skip;
+  overlay.addEventListener("pointerdown", skip);
+  timer = setTimeout(showBossLine, 250);
+}
+
+function bossPortraitImg(num) {
+  return num === 2 ? (images[BOSS2_FRAME_KEYS[0]] || images.boss2)
+    : num === 3 ? (images[BOSS3_FRAME_KEYS[0]] || images.boss3)
+    : num === 4 ? (images[BOSS4_FRAME_KEYS[0]] || images.boss4)
+    : (images[bossImgKey(num)] || images.boss);
+}
+
 function triggerBoss(num) {
     const cfg = bossConfig(num);
     setMusicTheme(THEME_BOSS);
@@ -5026,10 +5382,7 @@ function triggerBoss(num) {
     obstacles = []; // clear the sky for the encounter
 
     const isGround = cfg.kind === "tank";
-    const bossImg = num === 2 ? (images[BOSS2_FRAME_KEYS[0]] || images.boss2)
-      : num === 3 ? (images[BOSS3_FRAME_KEYS[0]] || images.boss3)
-      : num === 4 ? (images[BOSS4_FRAME_KEYS[0]] || images.boss4)
-      : (images[bossImgKey(num)] || images.boss);
+    const bossImg = bossPortraitImg(num);
     const aspect = imgAspect(bossImg);
     const sizeMult = 1 + (num - 1) * 0.06; // each boss reads a touch bigger/tougher than the last
     // boss 2's sprite is a wide blimp silhouette (short + very wide), so the normal
@@ -5038,7 +5391,7 @@ function triggerBoss(num) {
     const kindSizeScale = num === 2 ? (2 / 3) : 1; // boss 2 at 2x original size
     const dispH = Math.min(H * (isGround ? 0.32 : 0.42) * sizeMult, isGround ? 220 : 300) * kindSizeScale;
     const dispW = dispH / aspect;
-    const groundY = H - 6;
+    const groundY = groundLevelY();
 
     boss = {
       x: W + dispW,
@@ -7207,7 +7560,7 @@ function triggerBoss(num) {
   }
 
   function drawParallaxLayers() {
-    var groundY = H - 6;
+    var groundY = groundLevelY();
     parallaxLayers.forEach(function(layer, li) {
       if (li === 0 && layer.imgKey) {
         // Image layer: draw the far-background tiles, crossfading between
@@ -7526,7 +7879,7 @@ function triggerBoss(num) {
   // ---------- Boss shadow cast on buildings ----------
   function drawBossShadow() {
     if (!boss || !bossActive) return;
-    const groundY = H - 6;
+    const groundY = groundLevelY();
     const shadowY = groundY - 2;
     const shadowW = boss.w * 0.7;
     const shadowH = boss.h * 0.15;
@@ -7739,6 +8092,49 @@ function triggerBoss(num) {
     console.error(err);
   }
 
+  // ---------- Old-film grain overlay (subtle vintage effect, gameplay only) ----------
+  // A small noise tile is generated once and reused as a repeating pattern —
+  // far cheaper than regenerating per-pixel noise every frame. Jittering its
+  // offset each frame is what sells the "flickering grain" look.
+  let filmGrainPattern = null;
+  function buildFilmGrainPattern() {
+    const tile = document.createElement("canvas");
+    tile.width = 128; tile.height = 128;
+    const tctx = tile.getContext("2d");
+    const imgData = tctx.createImageData(128, 128);
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      const v = Math.floor(Math.random() * 255);
+      imgData.data[i] = v;
+      imgData.data[i + 1] = v;
+      imgData.data[i + 2] = v;
+      imgData.data[i + 3] = 255;
+    }
+    tctx.putImageData(imgData, 0, 0);
+    filmGrainPattern = ctx.createPattern(tile, "repeat");
+  }
+
+  function drawFilmGrain() {
+    if (!filmGrainPattern) buildFilmGrainPattern();
+    ctx.save();
+    ctx.globalCompositeOperation = "overlay";
+    ctx.globalAlpha = 0.05 + Math.random() * 0.025; // slight flicker frame to frame
+    const jx = (Math.random() - 0.5) * 10;
+    const jy = (Math.random() - 0.5) * 10;
+    ctx.translate(jx, jy);
+    ctx.fillStyle = filmGrainPattern;
+    ctx.fillRect(-jx - 4, -jy - 4, W + 8, H + 8);
+    ctx.restore();
+
+    // soft vignette to complete the vintage-film feel
+    ctx.save();
+    const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.32, W / 2, H / 2, H * 0.78);
+    vg.addColorStop(0, "rgba(10,6,3,0)");
+    vg.addColorStop(1, "rgba(10,6,3,0.28)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
   function loop(ts) {
     try {
     if (lastTime === null) lastTime = ts;
@@ -7774,6 +8170,7 @@ function triggerBoss(num) {
       elapsedMs = performance.now() - runStartTime;
       updateFlipClock(elapsedMs);
       updateBuildings(dtScale);
+      updateStreet(dtScale);
       updateBuildingSmoke(dt);
       updateStreetlamps(dtScale);
       updateGroundVehicles(dt, dtScale);
@@ -7810,6 +8207,7 @@ function triggerBoss(num) {
       resetPlayer();
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
+      updateStreet(dtScale * 0.4);
       updateBuildingSmoke(dt);
       updateStreetlamps(dtScale * 0.4);
       updateGroundVehicles(dt, dtScale * 0.4);
@@ -7821,6 +8219,7 @@ function triggerBoss(num) {
     }
 
     drawParallaxLayers();
+    drawStreet();
     drawBuildings();
     drawBuildingSmoke();
     drawStreetlamps();
@@ -7855,6 +8254,7 @@ function triggerBoss(num) {
     drawShockwaves();
     drawBonusHUD();
     drawComboPopups();
+    if (state === "playing") drawFilmGrain();
     } catch (err) {
       if (!loopErrorShown) {
         loopErrorShown = true;
