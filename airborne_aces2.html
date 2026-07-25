@@ -2588,6 +2588,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     streetrow2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow2.webp",
     streetlamp1:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0734.png",
     boss:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
+    boss1_portrait:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/baron_blackpowder_portrait.webp",
     boss2:           "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2.webp?cb=2",
     boss2_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_01.webp",
     boss2_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2_02.webp",
@@ -5540,7 +5541,7 @@ function startBossDialogue(num) {
   const playerBubble = document.getElementById("dlgPlayerBubble");
 
   const cfg = bossConfig(num);
-  const bossImg = bossPortraitImg(num);
+  const bossImg = dialoguePortraitImg(num);
   const dlgBossImgEl = document.getElementById("dlgBossImg");
   dlgBossImgEl.onerror = () => { dlgBossImgEl.style.visibility = "hidden"; };
   dlgBossImgEl.style.visibility = "visible";
@@ -5664,6 +5665,14 @@ function bossPortraitImg(num) {
     : num === 3 ? (images[BOSS3_FRAME_KEYS[0]] || images.boss3)
     : num === 4 ? (images[BOSS4_FRAME_KEYS[0]] || images.boss4)
     : (images[bossImgKey(num)] || images.boss);
+}
+
+// Dedicated art for the VS dialogue screen specifically — falls back to the
+// in-game sprite (bossPortraitImg) for any boss that doesn't have its own yet,
+// so this can be filled in boss-by-boss without needing code changes each time.
+function dialoguePortraitImg(num) {
+  const key = "boss" + num + "_portrait";
+  return images[key] && images[key].naturalWidth ? images[key] : bossPortraitImg(num);
 }
 
 function triggerBoss(num) {
