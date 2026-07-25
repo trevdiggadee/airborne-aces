@@ -4661,15 +4661,82 @@ ctx.save();
   // shift boss pacing (see the scoring block in updateObstacles).
   const BOSSES = [
     { num: 1, threshold: 50,  maxHealth: 16,  kind: "bomber",  miniType: "balloon_anim",
-      label: "BOSS INCOMING!",         defeatLabel: "BOSS DEFEATED!",         powerupKind: "gold",    defeatBonus: 25,  bonusRound: "balloon" },
+      label: "BOSS INCOMING!",         defeatLabel: "BOSS DEFEATED!",         powerupKind: "gold",    defeatBonus: 25,  bonusRound: "balloon",
+      name: "Baron Blackpowder",
+      taunts: [
+        "You'll never get past me, flyboy!",
+        "Turn back now, while you still can!",
+        "Ha! Another blimp for the scrap heap!",
+        "This sky belongs to ME now!",
+        "I've got a bomb with your name on it!"
+      ],
+      retorts: [
+        "Not on my watch, Baron!",
+        "We'll see about that!",
+        "Bring it on, powder-keg!",
+        "This sky's got room for one more win.",
+        "Better duck, old man!"
+      ] },
     { num: 2, threshold: 100, maxHealth: 64,  kind: "rocket",  miniType: "mini_blimp",
-      label: "SECOND BOSS INCOMING!",  defeatLabel: "SECOND BOSS DEFEATED!",  powerupKind: "blue",    defeatBonus: 60,  bonusRound: "coin" },
+      label: "SECOND BOSS INCOMING!",  defeatLabel: "SECOND BOSS DEFEATED!",  powerupKind: "blue",    defeatBonus: 60,  bonusRound: "coin",
+      name: "Marshal Cinderfuse",
+      taunts: [
+        "You call that flying? Pathetic!",
+        "Prepare to be grounded, permanently!",
+        "My rockets never miss twice!",
+        "Blackpowder was a warm-up. I'm the real fire!"
+      ],
+      retorts: [
+        "You talk big for a pile of gears.",
+        "Let's dance, tin can!",
+        "I've flown through worse than you!",
+        "Fuse THIS, Marshal!"
+      ] },
     { num: 3, threshold: 150, maxHealth: 96,  kind: "tank",    miniType: "mini_tank",
-      label: "THIRD BOSS INCOMING!",   defeatLabel: "THIRD BOSS DEFEATED!",   powerupKind: "arcbomb", defeatBonus: 90,  bonusRound: "balloon" },
+      label: "THIRD BOSS INCOMING!",   defeatLabel: "THIRD BOSS DEFEATED!",   powerupKind: "arcbomb", defeatBonus: 90,  bonusRound: "balloon",
+      name: "General Grimtread",
+      taunts: [
+        "I've crushed better pilots than you!",
+        "You can't out-fly a shell, ace.",
+        "The ground shakes when I roll!",
+        "Grounded and gutted — that's my promise."
+      ],
+      retorts: [
+        "I've got wings, General. You've got wheels.",
+        "Big talk for something made of scrap!",
+        "Let's see you aim at a moving target!",
+        "Enjoy the view from down there!"
+      ] },
     { num: 4, threshold: 200, maxHealth: 140, kind: "heli",    miniType: "mini_heli",
-      label: "FOURTH BOSS INCOMING!",  defeatLabel: "FOURTH BOSS DEFEATED!",  powerupKind: "gold",    defeatBonus: 130, bonusRound: "coin" },
+      label: "FOURTH BOSS INCOMING!",  defeatLabel: "FOURTH BOSS DEFEATED!",  powerupKind: "gold",    defeatBonus: 130, bonusRound: "coin",
+      name: "Captain Rotorbane",
+      taunts: [
+        "Say goodbye to your propeller!",
+        "Nobody outmaneuvers Rotorbane!",
+        "I'll cut you out of the sky myself!",
+        "Three bosses down and still smiling? Not for long."
+      ],
+      retorts: [
+        "My propeller's just getting started!",
+        "You spin, I dodge. Simple as that.",
+        "Let's see whose blades are sharper!",
+        "Smiling all the way to your defeat!"
+      ] },
     { num: 5, threshold: 250, maxHealth: 200, kind: "octopus", miniType: "mini_ebomb",
-      label: "FIFTH BOSS INCOMING!",   defeatLabel: "FIFTH BOSS DEFEATED!",   powerupKind: "blue",    defeatBonus: 190, bonusRound: "balloon" }
+      label: "FIFTH BOSS INCOMING!",   defeatLabel: "FIFTH BOSS DEFEATED!",   powerupKind: "blue",    defeatBonus: 190, bonusRound: "balloon",
+      name: "Admiral Octavius Squall",
+      taunts: [
+        "I've crushed better pilots than you!",
+        "Every arm of mine is a different way to lose.",
+        "This is where the sky runs out for you.",
+        "Four bosses couldn't stop me. What makes you different?"
+      ],
+      retorts: [
+        "Eight arms, one loss coming your way.",
+        "The sky's not yours to run, Admiral.",
+        "I've flown through worse than you!",
+        "This ends here — for you, not me."
+      ] }
   ];
   function bossConfig(num) { return BOSSES.find(b => b.num === num); }
   function nextBossConfig() { return BOSSES.find(b => b.num > lastBossTriggered); }
@@ -5472,20 +5539,23 @@ function startBossDialogue(num) {
   const bossBubble = document.getElementById("dlgBossBubble");
   const playerBubble = document.getElementById("dlgPlayerBubble");
 
+  const cfg = bossConfig(num);
   const bossImg = bossPortraitImg(num);
   const dlgBossImgEl = document.getElementById("dlgBossImg");
   dlgBossImgEl.onerror = () => { dlgBossImgEl.style.visibility = "hidden"; };
   dlgBossImgEl.style.visibility = "visible";
   dlgBossImgEl.src = (bossImg && bossImg.naturalWidth) ? bossImg.src : "";
-  document.getElementById("dlgBossName").textContent = "BOSS " + num;
+  document.getElementById("dlgBossName").textContent = (cfg && cfg.name) ? cfg.name : "BOSS " + num;
   const playerImg = currentPlayerImage();
   const dlgPlayerImgEl = document.getElementById("dlgPlayerImg");
   dlgPlayerImgEl.onerror = () => { dlgPlayerImgEl.style.visibility = "hidden"; };
   dlgPlayerImgEl.style.visibility = "visible";
   dlgPlayerImgEl.src = (playerImg && playerImg.naturalWidth) ? playerImg.src : "";
 
-  const bossLineText = BOSS_TAUNTS[Math.floor(Math.random() * BOSS_TAUNTS.length)];
-  const playerLineText = PLAYER_RETORTS[Math.floor(Math.random() * PLAYER_RETORTS.length)];
+  const tauntPool = (cfg && cfg.taunts && cfg.taunts.length) ? cfg.taunts : BOSS_TAUNTS;
+  const retortPool = (cfg && cfg.retorts && cfg.retorts.length) ? cfg.retorts : PLAYER_RETORTS;
+  const bossLineText = tauntPool[Math.floor(Math.random() * tauntPool.length)];
+  const playerLineText = retortPool[Math.floor(Math.random() * retortPool.length)];
   const bossTextEl = document.getElementById("dlgBossText");
   const playerTextEl = document.getElementById("dlgPlayerText");
   bossTextEl.textContent = "";
