@@ -1030,6 +1030,24 @@ input[type=range].tapSlider::-moz-range-thumb {
     animation: dlgHintBlink 1.1s steps(1) infinite;
   }
 
+  .dlgSkipBtn {
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: #f5e6c8;
+    background: #5e1212;
+    border: 3px solid #f5e6c8;
+    box-shadow: 0 0 0 2px #1a1410, 0 3px 0 rgba(0,0,0,0.5);
+    padding: 8px 16px;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+  }
+  .dlgSkipBtn:active {
+    transform: translateY(2px);
+    box-shadow: 0 0 0 2px #1a1410, 0 1px 0 rgba(0,0,0,0.5);
+  }
+
   @keyframes dlgHintBlink {
     0%, 49% { opacity: 1; }
     50%, 100% { opacity: 0.2; }
@@ -1299,6 +1317,7 @@ input[type=range].tapSlider::-moz-range-thumb {
   <div class="dlgBubble dlgBubblePlayer hidden" id="dlgPlayerBubble">
     <p id="dlgPlayerText"></p>
   </div>
+  <button type="button" id="dlgSkipBtn" class="dlgSkipBtn">SKIP ▶</button>
   <div class="dlgTapHint">TAP TO CONTINUE</div>
 </div>
 </div>
@@ -4385,7 +4404,6 @@ ctx.save();
       shieldUntil = performance.now() + SHIELD_DURATION_MS;
       shieldPickup = null;
       sfxPowerup();
-      showBanner("SHIELD ACTIVATED!", 1400, "power");
     }
   }
 
@@ -5337,17 +5355,18 @@ function startBossDialogue(num) {
   function showBossLine() {
     phase = 1;
     bossBubble.classList.remove("hidden");
-    timer = setTimeout(showPlayerLine, 1500);
+    timer = setTimeout(showPlayerLine, 2400);
   }
   function showPlayerLine() {
     phase = 2;
     playerBubble.classList.remove("hidden");
-    timer = setTimeout(finish, 1600);
+    timer = setTimeout(finish, 2600);
   }
   function finish() {
     clearTimeout(timer);
     overlay.classList.add("hidden");
     overlay.removeEventListener("pointerdown", skip);
+    skipBtn.removeEventListener("pointerdown", onSkipBtnPointerDown);
     bossDialogueSkip = null;
     if (state === "bossDialogue") {
       state = "playing";
@@ -5360,10 +5379,16 @@ function startBossDialogue(num) {
     else if (phase === 1) showPlayerLine();
     else finish();
   }
+  function onSkipBtnPointerDown(e) {
+    e.stopPropagation();
+    skip();
+  }
 
+  const skipBtn = document.getElementById("dlgSkipBtn");
   bossDialogueSkip = skip;
   overlay.addEventListener("pointerdown", skip);
-  timer = setTimeout(showBossLine, 250);
+  skipBtn.addEventListener("pointerdown", onSkipBtnPointerDown);
+  timer = setTimeout(showBossLine, 400);
 }
 
 function bossPortraitImg(num) {
@@ -5398,11 +5423,16 @@ function triggerBoss(num) {
       y: isGround ? groundY - dispH + dispH * 0.1 : H * 0.38, // ground-based bosses sink in a bit — their sprite tends to have empty padding at the bottom
       w: dispW,
       h: dispH,
-      // the bomber's sprite has extra transparent padding on its left (room for the
-      // throwing arm to extend during the animation), so the visible character only
-      // fills roughly the right 65% of dispW — pull the resting position in so he
-      // doesn't clip off the right edge
-      targetX: W - dispW * 0.55, // boss 2 positioned further right
+      // the bomber's (boss 2's) sprite has extra transparent padding on its left (room
+      // for the throwing arm to extend during the animation), so its visible character
+      // only fills roughly the right 65% of dispW — pull its resting position in so it
+      // doesn't clip off the right edge. Other bosses don't have that padding, so they're
+      // clamped to just stay fully on-screen instead of using the same offset.
+      targetX: (function () {
+        const edgeMargin = W * 0.02;
+        const paddedTarget = W - dispW * 0.55;
+        return num === 2 ? paddedTarget : Math.min(paddedTarget, W - dispW - edgeMargin);
+      })(),
       groundBaseY: isGround ? groundY - dispH + dispH * 0.1 : null,
       health: cfg.maxHealth,
       maxHealth: cfg.maxHealth,
