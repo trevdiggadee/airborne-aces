@@ -950,10 +950,29 @@ input[type=range].tapSlider::-moz-range-thumb {
     max-height: 88%;
     object-fit: contain;
     filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
+    animation: dlgIdleBob 2.4s ease-in-out infinite;
+    animation-delay: 0.5s; /* let the slide-in entrance finish first */
+    transform-origin: center bottom;
   }
-  /* boss sprite defaults to facing left already (world scrolls right-to-left),
-     so no flip needed — it was previously flipped, which faced it away
-     from the player */
+  #bossDialogueOverlay .dlgPortraitBoss .dlgPortraitFrame img {
+    animation-duration: 2.7s; /* slightly different rhythm so the two don't move in lockstep */
+    animation-delay: 0.65s;
+  }
+
+  @keyframes dlgIdleBob {
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+    50% { transform: translateY(-7px) rotate(-1.2deg) scale(1.02); }
+  }
+  /* the boss sprite art has a white sticker-style outline baked in, which reads as a
+     harsh white edge against the dark frame at this larger size — warm it with a
+     slight sepia tint and lighten the frame behind it so the outline blends in
+     instead of standing out */
+  #bossDialogueOverlay .dlgPortraitBoss .dlgPortraitFrame {
+    background: radial-gradient(circle at 38% 30%, #6b5636, #3a2c18 78%);
+  }
+  #bossDialogueOverlay .dlgPortraitBoss .dlgPortraitFrame img {
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5)) sepia(0.4) saturate(1.15);
+  }
 
   #bossDialogueOverlay .dlgNamePlate {
     font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
@@ -1035,12 +1054,13 @@ input[type=range].tapSlider::-moz-range-thumb {
   #bossDialogueOverlay .dlgBubble p {
     margin: 0;
     font-family: 'Georgia', 'Times New Roman', serif;
+    font-weight: bold;
     font-style: italic;
-    font-size: clamp(17px, 4.4vw, 22px);
-    line-height: 1.55;
+    font-size: clamp(19px, 5.2vw, 26px);
+    line-height: 1.5;
     color: #2b1c10;
     text-align: center;
-    min-height: 1.55em; /* reserve space so the bubble doesn't jump as text types in */
+    min-height: 1.5em; /* reserve space so the bubble doesn't jump as text types in */
   }
 
   /* blinking caret while the typewriter effect is running */
@@ -3483,7 +3503,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   function makeBuildingRowTile(xStart, key) {
     const img = images[key];
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3.2;
-    const h = H * 0.34;
+    const h = H * 0.42;
     const w = h * aspect;
     return { x: xStart, w, h };
   }
@@ -3527,7 +3547,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // for a proper street/sidewalk band beneath the buildings instead of just
   // a flat color strip
   function groundLevelY() {
-    return H - Math.max(50, H * 0.075);
+    return H - Math.max(58, H * 0.088);
   }
 
   function drawBuildings() {
