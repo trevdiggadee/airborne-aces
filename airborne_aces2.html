@@ -2564,6 +2564,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     bldg_l3_furnacehouse:"https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0768.png",
     bldg_l3_minetower:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0769.png",
     bldg_l3_pipeworks:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0770.png",
+    streetrow1: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow1.webp",
+    streetrow2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow2.webp",
     streetlamp1:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0734.png",
     boss:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
     boss2:           "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2.webp?cb=2",
@@ -3448,47 +3450,44 @@ flyBtn.addEventListener("click", () => { startGame(); });
   window.addEventListener("orientationchange", resize);
   resize();
 
-  // ---------- Buildings (ground obstacles — fly over the rooftops) ----------
-  // Each building: { x, w, h, key } — h/w are on-screen display dimensions.
-  // Height changes gradually (random walk) so the skyline is fair to react to.
-  let buildings = [];
-  let lastBuildingHeight = 0;
-  let lastBuildingKey = null;
+  // ---------- Buildings — now continuous panoramic street-row strips (one
+  // per level, cycling through until more level-specific art is provided),
+  // scrolling in sync with the rest of the ground plane. Replaces the old
+  // discrete per-building-sprite system. ----------
+  const BUILDING_ROW_KEYS = ['streetrow1', 'streetrow2'];
+  let buildings = []; // tiles of the current strip: { x, w, h }
+  let buildingRowKey = null;
 
-  function pickBuildingKey() {
-    const pool = bossesDefeatedCount >= 2 ? BUILDING_KEYS_L3 : BUILDING_KEYS;
-    let key;
-    do {
-      key = pool[Math.floor(Math.random() * pool.length)];
-    } while (key === lastBuildingKey && pool.length > 1);
-    lastBuildingKey = key;
-    return key;
+  function currentBuildingRowKey() {
+    return BUILDING_ROW_KEYS[bossesDefeatedCount % BUILDING_ROW_KEYS.length];
   }
 
-  function makeBuilding(xStart) {
-    const key = pickBuildingKey();
+  function makeBuildingRowTile(xStart, key) {
     const img = images[key];
-    const aspect = img.naturalWidth / img.naturalHeight;
-
-    const h = H * 0.33; // fixed height — all buildings are the same size now
+    const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3.2;
+    const h = H * 0.34;
     const w = h * aspect;
-    return { x: xStart, w, h, key };
+    return { x: xStart, w, h };
   }
 
   function initBuildings() {
+    buildingRowKey = currentBuildingRowKey();
     buildings = [];
-    lastBuildingHeight = 0;
-    lastBuildingKey = null;
     let x = 0;
     while (x < W + 200) {
-      const b = makeBuilding(x);
+      const b = makeBuildingRowTile(x, buildingRowKey);
       buildings.push(b);
-      x += b.w - 4; // slight overlap so there are no gaps at ground level
+      x += b.w; // edge-to-edge — pre-blended to tile seamlessly
     }
     initStreetlamps();
   }
 
   function updateBuildings(dtScale) {
+    const targetKey = currentBuildingRowKey();
+    if (targetKey !== buildingRowKey) {
+      initBuildings(); // level changed — rebuild with that level's strip
+      return;
+    }
     const speed = 0.8 * dtScale * (obstacleSpeedScale());
     buildings.forEach(b => (b.x -= speed));
     while (buildings.length && buildings[0].x + buildings[0].w < -10) {
@@ -3496,8 +3495,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     }
     const last = buildings[buildings.length - 1];
     if (!last || last.x + last.w < W + 200) {
-      const startX = last ? last.x + last.w - 4 : 0;
-      buildings.push(makeBuilding(startX));
+      const startX = last ? last.x + last.w : 0;
+      buildings.push(makeBuildingRowTile(startX, buildingRowKey));
     }
   }
 
@@ -3515,11 +3514,10 @@ flyBtn.addEventListener("click", () => { startGame(); });
 
   function drawBuildings() {
     const groundY = groundLevelY();
+    const img = images[buildingRowKey];
+    if (!img || !img.naturalWidth) return;
     buildings.forEach(b => {
-      const img = images[b.key];
-      if (!img.naturalWidth) return;
-      const top = groundY - b.h;
-      ctx.drawImage(img, b.x, top, b.w, b.h);
+      ctx.drawImage(img, b.x, groundY - b.h, b.w, b.h);
     });
   }
 
@@ -4039,7 +4037,26 @@ flyBtn.addEventListener("click", () => { startGame(); });
 
   function drawPlayer() {
     const img = currentPlayerImage();
-    if (!img || !img.naturalWidth) return;
+    if (!img || !img.naturalWidth) {
+      // Never let the player silently vanish — draw a simple visible
+      // placeholder and log why, so this is diagnosable if it recurs.
+      if (!drawPlayer._warned) {
+        drawPlayer._warned = true;
+        console.warn("Airborne Aces: currentPlayerImage() returned nothing usable — drawing a fallback shape instead of the blimp.");
+      }
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.rotation);
+      ctx.fillStyle = "#c9a66b";
+      ctx.strokeStyle = "#3a2410";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, player.w / 2, player.h / 2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+      return;
+    }
     // motion blur trail
     drawMotionBlur(img, player.x, player.y, player.w, player.h, player.rotation, -player.vy * 0.3, player.vy);
         drawBlimpPersonality();
@@ -5413,10 +5430,16 @@ function startBossDialogue(num) {
   const playerBubble = document.getElementById("dlgPlayerBubble");
 
   const bossImg = bossPortraitImg(num);
-  document.getElementById("dlgBossImg").src = bossImg ? bossImg.src : "";
+  const dlgBossImgEl = document.getElementById("dlgBossImg");
+  dlgBossImgEl.onerror = () => { dlgBossImgEl.style.visibility = "hidden"; };
+  dlgBossImgEl.style.visibility = "visible";
+  dlgBossImgEl.src = (bossImg && bossImg.naturalWidth) ? bossImg.src : "";
   document.getElementById("dlgBossName").textContent = "BOSS " + num;
   const playerImg = currentPlayerImage();
-  document.getElementById("dlgPlayerImg").src = playerImg ? playerImg.src : "";
+  const dlgPlayerImgEl = document.getElementById("dlgPlayerImg");
+  dlgPlayerImgEl.onerror = () => { dlgPlayerImgEl.style.visibility = "hidden"; };
+  dlgPlayerImgEl.style.visibility = "visible";
+  dlgPlayerImgEl.src = (playerImg && playerImg.naturalWidth) ? playerImg.src : "";
 
   const bossLineText = BOSS_TAUNTS[Math.floor(Math.random() * BOSS_TAUNTS.length)];
   const playerLineText = PLAYER_RETORTS[Math.floor(Math.random() * PLAYER_RETORTS.length)];
