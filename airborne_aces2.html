@@ -2570,6 +2570,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
     skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
     skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
+    powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0823.png",
     farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
@@ -3518,6 +3519,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
       x += b.w; // edge-to-edge — pre-blended to tile seamlessly
     }
     initStreetlamps();
+    initPowerlines();
   }
 
   function updateBuildings(dtScale) {
@@ -3557,6 +3559,53 @@ flyBtn.addEventListener("click", () => { startGame(); });
     buildings.forEach(b => {
       ctx.drawImage(img, b.x, groundY - b.h, b.w, b.h);
     });
+  }
+
+  // ---------- Power line silhouette layer — a background parallax strip that
+  // sits behind the buildings and drifts at half their scroll speed (a bit
+  // further back = a bit slower). The art has a transparent top half — that
+  // comes through automatically via drawImage's alpha, nothing special
+  // needed here as long as the source PNG keeps its alpha channel intact
+  // (a JPEG re-export of it would flatten the transparent area to white). ----------
+  let powerlineTiles = [];
+
+  function initPowerlines() {
+    powerlineTiles = [];
+    const img = images.powerlines;
+    const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3;
+    const h = H * 0.56; // tall enough for the poles/wires to read above the rooftops
+    const w = h * aspect;
+    let x = 0;
+    while (x < W + w) {
+      powerlineTiles.push({ x: x, w: w, h: h });
+      x += w - 1; // slight overlap so the seam never shows
+    }
+  }
+
+  function updatePowerlines(dtScale) {
+    const speed = 0.4 * dtScale * obstacleSpeedScale(); // half of updateBuildings' 0.8x
+    powerlineTiles.forEach(t => (t.x -= speed));
+    while (powerlineTiles.length && powerlineTiles[0].x + powerlineTiles[0].w < -10) {
+      powerlineTiles.shift();
+    }
+    const last = powerlineTiles[powerlineTiles.length - 1];
+    if (!last || last.x + last.w < W + 200) {
+      const startX = last ? last.x + last.w - 1 : 0;
+      const h = last ? last.h : H * 0.56;
+      const aspect = last ? last.w / last.h : 3;
+      powerlineTiles.push({ x: startX, w: h * aspect, h: h });
+    }
+  }
+
+  function drawPowerlines() {
+    const img = images.powerlines;
+    if (!img || !img.naturalWidth) return;
+    const groundY = groundLevelY();
+    ctx.save();
+    powerlineTiles.forEach(t => {
+      ctx.drawImage(img, t.x, groundY - t.h, t.w, t.h);
+    });
+    ctx.restore();
   }
 
   // ---------- Street (sidewalk + road) — sits beneath the buildings, gives
@@ -8468,6 +8517,7 @@ function triggerBoss(num) {
       elapsedMs = performance.now() - runStartTime;
       updateFlipClock(elapsedMs);
       updateBuildings(dtScale);
+      updatePowerlines(dtScale);
       updateStreet(dtScale);
       updateBuildingSmoke(dt);
       updateStreetlamps(dtScale);
@@ -8505,6 +8555,7 @@ function triggerBoss(num) {
       resetPlayer();
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
+      updatePowerlines(dtScale * 0.4);
       updateStreet(dtScale * 0.4);
       updateBuildingSmoke(dt);
       updateStreetlamps(dtScale * 0.4);
@@ -8517,6 +8568,7 @@ function triggerBoss(num) {
     }
 
     drawParallaxLayers();
+    drawPowerlines();
     drawStreet();
     drawBuildings();
     drawBuildingSmoke();
