@@ -4393,18 +4393,18 @@ ctx.save();
     if (type === "balloon_anim") {
       dispW = Math.min(90, W * 0.18);
     } else if (type === "mini_blimp") {
-      // mini blimps match the player blimp size for visual parity
+      // mini blimps — 2x bigger for dramatic boss lead-in presence
       const playerImg = currentPlayerImage();
       const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
-      dispW = Math.min(110, W * 0.22);
+      dispW = Math.min(220, W * 0.44);
       // Force aspect to match player so height matches too
       aspect = playerAspect || aspect;
     } else if (type === "mini_tank") {
-      // boss 3's mini — matches the player blimp's own size
-      dispW = Math.min(110, W * 0.22);
+      // boss 3's mini — 2x bigger
+      dispW = Math.min(220, W * 0.44);
     } else if (type === "mini_heli") {
-      // boss 4's mini — matches the player blimp's own size
-      dispW = Math.min(110, W * 0.22);
+      // boss 4's mini — 2x bigger
+      dispW = Math.min(220, W * 0.44);
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -4433,7 +4433,12 @@ ctx.save();
       speedMult: type === "balloon_anim" ? 0.72 : 1,
       animFrame: Math.floor(Math.random() * OBSTACLE_ANIM_FRAME_COUNT),
       animTimer: Math.random() / OBSTACLE_ANIM_FPS,
-      scored: false
+      scored: false,
+      // jet engine flame + smoke trail for mini blimps
+      flameTimer: (type === "mini_blimp") ? 0 : null,
+      smokeTimer: (type === "mini_blimp") ? 0 : null,
+      flameParticles: (type === "mini_blimp") ? [] : null,
+      smokeParticles: (type === "mini_blimp") ? [] : null
     });
   }
 
@@ -4462,6 +4467,75 @@ ctx.save();
         o.y += o.deflectVy * dt;
         o.deflectVy *= Math.max(0, 1 - 3.5 * dt);
         if (Math.abs(o.deflectVy) < 4) o.deflectVy = 0;
+      }
+
+      // mini blimp jet engine flame + smoke trails
+      if (o.type === "mini_blimp") {
+        const speed = obstacleSpeed * (o.speedMult || 1);
+        const engineX = o.x + o.w * 0.15;
+        const engineY = o.y + o.h * 0.55;
+
+        // flame particles (hot, bright, short-lived)
+        o.flameTimer -= dt;
+        if (o.flameTimer <= 0) {
+          o.flameTimer = 0.015 + Math.random() * 0.02;
+          const angle = Math.PI + (Math.random() - 0.5) * 0.6;
+          const flameSpeed = 60 + Math.random() * 80;
+          o.flameParticles.push({
+            x: engineX + (Math.random() - 0.5) * o.w * 0.12,
+            y: engineY + (Math.random() - 0.5) * o.h * 0.08,
+            vx: Math.cos(angle) * flameSpeed + speed * 0.3,
+            vy: Math.sin(angle) * flameSpeed * 0.3 + (Math.random() - 0.5) * 20,
+            size: 3 + Math.random() * 6,
+            life: 0.08 + Math.random() * 0.1,
+            age: 0,
+            r: 255,
+            g: 120 + Math.random() * 80,
+            b: 20 + Math.random() * 40
+          });
+        }
+
+        // smoke particles (cool, dark, longer-lived)
+        o.smokeTimer -= dt;
+        if (o.smokeTimer <= 0) {
+          o.smokeTimer = 0.04 + Math.random() * 0.04;
+          const angle = Math.PI + (Math.random() - 0.5) * 0.5;
+          const smokeSpeed = 40 + Math.random() * 50;
+          o.smokeParticles.push({
+            x: engineX + (Math.random() - 0.5) * o.w * 0.1,
+            y: engineY + (Math.random() - 0.5) * o.h * 0.06,
+            vx: Math.cos(angle) * smokeSpeed + speed * 0.2,
+            vy: Math.sin(angle) * smokeSpeed * 0.2 + (Math.random() - 0.5) * 15,
+            size: 5 + Math.random() * 10,
+            life: 0.25 + Math.random() * 0.2,
+            age: 0,
+            r: 80 + Math.random() * 40,
+            g: 75 + Math.random() * 35,
+            b: 70 + Math.random() * 30
+          });
+        }
+
+        // update flame particles
+        o.flameParticles.forEach(p => {
+          p.age += dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vx *= 0.92;
+          p.vy *= 0.92;
+          p.size += dt * 15;
+        });
+        o.flameParticles = o.flameParticles.filter(p => p.age < p.life);
+
+        // update smoke particles
+        o.smokeParticles.forEach(p => {
+          p.age += dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vx *= 0.95;
+          p.vy *= 0.95;
+          p.size += dt * 8;
+        });
+        o.smokeParticles = o.smokeParticles.filter(p => p.age < p.life);
       }
 
       // boss 4's mini crackles with a little electrical charge — refresh the
@@ -4564,6 +4638,50 @@ ctx.save();
       const speed = obstacleSpeed * (o.speedMult || 1);
       drawMotionBlur(img, o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, 0, speed, 0);
       ctx.drawImage(img, o.x, drawY, o.w, o.h);
+
+      // draw jet engine flame + smoke trails behind mini blimps
+      if (o.type === "mini_blimp") {
+        // smoke first (behind flame)
+        if (o.smokeParticles) {
+          o.smokeParticles.forEach(p => {
+            const t = p.age / p.life;
+            const alpha = (1 - t) * 0.45;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+            grad.addColorStop(0, `rgba(${p.r},${p.g},${p.b},0.8)`);
+            grad.addColorStop(1, `rgba(${p.r},${p.g},${p.b},0)`);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          });
+        }
+        // flame on top
+        if (o.flameParticles) {
+          o.flameParticles.forEach(p => {
+            const t = p.age / p.life;
+            const alpha = (1 - t) * 0.9;
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+            grad.addColorStop(0, `rgba(255,${p.g},${p.b},1)`);
+            grad.addColorStop(0.4, `rgba(255,${Math.floor(p.g * 0.6)},20,0.8)`);
+            grad.addColorStop(1, `rgba(255,60,10,0)`);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            // bright core
+            ctx.fillStyle = `rgba(255,255,220,${alpha * 0.9})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * 0.35, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          });
+        }
+      }
 
       if (o.type === "mini_heli" && o.chargeArcs) {
         ctx.save();
