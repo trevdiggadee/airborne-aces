@@ -1144,6 +1144,105 @@ input[type=range].tapSlider::-moz-range-thumb {
     box-shadow: 0 1px 0 #3a2a10, 0 2px 5px rgba(0,0,0,0.5);
   }
 
+  /* ---------- Tutorial guide — floating mascot + speech bubble, upper right ---------- */
+  #tutorialGuide {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 78px);
+    right: 14px;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    max-width: min(72vw, 320px);
+    animation: tutFadeIn 0.35s ease-out;
+  }
+  #tutorialGuide.hidden { display: none !important; }
+
+  @keyframes tutFadeIn {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  #tutorialGuide .tutGuideChar {
+    width: 64px;
+    height: 64px;
+    animation: tutFloat 2.2s ease-in-out infinite;
+  }
+  #tutorialGuide .tutGuideChar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
+  }
+
+  @keyframes tutFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  #tutorialGuide .tutBubble {
+    background: linear-gradient(#f5e6c8, #e3cfa0);
+    border: 3px solid #6b4a2b;
+    border-radius: 12px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.45), inset 0 0 0 2px #c9a66b;
+    padding: 12px 14px 12px;
+    position: relative;
+  }
+  #tutorialGuide .tutBubble::after {
+    content: "";
+    position: absolute;
+    top: -10px;
+    right: 26px;
+    width: 0; height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 12px solid #6b4a2b;
+  }
+  #tutorialGuide .tutBubble::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 28px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 9px solid #f0dfb8;
+    z-index: 1;
+  }
+  #tutorialGuide .tutBubble p {
+    margin: 0 0 10px;
+    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: #3a2410;
+  }
+  #tutorialGuide .tutBubble button {
+    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #f5e6c8;
+    background: linear-gradient(#8b6b3d, #5e4420);
+    border: 2px solid #c9a66b;
+    border-radius: 6px;
+    box-shadow: 0 2px 0 #3a2a10, 0 3px 6px rgba(0,0,0,0.4);
+    padding: 6px 16px;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+  }
+  #tutorialGuide .tutBubble button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 0 #3a2a10, 0 2px 4px rgba(0,0,0,0.4);
+  }
+
+  @media (max-width: 420px) {
+    #tutorialGuide { max-width: 68vw; }
+    #tutorialGuide .tutGuideChar { width: 52px; height: 52px; }
+    #tutorialGuide .tutBubble p { font-size: 12px; }
+  }
+
   @keyframes dlgHintBlink {
     0%, 49% { opacity: 1; }
     50%, 100% { opacity: 0.2; }
@@ -1415,6 +1514,16 @@ input[type=range].tapSlider::-moz-range-thumb {
     </div>
     <button type="button" id="dlgSkipBtn" class="dlgSkipBtn">SKIP ▶</button>
     <div class="dlgTapHint">TAP TO CONTINUE</div>
+  </div>
+</div>
+
+<div id="tutorialGuide" class="hidden">
+  <div class="tutGuideChar">
+    <img src="" alt="" id="tutGuideImg">
+  </div>
+  <div class="tutBubble">
+    <p id="tutBubbleText"></p>
+    <button type="button" id="tutSkipBtn">GOT IT ▶</button>
   </div>
 </div>
 </div>
@@ -3488,33 +3597,35 @@ flyBtn.addEventListener("click", () => { startGame(); });
   const BUILDING_ROW_PROFILES = { streetrow1: STREETROW1_PROFILE, streetrow2: STREETROW2_PROFILE };
 
   function buildingProfileTopFrac(b, sampleX) {
-    const profile = BUILDING_ROW_PROFILES[buildingRowKey];
+    const profile = BUILDING_ROW_PROFILES[b.key];
     if (!profile) return 0;
     const localFrac = Math.max(0, Math.min(0.9999, (sampleX - b.x) / b.w));
     const idx = Math.floor(localFrac * profile.length);
     return profile[idx];
   }
-  let buildings = []; // tiles of the current strip: { x, w, h }
-  let buildingRowKey = null;
+  let buildings = []; // tiles of the current strip: { x, w, h, key }
 
-  function currentBuildingRowKey() {
-    return BUILDING_ROW_KEYS[bossesDefeatedCount % BUILDING_ROW_KEYS.length];
+  function pickBuildingRowKey() {
+    // random per-tile rather than tied to level — until level-specific art
+    // exists, this keeps the street looping continuously with no jump/swap
+    // at level transitions
+    return BUILDING_ROW_KEYS[Math.floor(Math.random() * BUILDING_ROW_KEYS.length)];
   }
 
-  function makeBuildingRowTile(xStart, key) {
+  function makeBuildingRowTile(xStart) {
+    const key = pickBuildingRowKey();
     const img = images[key];
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3.2;
     const h = H * 0.42;
     const w = h * aspect;
-    return { x: xStart, w, h };
+    return { x: xStart, w, h, key };
   }
 
   function initBuildings() {
-    buildingRowKey = currentBuildingRowKey();
     buildings = [];
     let x = 0;
     while (x < W + 200) {
-      const b = makeBuildingRowTile(x, buildingRowKey);
+      const b = makeBuildingRowTile(x);
       buildings.push(b);
       x += b.w; // edge-to-edge — pre-blended to tile seamlessly
     }
@@ -3523,11 +3634,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function updateBuildings(dtScale) {
-    const targetKey = currentBuildingRowKey();
-    if (targetKey !== buildingRowKey) {
-      initBuildings(); // level changed — rebuild with that level's strip
-      return;
-    }
     const speed = 0.8 * dtScale * (obstacleSpeedScale());
     buildings.forEach(b => (b.x -= speed));
     while (buildings.length && buildings[0].x + buildings[0].w < -10) {
@@ -3536,7 +3642,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     const last = buildings[buildings.length - 1];
     if (!last || last.x + last.w < W + 200) {
       const startX = last ? last.x + last.w : 0;
-      buildings.push(makeBuildingRowTile(startX, buildingRowKey));
+      buildings.push(makeBuildingRowTile(startX));
     }
   }
 
@@ -3554,9 +3660,9 @@ flyBtn.addEventListener("click", () => { startGame(); });
 
   function drawBuildings() {
     const groundY = groundLevelY();
-    const img = images[buildingRowKey];
-    if (!img || !img.naturalWidth) return;
     buildings.forEach(b => {
+      const img = images[b.key];
+      if (!img || !img.naturalWidth) return;
       ctx.drawImage(img, b.x, groundY - b.h, b.w, b.h);
     });
   }
@@ -7540,9 +7646,34 @@ function triggerBoss(num) {
     initParallaxLayers();
     showBanner("LEVEL 1", 2000, "level");
     
-    state = "playing";
+    startTutorial();
     startOverlay.classList.add("hidden");
     gameOverOverlay.classList.add("hidden");
+  }
+
+  const TUTORIAL_TEXT = "Tap or click to fly! Dodge the buildings, birds, and balloons \u2014 reach each boss to keep going!";
+
+  function startTutorial() {
+    state = "tutorial";
+    const overlay = document.getElementById("tutorialGuide");
+    const img = document.getElementById("tutGuideImg");
+    img.src = (images.heartPickup && images.heartPickup.naturalWidth) ? images.heartPickup.src : "";
+    document.getElementById("tutBubbleText").textContent = TUTORIAL_TEXT;
+    overlay.classList.remove("hidden");
+
+    let done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      overlay.classList.add("hidden");
+      skipBtn.removeEventListener("click", finish);
+      if (state === "tutorial") state = "playing";
+    }
+    const skipBtn = document.getElementById("tutSkipBtn");
+    skipBtn.addEventListener("click", finish);
+
+    // auto-dismiss after a few seconds even if they never tap the button
+    setTimeout(finish, 5000);
   }
 
   function crash() {
