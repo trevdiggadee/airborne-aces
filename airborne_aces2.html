@@ -7911,34 +7911,44 @@ function triggerBoss(num) {
     var groundY = groundLevelY();
     parallaxLayers.forEach(function(layer, li) {
       if (li === 0 && layer.imgKey) {
-        // Image layer: draw the far-background tiles, crossfading between
-        // levels when a transition is active (same tile positions/sizes for
-        // both images, so the blend has no jump or seam)
+        // The skylineFar / skylineFarL2 / skylineFarL3 art assets were
+        // shipping with their transparent regions baked in as a literal
+        // checkerboard (instead of being flattened onto a solid/sky color
+        // before export), so drawing them here was punching a checkerboard
+        // hole straight through the sky on every level. Replaced with a
+        // procedural haze wash that always matches the live sky gradient
+        // exactly (day/dusk/night/dawn), with a faint per-level tint so the
+        // LEVEL transition is still visually distinguishable — and none of
+        // it depends on that broken external art, so it can never show a
+        // broken/transparent checkerboard again.
+        var sky = getSkyColors(gameplayScore);
+        var haze = ctx.createLinearGradient(0, 0, 0, H);
+        haze.addColorStop(0, sky.top);
+        haze.addColorStop(1, sky.bottom);
+        var LEVEL_TINTS = {
+          skylineFar:   'rgba(0,0,0,0)',
+          skylineFarL2: 'rgba(60,40,70,0.12)',
+          skylineFarL3: 'rgba(70,30,20,0.14)'
+        };
         ctx.save();
         if (bgTransition) {
-          var fromImg = images[bgTransition.from];
-          var toImg = images[bgTransition.to];
           var t = bgTransition.t;
-          if (fromImg && fromImg.naturalWidth) {
-            ctx.globalAlpha = 0.55 * (1 - t);
-            layer.items.forEach(function(item) {
-              ctx.drawImage(fromImg, item.x, 0, item.w, item.h);
-            });
-          }
-          if (toImg && toImg.naturalWidth) {
-            ctx.globalAlpha = 0.55 * t;
-            layer.items.forEach(function(item) {
-              ctx.drawImage(toImg, item.x, 0, item.w, item.h);
-            });
-          }
+          ctx.globalAlpha = 0.35 * (1 - t);
+          ctx.fillStyle = haze;
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = LEVEL_TINTS[bgTransition.from] || 'rgba(0,0,0,0)';
+          ctx.fillRect(0, 0, W, H);
+          ctx.globalAlpha = 0.35 * t;
+          ctx.fillStyle = haze;
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = LEVEL_TINTS[bgTransition.to] || 'rgba(0,0,0,0)';
+          ctx.fillRect(0, 0, W, H);
         } else {
-          var img = images[layer.imgKey];
-          if (img && img.naturalWidth) {
-            ctx.globalAlpha = 0.55;
-            layer.items.forEach(function(item) {
-              ctx.drawImage(img, item.x, 0, item.w, item.h);
-            });
-          }
+          ctx.globalAlpha = 0.35;
+          ctx.fillStyle = haze;
+          ctx.fillRect(0, 0, W, H);
+          ctx.fillStyle = LEVEL_TINTS[layer.imgKey] || 'rgba(0,0,0,0)';
+          ctx.fillRect(0, 0, W, H);
         }
         ctx.restore();
       } else {
