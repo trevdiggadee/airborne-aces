@@ -2436,7 +2436,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // optional send to the reverb bus
   function playTone({ freq = 440, duration = 0.1, type = "sine", vol = 0.2, sweep = 0,
                        startDelay = 0, attack = 0.006, detune = 0, reverbSend = 0 }) {
-    ensureAudio();
     if (muted || !audioCtx) return;
     const t0 = audioCtx.currentTime + Math.max(0, startDelay);
     const osc = audioCtx.createOscillator();
@@ -2463,7 +2462,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // filtered noise burst — the workhorse for explosions, wind, thunder, hits
   function playNoise({ duration = 0.2, vol = 0.25, startDelay = 0, filterType = "lowpass",
                         filterFreq = 2000, filterFreqEnd = null, Q = 1, reverbSend = 0 }) {
-    ensureAudio();
     if (muted || !audioCtx) return;
     const t0 = audioCtx.currentTime + Math.max(0, startDelay);
     const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
