@@ -2568,9 +2568,13 @@ flyBtn.addEventListener("click", () => { startGame(); });
   const ASSET_SOURCES = {
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
-    skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
-    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
-    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
+    // DISABLED for testing — skylineFar/L2/L3 are no longer drawn as images anywhere
+    // (drawSkyline/drawParallaxLayers now use a procedural haze fill instead), so these
+    // are just being preloaded and otherwise unused. Commenting out stops the fetch
+    // entirely so we can confirm whether these specific files were the checkerboard source.
+    // skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
+    // skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
+    // skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
     powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0823.png",
     // DISABLED: farBg (Far_Bg.jpg) — this was the original checkerboard-transparency
     // asset the drawSkyline/drawParallaxLayers fix was written to stop using. It's not
