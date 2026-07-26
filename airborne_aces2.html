@@ -1270,7 +1270,7 @@ input[type=range].tapSlider::-moz-range-thumb {
 
 <div id="menuScreen">
 <audio id="menuMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/victory_brass_step.mp3"></audio>
-<audio id="levelMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skyward-march2.mp3"></audio>
+<audio id="gameplayMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skyward-march%202.mp3"></audio>
 <div class="stage">
   <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_03.webp?cb=2" alt="Airborne Aces" />
 
@@ -2169,6 +2169,56 @@ document.addEventListener("pointerdown", function unlockMenuMusic() {
 
 window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenuMusic(); };
 
+// ---------- Gameplay background music — a real audio file (skyward-march 2.mp3)
+// that plays during actual flight. Controlled from the inner game IIFE via the
+// window bridge below, hooked into its existing startMusic()/stopMusic()/
+// setMuted() calls — so every place that already turns the procedural music
+// on or off (game start, retry, checkpoint resume, crash) automatically drives
+// this track too, with no extra call sites needed. ----------
+const gameplayMusic = document.getElementById("gameplayMusic");
+const GAMEPLAY_MUSIC_VOLUME = 0.45;
+const GAMEPLAY_MUSIC_FADE_MS = 900;
+let gameplayMusicMuted = false;
+try { gameplayMusicMuted = localStorage.getItem("aa_muted") === "1"; } catch (e) {}
+if (gameplayMusic) gameplayMusic.volume = 0;
+
+function fadeGameplayMusicVolume(target, thenPause) {
+  if (!gameplayMusic) return;
+  const startVol = gameplayMusic.volume;
+  const startedAt = performance.now();
+  (function step() {
+    const p = Math.min(1, (performance.now() - startedAt) / GAMEPLAY_MUSIC_FADE_MS);
+    gameplayMusic.volume = startVol + (target - startVol) * p;
+    if (p < 1) {
+      requestAnimationFrame(step);
+    } else if (thenPause) {
+      gameplayMusic.pause();
+    }
+  })();
+}
+
+function startGameplayMusic() {
+  if (!gameplayMusic) return;
+  if (gameplayMusic.paused) gameplayMusic.play().catch(() => {});
+  fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME, false);
+}
+
+function stopGameplayMusic() {
+  if (!gameplayMusic || gameplayMusic.paused) return;
+  fadeGameplayMusicVolume(0, true);
+}
+
+function setGameplayMusicMuted(m) {
+  gameplayMusicMuted = m;
+  if (gameplayMusic && !gameplayMusic.paused) {
+    gameplayMusic.volume = m ? 0 : GAMEPLAY_MUSIC_VOLUME;
+  }
+}
+
+window.__airborneStartGameplayMusic = startGameplayMusic;
+window.__airborneStopGameplayMusic = stopGameplayMusic;
+window.__airborneSetGameplayMusicMuted = setGameplayMusicMuted;
+
 function setEffect(effect) {
   propBlur.style.display = effect === "propeller" ? "block" : "none";
   smokeParticles.style.display = effect === "smoke" ? "block" : "none";
@@ -2211,47 +2261,6 @@ function fadeOutMenuMusic() {
     } else {
       stopMenuMusicImmediately();
       menuMusic.addEventListener("timeupdate", menuMusicFadeStep);
-    }
-  })();
-}
-
-// ---------- Level (in-flight) background music — plays during normal
-// flight only; boss fights use the existing procedural THEME_BOSS music
-// instead (see triggerBoss / setMusicTheme call sites in the game logic
-// further down), so this and that system take turns rather than overlap.
-const levelMusic = document.getElementById("levelMusic");
-const LEVEL_MUSIC_VOLUME = 0.5;
-try {
-  if (localStorage.getItem("aa_muted") === "1" && levelMusic) levelMusic.dataset.userMuted = "1";
-} catch (e) {}
-if (levelMusic) levelMusic.volume = 0; // ramped up by startLevelMusic()
-
-function startLevelMusic() {
-  if (!levelMusic) return;
-  if (levelMusic.dataset.userMuted === "1") { levelMusic.volume = 0; return; }
-  levelMusic.volume = LEVEL_MUSIC_VOLUME;
-  if (levelMusic.paused) levelMusic.play().catch(() => {});
-}
-
-function stopLevelMusicImmediately() {
-  if (!levelMusic || levelMusic.paused) return;
-  levelMusic.pause();
-  levelMusic.currentTime = 0;
-}
-
-// quick fade-out (rather than an abrupt cut) when handing off to the boss theme
-function fadeOutLevelMusic() {
-  if (!levelMusic || levelMusic.paused) return;
-  const fadeMs = 350;
-  const startVol = levelMusic.volume;
-  const startedAt = performance.now();
-  (function step() {
-    const p = Math.min(1, (performance.now() - startedAt) / fadeMs);
-    levelMusic.volume = startVol * (1 - p);
-    if (p < 1) {
-      requestAnimationFrame(step);
-    } else {
-      stopLevelMusicImmediately();
     }
   })();
 }
@@ -2339,12 +2348,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     muted = m;
     try { localStorage.setItem("aa_muted", muted ? "1" : "0"); } catch (e) {}
     if (masterGain) masterGain.gain.setTargetAtTime(muted ? 0 : 1, audioCtx.currentTime, 0.02);
-    [typeof menuMusic !== "undefined" ? menuMusic : null,
-     typeof levelMusic !== "undefined" ? levelMusic : null].forEach(a => {
-      if (!a) return;
-      a.dataset.userMuted = muted ? "1" : "0";
-      if (muted) a.volume = 0;
-    });
+    if (window.__airborneSetGameplayMusicMuted) window.__airborneSetGameplayMusicMuted(muted);
     const btn = document.getElementById("muteBtn");
     if (btn) btn.textContent = muted ? "🔇" : "🔊";
   }
@@ -2593,6 +2597,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function startMusic() {
+    if (window.__airborneStartGameplayMusic) window.__airborneStartGameplayMusic();
     if (!audioCtx) return;
     buildAudioGraph();
     if (musicPlaying) return;
@@ -2603,6 +2608,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function stopMusic() {
+    if (window.__airborneStopGameplayMusic) window.__airborneStopGameplayMusic();
     musicPlaying = false;
     if (musicTimerId) { clearInterval(musicTimerId); musicTimerId = null; }
   }
@@ -3552,7 +3558,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   function makeBuildingRowTile(xStart, key) {
     const img = images[key];
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3.2;
-    const h = H * 0.42;
+    const h = H * 0.3;
     const w = h * aspect;
     return { x: xStart, w, h };
   }
@@ -4276,22 +4282,18 @@ ctx.save();
     if (type === "balloon_anim") {
       dispW = Math.min(90, W * 0.18);
     } else if (type === "mini_blimp") {
-      // boss 2's mini — 2x the player blimp's own size
+      // mini blimps match the player blimp size for visual parity
       const playerImg = currentPlayerImage();
       const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
-      dispW = Math.min(220, W * 0.44);
+      dispW = Math.min(110, W * 0.22);
       // Force aspect to match player so height matches too
       aspect = playerAspect || aspect;
     } else if (type === "mini_tank") {
-      // boss 3's mini — 2x the player blimp's own size
-      dispW = Math.min(220, W * 0.44);
+      // boss 3's mini — matches the player blimp's own size
+      dispW = Math.min(110, W * 0.22);
     } else if (type === "mini_heli") {
-      // boss 4's mini — 2x the player blimp's own size
-      dispW = Math.min(220, W * 0.44);
-    } else if (type === "mini_ebomb") {
-      // boss 5's mini — 2x the player blimp's own size (previously had no
-      // dedicated branch and was falling into the generic bird-size default)
-      dispW = Math.min(220, W * 0.44);
+      // boss 4's mini — matches the player blimp's own size
+      dispW = Math.min(110, W * 0.22);
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -5771,8 +5773,6 @@ function bossPortraitImg(num) {
 function triggerBoss(num) {
     const cfg = bossConfig(num);
     setMusicTheme(THEME_BOSS);
-    fadeOutLevelMusic();
-    startMusic();
     lastBossTriggered = num;
     bossActive = true;
     bossNumber = num;
@@ -6254,8 +6254,6 @@ function triggerBoss(num) {
     triggerScreenShake(6, 400);
     triggerScreenFlash(0.2, 300);
     setMusicTheme(THEME_NORMAL);
-    stopMusic();
-    startLevelMusic();
     const cfg = bossConfig(bossNumber);
     bossesDefeatedCount++;
     bossActive = false;
@@ -7502,8 +7500,7 @@ function triggerBoss(num) {
   function startGame() {
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
-    fadeOutMenuMusic();
-    startLevelMusic();
+    startMusic();
     // force hide overlays
     document.getElementById("startOverlay").classList.add("hidden");
     document.getElementById("gameOverOverlay").classList.add("hidden");
@@ -7610,7 +7607,6 @@ function triggerBoss(num) {
     triggerScreenShake(10, 600);
     triggerScreenFlash(0.4, 400);
     stopMusic();
-    stopLevelMusicImmediately();
     defeatDebris = [];
     shockwaves = [];
     groundVehicles = [];
@@ -7643,8 +7639,6 @@ function triggerBoss(num) {
     checkpointScore = 0;
     checkpointGameplayScore = 0;
     checkpointBossesDefeated = 0;
-    stopMusic();
-    stopLevelMusicImmediately();
     gameOverOverlay.classList.add("hidden");
     document.getElementById("gameScreen").style.display = "none";
     const menuScreenEl = document.getElementById("menuScreen");
@@ -7656,8 +7650,7 @@ function triggerBoss(num) {
     // Resume game from last checkpoint — keep score, reset health, clear threats
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
-    stopMusic();
-    startLevelMusic();
+    startMusic();
 
     // Restore score to checkpoint level
     score = checkpointScore;
