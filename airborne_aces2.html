@@ -1270,6 +1270,7 @@ input[type=range].tapSlider::-moz-range-thumb {
 
 <div id="menuScreen">
 <audio id="menuMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/victory_brass_step.mp3"></audio>
+<audio id="skywardMarch" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skyward-march%202.mp3"></audio>
 <div class="stage">
   <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_03.webp?cb=2" alt="Airborne Aces" />
 
@@ -2213,6 +2214,41 @@ function fadeOutMenuMusic() {
     }
   })();
 }
+
+// ---------- skyward-march background music for level 3 (tank boss / rain level) ----------
+const skywardMarch = document.getElementById("skywardMarch");
+const SKYWARD_VOLUME = 0.55;
+let skywardPlaying = false;
+
+function startSkywardMarch() {
+  if (!skywardMarch || skywardPlaying) return;
+  skywardMarch.volume = SKYWARD_VOLUME;
+  skywardMarch.play().then(() => { skywardPlaying = true; }).catch(() => {});
+}
+
+function stopSkywardMarch() {
+  if (!skywardMarch || skywardMarch.paused) return;
+  skywardMarch.pause();
+  skywardMarch.currentTime = 0;
+  skywardPlaying = false;
+}
+
+function fadeOutSkywardMarch() {
+  if (!skywardMarch || skywardMarch.paused) return;
+  const fadeMs = 600;
+  const startVol = skywardMarch.volume;
+  const startedAt = performance.now();
+  (function step() {
+    const p = Math.min(1, (performance.now() - startedAt) / fadeMs);
+    skywardMarch.volume = startVol * (1 - p);
+    if (p < 1) {
+      requestAnimationFrame(step);
+    } else {
+      stopSkywardMarch();
+    }
+  })();
+}
+
 
 const flyBtn = document.getElementById("flyBtn");
 flyBtn.addEventListener("pointerdown", (e) => {
@@ -4231,15 +4267,18 @@ ctx.save();
       // mini blimps match the player blimp size for visual parity
       const playerImg = currentPlayerImage();
       const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
-      dispW = Math.min(110, W * 0.22);
+      dispW = Math.min(220, W * 0.44);
       // Force aspect to match player so height matches too
       aspect = playerAspect || aspect;
     } else if (type === "mini_tank") {
       // boss 3's mini — matches the player blimp's own size
-      dispW = Math.min(110, W * 0.22);
+      dispW = Math.min(220, W * 0.44);
     } else if (type === "mini_heli") {
       // boss 4's mini — matches the player blimp's own size
-      dispW = Math.min(110, W * 0.22);
+      dispW = Math.min(220, W * 0.44);
+    } else if (type === "mini_ebomb") {
+      // boss 5's mini — electric bomb, 2x size
+      dispW = Math.min(220, W * 0.44);
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -5583,6 +5622,7 @@ const PLAYER_RETORTS = [
 let bossDialogueSkip = null;
 
 function startBossDialogue(num) {
+  if (num !== 3 && skywardPlaying) { fadeOutSkywardMarch(); }
   state = "bossDialogue";
 
   const overlay = document.getElementById("bossDialogueOverlay");
@@ -5719,6 +5759,7 @@ function bossPortraitImg(num) {
 function triggerBoss(num) {
     const cfg = bossConfig(num);
     setMusicTheme(THEME_BOSS);
+    if (num === 3) { startSkywardMarch(); }
     lastBossTriggered = num;
     bossActive = true;
     bossNumber = num;
@@ -6035,7 +6076,7 @@ function triggerBoss(num) {
       ctx.save();
       ctx.translate(b.x, b.y);
       ctx.rotate(b.rotation || 0);
-      drawMotionBlur(img, 0, 0, w, h, b.rotation || 0, b.vx, b.vy);
+      drawMotionBlur(img, 0, 0, w, h, (b.rotation || 0) + (b.spriteKey === "boss3_shell" ? Math.PI : 0), b.vx, b.vy);
       ctx.drawImage(img, -w / 2, -h / 2, w, h);
       ctx.restore();
     });
@@ -6181,6 +6222,7 @@ function triggerBoss(num) {
   }
 
   function defeatBoss() {
+    if (boss && boss.variant === 3) { fadeOutSkywardMarch(); }
     if (boss) {
       const cx = boss.x + boss.w / 2;
       const cy = boss.y + boss.h / 2;
@@ -6565,7 +6607,9 @@ function triggerBoss(num) {
     if (state !== "playing") return false;
     if (bossActive) return !!(boss && boss.kind === "tank");
     const next = nextBossConfig();
-    return !!(next && next.num === 3);
+    const raining = !!(next && next.num === 3);
+    if (raining && !skywardPlaying) { startSkywardMarch(); }
+    return raining;
   }
 
   // Storm cloud animation - 36 frames for floating decorative cloud during rain
@@ -7109,8 +7153,9 @@ function triggerBoss(num) {
       const h = w * aspect;
       ctx.save();
       ctx.translate(b.x, b.y);
-      ctx.rotate(b.rotation || 0);
-      drawMotionBlur(img, 0, 0, w, h, b.rotation || 0, b.vx, b.vy);
+      // boss3_shell: flame comes out the back, so rotate 180° from velocity direction
+      ctx.rotate((b.rotation || 0) + (b.spriteKey === "boss3_shell" ? Math.PI : 0));
+      drawMotionBlur(img, 0, 0, w, h, (b.rotation || 0) + (b.spriteKey === "boss3_shell" ? Math.PI : 0), b.vx, b.vy);
       ctx.drawImage(img, -w / 2, -h / 2, w, h);
       ctx.restore();
     });
