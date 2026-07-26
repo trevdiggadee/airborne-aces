@@ -2318,11 +2318,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
     masterGain.connect(audioCtx.destination);
 
     sfxGainNode = audioCtx.createGain();
-    sfxGainNode.gain.value = 1;
+    sfxGainNode.gain.value = 1.6;
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = 0.55;
+    musicGainNode.gain.value = 0.28;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -2415,91 +2415,91 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxFlap() {
-    playNoise({ duration: 0.09, vol: 0.045, filterType: "bandpass", filterFreq: 900, filterFreqEnd: 380, Q: 0.8 });
-    playTone({ freq: 230, duration: 0.09, type: "triangle", vol: 0.08, sweep: 130, attack: 0.004 });
+    playNoise({ duration: 0.09, vol: 0.10, filterType: "bandpass", filterFreq: 900, filterFreqEnd: 380, Q: 0.8 });
+    playTone({ freq: 230, duration: 0.09, type: "triangle", vol: 0.15, sweep: 130, attack: 0.004 });
   }
 
   function sfxShoot() {
-    playTone({ freq: 920, duration: 0.05, type: "square", vol: 0.05, sweep: -520, attack: 0.002 });
-    playTone({ freq: 1500, duration: 0.02, type: "square", vol: 0.03, attack: 0.001 });
+    playTone({ freq: 920, duration: 0.05, type: "square", vol: 0.12, sweep: -520, attack: 0.002 });
+    playTone({ freq: 1500, duration: 0.02, type: "square", vol: 0.08, attack: 0.001 });
   }
 
   function sfxExplosion(size = 1) {
-    playNoise({ duration: 0.26 + size * 0.12, vol: 0.17 + size * 0.08, filterType: "lowpass",
+    playNoise({ duration: 0.26 + size * 0.12, vol: 0.30 + size * 0.14, filterType: "lowpass",
       filterFreq: 3200, filterFreqEnd: 180, Q: 0.8, reverbSend: 0.45 });
-    playTone({ freq: 82, duration: 0.22 + size * 0.1, type: "sawtooth", vol: 0.12 + size * 0.06,
+    playTone({ freq: 82, duration: 0.22 + size * 0.1, type: "sawtooth", vol: 0.22 + size * 0.11,
       sweep: -45, attack: 0.005, reverbSend: 0.2 });
     for (let i = 0; i < 3; i++) {
-      playNoise({ duration: 0.03, vol: 0.05, filterType: "highpass", filterFreq: 2600, startDelay: 0.02 + i * 0.045 });
+      playNoise({ duration: 0.03, vol: 0.10, filterType: "highpass", filterFreq: 2600, startDelay: 0.02 + i * 0.045 });
     }
   }
 
   function sfxHit() {
-    playNoise({ duration: 0.12, vol: 0.14, filterType: "bandpass", filterFreq: 1300, Q: 1.5 });
-    playTone({ freq: 145, duration: 0.15, type: "sawtooth", vol: 0.17, sweep: -85, attack: 0.003 });
+    playNoise({ duration: 0.12, vol: 0.26, filterType: "bandpass", filterFreq: 1300, Q: 1.5 });
+    playTone({ freq: 145, duration: 0.15, type: "sawtooth", vol: 0.30, sweep: -85, attack: 0.003 });
   }
 
   function sfxPowerup() {
     [0, 4, 7, 12].forEach((iv, i) => {
-      playTone({ freq: noteFreq(64 + iv), duration: 0.14, type: "triangle", vol: 0.1,
+      playTone({ freq: noteFreq(64 + iv), duration: 0.14, type: "triangle", vol: 0.20,
         sweep: 40, startDelay: i * 0.07, attack: 0.004, reverbSend: 0.3 });
     });
   }
 
   function sfxHeart() {
-    playTone({ freq: 660, duration: 0.16, type: "sine", vol: 0.12, sweep: 140, reverbSend: 0.35 });
-    playTone({ freq: 990, duration: 0.14, type: "sine", vol: 0.06, startDelay: 0.03, reverbSend: 0.35 });
+    playTone({ freq: 660, duration: 0.16, type: "sine", vol: 0.22, sweep: 140, reverbSend: 0.35 });
+    playTone({ freq: 990, duration: 0.14, type: "sine", vol: 0.14, startDelay: 0.03, reverbSend: 0.35 });
   }
 
   function sfxBossDefeat() {
     // a little triumphant major chord + rising fanfare stab
     [0, 4, 7, 12].forEach(iv => {
-      playTone({ freq: noteFreq(45 + iv), duration: 0.6, type: "sawtooth", vol: 0.07, attack: 0.02, reverbSend: 0.4 });
+      playTone({ freq: noteFreq(45 + iv), duration: 0.6, type: "sawtooth", vol: 0.15, attack: 0.02, reverbSend: 0.4 });
     });
     [0, 0.14, 0.28].forEach((d, i) => {
-      playTone({ freq: 300 + i * 140, duration: 0.22, type: "square", vol: 0.14, sweep: 90, startDelay: d, reverbSend: 0.3 });
+      playTone({ freq: 300 + i * 140, duration: 0.22, type: "square", vol: 0.26, sweep: 90, startDelay: d, reverbSend: 0.3 });
     });
   }
 
   function sfxCrash() {
-    playNoise({ duration: 0.42, vol: 0.22, filterType: "lowpass", filterFreq: 2600, filterFreqEnd: 150, reverbSend: 0.35 });
-    playTone({ freq: 90, duration: 0.42, type: "sawtooth", vol: 0.18, sweep: -65, attack: 0.005, reverbSend: 0.2 });
-    playTone({ freq: 55, duration: 0.5, type: "sine", vol: 0.12, startDelay: 0.05 });
+    playNoise({ duration: 0.42, vol: 0.40, filterType: "lowpass", filterFreq: 2600, filterFreqEnd: 150, reverbSend: 0.35 });
+    playTone({ freq: 90, duration: 0.42, type: "sawtooth", vol: 0.32, sweep: -65, attack: 0.005, reverbSend: 0.2 });
+    playTone({ freq: 55, duration: 0.5, type: "sine", vol: 0.22, startDelay: 0.05 });
   }
 
   function sfxClick() {
-    playTone({ freq: 900, duration: 0.035, type: "square", vol: 0.07, attack: 0.001 });
-    playNoise({ duration: 0.02, vol: 0.03, filterType: "highpass", filterFreq: 3200 });
+    playTone({ freq: 900, duration: 0.035, type: "square", vol: 0.14, attack: 0.001 });
+    playNoise({ duration: 0.02, vol: 0.08, filterType: "highpass", filterFreq: 3200 });
   }
 
   function sfxThunder() {
-    playNoise({ duration: 0.6, vol: 0.16, filterType: "lowpass", filterFreq: 500, filterFreqEnd: 80, reverbSend: 0.55 });
-    playNoise({ duration: 0.12, vol: 0.1, filterType: "highpass", filterFreq: 3000, startDelay: 0.01 });
-    playTone({ freq: 50, duration: 0.6, type: "sawtooth", vol: 0.1, sweep: -15, reverbSend: 0.35 });
+    playNoise({ duration: 0.6, vol: 0.30, filterType: "lowpass", filterFreq: 500, filterFreqEnd: 80, reverbSend: 0.55 });
+    playNoise({ duration: 0.12, vol: 0.20, filterType: "highpass", filterFreq: 3000, startDelay: 0.01 });
+    playTone({ freq: 50, duration: 0.6, type: "sawtooth", vol: 0.20, sweep: -15, reverbSend: 0.35 });
   }
 
   function sfxDeflect() {
-    playTone({ freq: 1200, duration: 0.08, type: "sine", vol: 0.1, sweep: 320, detune: 8, reverbSend: 0.3 });
-    playTone({ freq: 1600, duration: 0.06, type: "sine", vol: 0.06, sweep: 320, startDelay: 0.01 });
+    playTone({ freq: 1200, duration: 0.08, type: "sine", vol: 0.20, sweep: 320, detune: 8, reverbSend: 0.3 });
+    playTone({ freq: 1600, duration: 0.06, type: "sine", vol: 0.14, sweep: 320, startDelay: 0.01 });
   }
 
   function sfxTypewriterTick() {
-    playTone({ freq: 1050 + Math.random() * 260, duration: 0.028, type: "square", vol: 0.05, attack: 0.001 });
+    playTone({ freq: 1050 + Math.random() * 260, duration: 0.028, type: "square", vol: 0.12, attack: 0.001 });
   }
 
   function sfxStreak() {
     [0, 0.07].forEach((d, i) => {
-      playTone({ freq: 660 * Math.pow(2, (i * 3) / 12), duration: 0.09, type: "triangle", vol: 0.09, sweep: 120, startDelay: d });
+      playTone({ freq: 660 * Math.pow(2, (i * 3) / 12), duration: 0.09, type: "triangle", vol: 0.18, sweep: 120, startDelay: d });
     });
   }
 
   function sfxStormReady() {
     // bright rising sparkle + chime — signals the power is charged and tappable
     [0, 4, 7, 12, 16].forEach((iv, i) => {
-      playTone({ freq: noteFreq(69 + iv), duration: 0.16, type: "triangle", vol: 0.09,
+      playTone({ freq: noteFreq(69 + iv), duration: 0.16, type: "triangle", vol: 0.20,
         sweep: 60, startDelay: i * 0.045, attack: 0.003, reverbSend: 0.4 });
     });
-    playTone({ freq: 1760, duration: 0.22, type: "sine", vol: 0.07, startDelay: 0.18, reverbSend: 0.45 });
+    playTone({ freq: 1760, duration: 0.22, type: "sine", vol: 0.18, startDelay: 0.18, reverbSend: 0.45 });
   }
 
   // ---------- Music — original adaptive score, two hand-written 16-step loops ----------
@@ -4282,18 +4282,21 @@ ctx.save();
     if (type === "balloon_anim") {
       dispW = Math.min(90, W * 0.18);
     } else if (type === "mini_blimp") {
-      // mini blimps match the player blimp size for visual parity
+      // mini blimps match the player blimp size for visual parity (2x scaled)
       const playerImg = currentPlayerImage();
       const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
-      dispW = Math.min(110, W * 0.22);
+      dispW = Math.min(220, W * 0.44);
       // Force aspect to match player so height matches too
       aspect = playerAspect || aspect;
     } else if (type === "mini_tank") {
-      // boss 3's mini — matches the player blimp's own size
-      dispW = Math.min(110, W * 0.22);
+      // boss 3's mini — matches the player blimp's own size (2x scaled)
+      dispW = Math.min(220, W * 0.44);
     } else if (type === "mini_heli") {
-      // boss 4's mini — matches the player blimp's own size
-      dispW = Math.min(110, W * 0.22);
+      // boss 4's mini — matches the player blimp's own size (2x scaled)
+      dispW = Math.min(220, W * 0.44);
+    } else if (type === "mini_ebomb") {
+      // boss 5's mini — electric bomb (2x scaled)
+      dispW = Math.min(220, W * 0.44);
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -4453,6 +4456,41 @@ ctx.save();
       const speed = obstacleSpeed * (o.speedMult || 1);
       drawMotionBlur(img, o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, 0, speed, 0);
       ctx.drawImage(img, o.x, drawY, o.w, o.h);
+
+      // Blue rocket flame exhaust for boss 2 mini blimps
+      if (o.type === "mini_blimp") {
+        const flameT = performance.now() / 1000;
+        const flameLen = o.w * (0.35 + Math.sin(flameT * 12) * 0.08);
+        const flameW = o.h * (0.22 + Math.sin(flameT * 18) * 0.05);
+        const flameX = o.x - flameLen * 0.4;
+        const flameY = drawY + o.h * 0.55;
+        ctx.save();
+        // Outer blue glow
+        const glow = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, flameLen * 1.2);
+        glow.addColorStop(0, "rgba(80,160,255,0.75)");
+        glow.addColorStop(0.5, "rgba(40,100,220,0.45)");
+        glow.addColorStop(1, "rgba(20,60,180,0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.ellipse(flameX, flameY, flameLen, flameW, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Bright core
+        const core = ctx.createRadialGradient(flameX + flameLen * 0.15, flameY, 0, flameX + flameLen * 0.15, flameY, flameLen * 0.5);
+        core.addColorStop(0, "rgba(180,220,255,0.9)");
+        core.addColorStop(0.6, "rgba(100,170,255,0.6)");
+        core.addColorStop(1, "rgba(60,120,230,0)");
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.ellipse(flameX + flameLen * 0.1, flameY, flameLen * 0.55, flameW * 0.65, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // White hot center flicker
+        ctx.globalAlpha = 0.7 + Math.sin(flameT * 24) * 0.25;
+        ctx.fillStyle = "rgba(220,240,255,0.85)";
+        ctx.beginPath();
+        ctx.ellipse(flameX + flameLen * 0.2, flameY + Math.sin(flameT * 16) * 2, flameLen * 0.2, flameW * 0.25, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
 
       if (o.type === "mini_heli" && o.chargeArcs) {
         ctx.save();
