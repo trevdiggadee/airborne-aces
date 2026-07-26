@@ -2568,8 +2568,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
     skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
-    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
-    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
+    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0845.png",
+    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0844.png",
     powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/powerlines.webp",
     farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
@@ -7857,7 +7857,7 @@ function triggerBoss(num) {
       showBanner("LEVEL " + levelNum, 2000, "level");
     }
     if (bgTransition) {
-      bgTransition.t += dtScale / 150; // ~2.5s crossfade at a 60fps baseline
+      bgTransition.t += dtScale / 210; // ~3.5s eased crossfade at a 60fps baseline
       if (bgTransition.t >= 1) {
         layer0.imgKey = bgTransition.to;
         bgTransition = null;
@@ -7922,7 +7922,8 @@ function triggerBoss(num) {
         if (bgTransition) {
           var fromImg = images[bgTransition.from];
           var toImg = images[bgTransition.to];
-          var t = bgTransition.t;
+          var rawT = bgTransition.t;
+          var t = rawT * rawT * (3 - 2 * rawT); // smoothstep ease — gentler start/end than a linear fade
           if (fromImg && fromImg.naturalWidth) {
             ctx.globalAlpha = 0.55 * (1 - t);
             layer.items.forEach(function(item) {
