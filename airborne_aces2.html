@@ -7881,11 +7881,8 @@ function triggerBoss(num) {
   // (should be near-instant since they're embedded base64), the start is
   // queued and fires the moment loading finishes.
   let pendingStart = false;
-  let gameStarted = false;
   function bridgeStart() {
-    if (gameStarted) return;
     if (assetsLoaded === assetKeys.length) {
-      gameStarted = true;
       startGame();
     } else {
       pendingStart = true;
