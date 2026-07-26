@@ -3573,7 +3573,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     powerlineTiles = [];
     const img = images.powerlines;
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3;
-    const h = H * 0.56; // tall enough for the poles/wires to read above the rooftops
+    const h = H * 0.22; // reduced well below half its old size — was dominating the whole sky
     const w = h * aspect;
     let x = 0;
     while (x < W + w) {
@@ -3591,7 +3591,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     const last = powerlineTiles[powerlineTiles.length - 1];
     if (!last || last.x + last.w < W + 200) {
       const startX = last ? last.x + last.w - 1 : 0;
-      const h = last ? last.h : H * 0.56;
+      const h = last ? last.h : H * 0.22;
       const aspect = last ? last.w / last.h : 3;
       powerlineTiles.push({ x: startX, w: h * aspect, h: h });
     }
@@ -7813,15 +7813,18 @@ function triggerBoss(num) {
       { depth: 0.35, items: [], color: 'rgba(50,40,25,0.55)', itemH: H * 0.08, density: 0.025 }
     ];
     bgTransition = null;
-    // Layer 0: skylineFar image - tile across screen
+    // Layer 0: skylineFar image - tile across screen, 25% taller than full
+    // screen height, anchored to the ground so the extra height extends
+    // upward past the top edge (naturally cropped by the canvas)
     var layer0 = parallaxLayers[0];
     var img = images[layer0.imgKey];
     if (img && img.naturalWidth) {
       var aspect = img.naturalHeight / img.naturalWidth;
-      var tileW = H / aspect;
+      var dispH = H * 1.25;
+      var tileW = dispH / aspect;
       var x = 0;
       while (x < W + tileW * 2) {
-        layer0.items.push({ x: x, w: tileW, h: H });
+        layer0.items.push({ x: x, w: tileW, h: dispH });
         x += tileW - 1; // slight overlap to prevent gaps
       }
     }
@@ -7911,44 +7914,35 @@ function triggerBoss(num) {
     var groundY = groundLevelY();
     parallaxLayers.forEach(function(layer, li) {
       if (li === 0 && layer.imgKey) {
-        // The skylineFar / skylineFarL2 / skylineFarL3 art assets were
-        // shipping with their transparent regions baked in as a literal
-        // checkerboard (instead of being flattened onto a solid/sky color
-        // before export), so drawing them here was punching a checkerboard
-        // hole straight through the sky on every level. Replaced with a
-        // procedural haze wash that always matches the live sky gradient
-        // exactly (day/dusk/night/dawn), with a faint per-level tint so the
-        // LEVEL transition is still visually distinguishable — and none of
-        // it depends on that broken external art, so it can never show a
-        // broken/transparent checkerboard again.
-        var sky = getSkyColors(gameplayScore);
-        var haze = ctx.createLinearGradient(0, 0, 0, H);
-        haze.addColorStop(0, sky.top);
-        haze.addColorStop(1, sky.bottom);
-        var LEVEL_TINTS = {
-          skylineFar:   'rgba(0,0,0,0)',
-          skylineFarL2: 'rgba(60,40,70,0.12)',
-          skylineFarL3: 'rgba(70,30,20,0.14)'
-        };
+        // Distant skyline image, crossfading between levels when the
+        // background transitions. Anchored to the ground line — since the
+        // display height is 25% taller than the screen, the extra height
+        // extends up past the top edge and is naturally clipped by the canvas.
         ctx.save();
         if (bgTransition) {
+          var fromImg = images[bgTransition.from];
+          var toImg = images[bgTransition.to];
           var t = bgTransition.t;
-          ctx.globalAlpha = 0.35 * (1 - t);
-          ctx.fillStyle = haze;
-          ctx.fillRect(0, 0, W, H);
-          ctx.fillStyle = LEVEL_TINTS[bgTransition.from] || 'rgba(0,0,0,0)';
-          ctx.fillRect(0, 0, W, H);
-          ctx.globalAlpha = 0.35 * t;
-          ctx.fillStyle = haze;
-          ctx.fillRect(0, 0, W, H);
-          ctx.fillStyle = LEVEL_TINTS[bgTransition.to] || 'rgba(0,0,0,0)';
-          ctx.fillRect(0, 0, W, H);
+          if (fromImg && fromImg.naturalWidth) {
+            ctx.globalAlpha = 0.55 * (1 - t);
+            layer.items.forEach(function(item) {
+              ctx.drawImage(fromImg, item.x, groundY - item.h, item.w, item.h);
+            });
+          }
+          if (toImg && toImg.naturalWidth) {
+            ctx.globalAlpha = 0.55 * t;
+            layer.items.forEach(function(item) {
+              ctx.drawImage(toImg, item.x, groundY - item.h, item.w, item.h);
+            });
+          }
         } else {
-          ctx.globalAlpha = 0.35;
-          ctx.fillStyle = haze;
-          ctx.fillRect(0, 0, W, H);
-          ctx.fillStyle = LEVEL_TINTS[layer.imgKey] || 'rgba(0,0,0,0)';
-          ctx.fillRect(0, 0, W, H);
+          var img = images[layer.imgKey];
+          if (img && img.naturalWidth) {
+            ctx.globalAlpha = 0.55;
+            layer.items.forEach(function(item) {
+              ctx.drawImage(img, item.x, groundY - item.h, item.w, item.h);
+            });
+          }
         }
         ctx.restore();
       } else {
