@@ -5772,6 +5772,7 @@ function triggerBoss(num) {
     playerBombs = [];
     playerBombTrailParticles = [];
     arcBombTimer = 0.6;
+    showBanner(cfg.label, 2200, "boss");
 
     // power-up starts drifting in shortly after the boss arrives
     powerup = null;
@@ -6284,10 +6285,13 @@ function triggerBoss(num) {
       if (powerup.kind === "blue") {
         hasFirepower = true;
         hasDualFire = true;
+        showBanner("DUAL CANNONS ACTIVATED!", 1600, "power");
       } else if (powerup.kind === "arcbomb") {
         hasArcBomb = true;
+        showBanner("BOMBARDIER ACTIVATED!", 1600, "power");
       } else {
         hasFirepower = true;
+        showBanner("FIREPOWER ACTIVATED!", 1600, "power");
       }
     }
   }
@@ -6601,7 +6605,7 @@ function triggerBoss(num) {
             const dispH = dispW * aspect;
             stormCloudsDecorative.push({
                 x: W + dispW,
-                y: H * 0.05 + Math.random() * Math.max(20, (groundLevelY() - H * 0.42) - H * 0.05 - 20), // stays above the rooftops instead of dipping down over the buildings
+                y: H * 0.05 + Math.random() * (H * 0.55), // spread across more vertical area
                 w: dispW,
                 h: dispH,
                 speed: 25 + Math.random() * 20, // slower drift for dramatic effect
@@ -7534,7 +7538,6 @@ function triggerBoss(num) {
     birdFlocks = [];
     birdFlockTimer = 6 + Math.random() * 8;
     initParallaxLayers();
-    initFarBg();
     showBanner("LEVEL 1", 2000, "level");
     
     state = "playing";
@@ -7692,7 +7695,6 @@ function triggerBoss(num) {
     initBuildings();
     initClouds();
     initParallaxLayers(); // resync the background to the restored level immediately — no crossfade, no stray "LEVEL X" banner
-    initFarBg();
 
     // Resume
     state = "playing";
@@ -7791,52 +7793,6 @@ function triggerBoss(num) {
 
   // ---------- Parallax Background Layers (4 depth levels) ----------
   let parallaxLayers = [];
-
-  // ---------- Far background backdrop — sits behind everything else, even
-  // the distant skyline layer. A slow-drifting atmospheric painting instead
-  // of the flat sky gradient alone. Was added to ASSET_SOURCES but never
-  // actually drawn anywhere — this is what was missing. ----------
-  let farBgTiles = [];
-
-  function initFarBg() {
-    farBgTiles = [];
-    const img = images.farBg;
-    if (!img || !img.naturalWidth) return;
-    const aspect = img.naturalWidth / img.naturalHeight;
-    const tileH = H;
-    const tileW = tileH * aspect;
-    let x = 0;
-    while (x < W + tileW) {
-      farBgTiles.push({ x: x, w: tileW, h: tileH });
-      x += tileW - 1; // slight overlap so the seam never shows
-    }
-  }
-
-  function updateFarBg(dtScale) {
-    const img = images.farBg;
-    if (!img || !img.naturalWidth) return;
-    if (!farBgTiles.length) initFarBg();
-    const speed = 0.015 * dtScale * obstacleSpeedScale(); // slowest layer in the scene — reads as furthest away
-    farBgTiles.forEach(t => (t.x -= speed));
-    while (farBgTiles.length && farBgTiles[0].x + farBgTiles[0].w < -10) {
-      farBgTiles.shift();
-    }
-    const last = farBgTiles[farBgTiles.length - 1];
-    if (!last || last.x + last.w < W + 50) {
-      const aspect = img.naturalWidth / img.naturalHeight;
-      const tileW = H * aspect;
-      farBgTiles.push({ x: last ? last.x + last.w - 1 : 0, w: tileW, h: H });
-    }
-  }
-
-  function drawFarBg() {
-    const img = images.farBg;
-    if (!img || !img.naturalWidth) return;
-    farBgTiles.forEach(t => {
-      ctx.drawImage(img, t.x, 0, t.w, t.h);
-    });
-  }
-
 
   // ---------- Level far-background crossfade ----------
   // Each level uses its own far-background image; when the score crosses a
@@ -8551,12 +8507,10 @@ function triggerBoss(num) {
     grad.addColorStop(1, sky.bottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
-    drawFarBg();
 
     const dtScale = dt * 60; // normalize movement speeds tuned at 60fps baseline
 
     updateParallaxLayers(dtScale);
-    updateFarBg(dtScale);
     updateSkyline(dtScale);
     drawSkyline();
 
@@ -8608,7 +8562,6 @@ function triggerBoss(num) {
       initBuildings();
       initClouds();
       initParallaxLayers();
-      initFarBg();
       
       resetPlayer();
     } else if (state !== "playing") {
@@ -8679,7 +8632,6 @@ function triggerBoss(num) {
       initBuildings();
       initClouds();
       initParallaxLayers();
-      initFarBg();
       
       resetPlayer();
       requestAnimationFrame(loop);
