@@ -1256,59 +1256,6 @@ input[type=range].tapSlider::-moz-range-thumb {
     opacity: 0.25;
     transition: opacity 0.05s ease-in;
   }
-
-  /* MUSIC VOLUME SLIDER */
-  #musicVolumeWrap {
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
-    right: 14px;
-    z-index: 12;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: linear-gradient(#f5e6c8, #d8c3a5);
-    border: 2px solid #6b4a2b;
-    border-radius: 20px;
-    padding: 4px 10px;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 0 0 2px #c9a66b;
-  }
-  #musicVolumeWrap label {
-    font-size: 12px;
-    font-weight: bold;
-    color: #3a2a18;
-    letter-spacing: 0.5px;
-    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-  }
-  input[type=range].musicVolSlider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 80px;
-    height: 6px;
-    background: #3a2a18;
-    border-radius: 3px;
-    outline: none;
-    cursor: pointer;
-  }
-  input[type=range].musicVolSlider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: linear-gradient(#c9a66b, #8b6b3d);
-    border: 2px solid #3a2a18;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    cursor: pointer;
-  }
-  input[type=range].musicVolSlider::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    background: linear-gradient(#c9a66b, #8b6b3d);
-    border: 2px solid #3a2a18;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-    cursor: pointer;
-  }
-
 </style>
 </head>
 
@@ -1323,7 +1270,6 @@ input[type=range].tapSlider::-moz-range-thumb {
 
 <div id="menuScreen">
 <audio id="menuMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/victory_brass_step.mp3"></audio>
-<audio id="skywardMarch" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skyward-march%202.mp3"></audio>
 <div class="stage">
   <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_03.webp?cb=2" alt="Airborne Aces" />
 
@@ -1373,10 +1319,6 @@ input[type=range].tapSlider::-moz-range-thumb {
 <canvas id="gameCanvas"></canvas>
 
 <button id="muteBtn" aria-label="Toggle sound">🔊</button>
-<div id="musicVolumeWrap">
-  <label>🎵</label>
-  <input type="range" class="musicVolSlider" id="musicVolSlider" min="0" max="100" value="55" aria-label="Music volume">
-</div>
 
 <div id="hudFrame">
   <img id="hudFrameImg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/hudFrame.webp?cb=2" alt="" />
@@ -1450,11 +1392,6 @@ input[type=range].tapSlider::-moz-range-thumb {
     <button class="gameFlyBtn secondaryBtn hidden" id="checkpointBtn">CHECKPOINT</button>
     <button class="gameFlyBtn secondaryBtn" id="menuBtn">CHANGE BLIMP</button>
   </div>
-</div>
-
-<div id="musicVolumeWrap">
-  <label>🎵</label>
-  <input type="range" class="musicVolSlider" id="musicVolSlider" min="0" max="100" value="55" aria-label="Music volume">
 </div>
 
 <div id="bossDialogueOverlay" class="hidden">
@@ -2277,67 +2214,6 @@ function fadeOutMenuMusic() {
   })();
 }
 
-// ---------- skyward-march background music for level 3 (tank boss / rain level) ----------
-const skywardMarch = document.getElementById("skywardMarch");
-const SKYWARD_VOLUME = 0.55;
-let skywardPlaying = false;
-
-function startSkywardMarch() {
-  if (!skywardMarch || skywardPlaying) return;
-  skywardMarch.volume = musicVolume;
-  skywardMarch.play().then(() => { skywardPlaying = true; }).catch(() => {});
-}
-
-function stopSkywardMarch() {
-  if (!skywardMarch || skywardMarch.paused) return;
-  skywardMarch.pause();
-  skywardMarch.currentTime = 0;
-  skywardPlaying = false;
-}
-
-function fadeOutSkywardMarch() {
-  if (!skywardMarch || skywardMarch.paused) return;
-  const fadeMs = 600;
-  const startVol = skywardMarch.volume;
-  const startedAt = performance.now();
-  (function step() {
-    const p = Math.min(1, (performance.now() - startedAt) / fadeMs);
-    skywardMarch.volume = startVol * (1 - p);
-    if (p < 1) {
-      requestAnimationFrame(step);
-    } else {
-      stopSkywardMarch();
-    }
-  })();
-}
-
-// ---------- Music volume slider ----------
-let musicVolume = 0.55; // 0-1 range
-const musicVolSlider = document.getElementById("musicVolSlider");
-
-try {
-  const savedVol = localStorage.getItem("aa_music_vol");
-  if (savedVol !== null) {
-    musicVolume = parseFloat(savedVol);
-    if (musicVolSlider) musicVolSlider.value = Math.round(musicVolume * 100);
-  }
-} catch (e) {}
-
-function applyMusicVolume() {
-  if (skywardMarch) skywardMarch.volume = musicVolume;
-  if (musicGainNode) musicGainNode.gain.setTargetAtTime(musicVolume, audioCtx ? audioCtx.currentTime : 0, 0.02);
-}
-
-if (musicVolSlider) {
-  musicVolSlider.addEventListener("input", function() {
-    musicVolume = parseInt(this.value, 10) / 100;
-    applyMusicVolume();
-    try { localStorage.setItem("aa_music_vol", String(musicVolume)); } catch (e) {}
-  });
-}
-
-
-
 const flyBtn = document.getElementById("flyBtn");
 flyBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -2391,11 +2267,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
     masterGain.connect(audioCtx.destination);
 
     sfxGainNode = audioCtx.createGain();
-    sfxGainNode.gain.value = 1.4;
+    sfxGainNode.gain.value = 1;
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = musicVolume;
+    musicGainNode.gain.value = 0.55;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -2421,8 +2297,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
     muted = m;
     try { localStorage.setItem("aa_muted", muted ? "1" : "0"); } catch (e) {}
     if (masterGain) masterGain.gain.setTargetAtTime(muted ? 0 : 1, audioCtx.currentTime, 0.02);
-    if (skywardMarch) skywardMarch.muted = muted;
-    if (menuMusic) menuMusic.muted = muted;
     const btn = document.getElementById("muteBtn");
     if (btn) btn.textContent = muted ? "🔇" : "🔊";
   }
@@ -2489,19 +2363,19 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxFlap() {
-    playNoise({ duration: 0.09, vol: 0.08, filterType: "bandpass", filterFreq: 900, filterFreqEnd: 380, Q: 0.8 });
-    playTone({ freq: 230, duration: 0.09, type: "triangle", vol: 0.14, sweep: 130, attack: 0.004 });
+    playNoise({ duration: 0.09, vol: 0.045, filterType: "bandpass", filterFreq: 900, filterFreqEnd: 380, Q: 0.8 });
+    playTone({ freq: 230, duration: 0.09, type: "triangle", vol: 0.08, sweep: 130, attack: 0.004 });
   }
 
   function sfxShoot() {
-    playTone({ freq: 920, duration: 0.05, type: "square", vol: 0.12, sweep: -520, attack: 0.002 });
-    playTone({ freq: 1500, duration: 0.02, type: "square", vol: 0.08, attack: 0.001 });
+    playTone({ freq: 920, duration: 0.05, type: "square", vol: 0.05, sweep: -520, attack: 0.002 });
+    playTone({ freq: 1500, duration: 0.02, type: "square", vol: 0.03, attack: 0.001 });
   }
 
   function sfxExplosion(size = 1) {
-    playNoise({ duration: 0.26 + size * 0.12, vol: 0.28 + size * 0.12, filterType: "lowpass",
+    playNoise({ duration: 0.26 + size * 0.12, vol: 0.17 + size * 0.08, filterType: "lowpass",
       filterFreq: 3200, filterFreqEnd: 180, Q: 0.8, reverbSend: 0.45 });
-    playTone({ freq: 82, duration: 0.22 + size * 0.1, type: "sawtooth", vol: 0.22 + size * 0.10,
+    playTone({ freq: 82, duration: 0.22 + size * 0.1, type: "sawtooth", vol: 0.12 + size * 0.06,
       sweep: -45, attack: 0.005, reverbSend: 0.2 });
     for (let i = 0; i < 3; i++) {
       playNoise({ duration: 0.03, vol: 0.05, filterType: "highpass", filterFreq: 2600, startDelay: 0.02 + i * 0.045 });
@@ -2509,20 +2383,20 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxHit() {
-    playNoise({ duration: 0.12, vol: 0.24, filterType: "bandpass", filterFreq: 1300, Q: 1.5 });
-    playTone({ freq: 145, duration: 0.15, type: "sawtooth", vol: 0.28, sweep: -85, attack: 0.003 });
+    playNoise({ duration: 0.12, vol: 0.14, filterType: "bandpass", filterFreq: 1300, Q: 1.5 });
+    playTone({ freq: 145, duration: 0.15, type: "sawtooth", vol: 0.17, sweep: -85, attack: 0.003 });
   }
 
   function sfxPowerup() {
     [0, 4, 7, 12].forEach((iv, i) => {
-      playTone({ freq: noteFreq(64 + iv), duration: 0.14, type: "triangle", vol: 0.18,
+      playTone({ freq: noteFreq(64 + iv), duration: 0.14, type: "triangle", vol: 0.1,
         sweep: 40, startDelay: i * 0.07, attack: 0.004, reverbSend: 0.3 });
     });
   }
 
   function sfxHeart() {
-    playTone({ freq: 660, duration: 0.16, type: "sine", vol: 0.22, sweep: 140, reverbSend: 0.35 });
-    playTone({ freq: 990, duration: 0.14, type: "sine", vol: 0.12, startDelay: 0.03, reverbSend: 0.35 });
+    playTone({ freq: 660, duration: 0.16, type: "sine", vol: 0.12, sweep: 140, reverbSend: 0.35 });
+    playTone({ freq: 990, duration: 0.14, type: "sine", vol: 0.06, startDelay: 0.03, reverbSend: 0.35 });
   }
 
   function sfxBossDefeat() {
@@ -2536,8 +2410,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxCrash() {
-    playNoise({ duration: 0.42, vol: 0.35, filterType: "lowpass", filterFreq: 2600, filterFreqEnd: 150, reverbSend: 0.35 });
-    playTone({ freq: 90, duration: 0.42, type: "sawtooth", vol: 0.30, sweep: -65, attack: 0.005, reverbSend: 0.2 });
+    playNoise({ duration: 0.42, vol: 0.22, filterType: "lowpass", filterFreq: 2600, filterFreqEnd: 150, reverbSend: 0.35 });
+    playTone({ freq: 90, duration: 0.42, type: "sawtooth", vol: 0.18, sweep: -65, attack: 0.005, reverbSend: 0.2 });
     playTone({ freq: 55, duration: 0.5, type: "sine", vol: 0.12, startDelay: 0.05 });
   }
 
@@ -2547,9 +2421,9 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxThunder() {
-    playNoise({ duration: 0.6, vol: 0.28, filterType: "lowpass", filterFreq: 500, filterFreqEnd: 80, reverbSend: 0.55 });
+    playNoise({ duration: 0.6, vol: 0.16, filterType: "lowpass", filterFreq: 500, filterFreqEnd: 80, reverbSend: 0.55 });
     playNoise({ duration: 0.12, vol: 0.1, filterType: "highpass", filterFreq: 3000, startDelay: 0.01 });
-    playTone({ freq: 50, duration: 0.6, type: "sawtooth", vol: 0.20, sweep: -15, reverbSend: 0.35 });
+    playTone({ freq: 50, duration: 0.6, type: "sawtooth", vol: 0.1, sweep: -15, reverbSend: 0.35 });
   }
 
   function sfxDeflect() {
@@ -2694,8 +2568,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
     skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
-    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0845.png",
-    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0844.png",
+    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
+    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
     powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/powerlines.webp",
     farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
@@ -3624,8 +3498,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let buildingRowKey = null;
 
   function currentBuildingRowKey() {
-    // Always use the first strip for continuous smooth scrolling
-    return BUILDING_ROW_KEYS[0];
+    return BUILDING_ROW_KEYS[bossesDefeatedCount % BUILDING_ROW_KEYS.length];
   }
 
   function makeBuildingRowTile(xStart, key) {
@@ -3650,8 +3523,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function updateBuildings(dtScale) {
-    // Continuous scroll — same image keeps flowing regardless of level
-    // The buildingRowKey is set once at init and never changes mid-game
+    const targetKey = currentBuildingRowKey();
+    if (targetKey !== buildingRowKey) {
+      initBuildings(); // level changed — rebuild with that level's strip
+      return;
+    }
     const speed = 0.8 * dtScale * (obstacleSpeedScale());
     buildings.forEach(b => (b.x -= speed));
     while (buildings.length && buildings[0].x + buildings[0].w < -10) {
@@ -4355,18 +4231,15 @@ ctx.save();
       // mini blimps match the player blimp size for visual parity
       const playerImg = currentPlayerImage();
       const playerAspect = playerImg && playerImg.naturalWidth ? (playerImg.naturalHeight / playerImg.naturalWidth) : 0.6;
-      dispW = Math.min(220, W * 0.44);
+      dispW = Math.min(110, W * 0.22);
       // Force aspect to match player so height matches too
       aspect = playerAspect || aspect;
     } else if (type === "mini_tank") {
       // boss 3's mini — matches the player blimp's own size
-      dispW = Math.min(220, W * 0.44);
+      dispW = Math.min(110, W * 0.22);
     } else if (type === "mini_heli") {
       // boss 4's mini — matches the player blimp's own size
-      dispW = Math.min(220, W * 0.44);
-    } else if (type === "mini_ebomb") {
-      // boss 5's mini — electric bomb, 2x size
-      dispW = Math.min(220, W * 0.44);
+      dispW = Math.min(110, W * 0.22);
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -4424,40 +4297,6 @@ ctx.save();
         o.y += o.deflectVy * dt;
         o.deflectVy *= Math.max(0, 1 - 3.5 * dt);
         if (Math.abs(o.deflectVy) < 4) o.deflectVy = 0;
-      }
-
-      // mini_blimp blue rocket flame trail
-      if (o.type === "mini_blimp") {
-        o.flameTimer = (o.flameTimer || 0) - dt;
-        if (o.flameTimer <= 0) {
-          o.flameTimer = 0.04;
-          const speed = obstacleSpeed * (o.speedMult || 1);
-          const backX = o.x + o.w * 0.15;
-          const backY = o.y + Math.sin(o.bobPhase) * o.bobAmount + o.h * 0.5;
-          hitParticles.push({
-            type: "spark",
-            x: backX + (Math.random() - 0.5) * 6,
-            y: backY + (Math.random() - 0.5) * 6,
-            vx: -speed * 0.6 + (Math.random() - 0.5) * 40,
-            vy: (Math.random() - 0.5) * 30,
-            life: 0.12 + Math.random() * 0.1,
-            age: 0,
-            r: 3 + Math.random() * 4,
-            color: "#4488ff"
-          });
-          hitParticles.push({
-            type: "smoke",
-            x: backX + (Math.random() - 0.5) * 8,
-            y: backY + (Math.random() - 0.5) * 8,
-            vx: -speed * 0.4 + (Math.random() - 0.5) * 20,
-            vy: (Math.random() - 0.5) * 20,
-            life: 0.18 + Math.random() * 0.12,
-            age: 0,
-            r: 5 + Math.random() * 6,
-            growth: 1.5,
-            color: "#66aaff"
-          });
-        }
       }
 
       // boss 4's mini crackles with a little electrical charge — refresh the
@@ -5933,6 +5772,7 @@ function triggerBoss(num) {
     playerBombs = [];
     playerBombTrailParticles = [];
     arcBombTimer = 0.6;
+    showBanner(cfg.label, 2200, "boss");
 
     // power-up starts drifting in shortly after the boss arrives
     powerup = null;
@@ -6196,7 +6036,7 @@ function triggerBoss(num) {
       ctx.save();
       ctx.translate(b.x, b.y);
       ctx.rotate(b.rotation || 0);
-      drawMotionBlur(img, 0, 0, w, h, (b.rotation || 0) + (b.spriteKey === "boss3_shell" ? Math.PI : 0), b.vx, b.vy);
+      drawMotionBlur(img, 0, 0, w, h, b.rotation || 0, b.vx, b.vy);
       ctx.drawImage(img, -w / 2, -h / 2, w, h);
       ctx.restore();
     });
@@ -6445,10 +6285,13 @@ function triggerBoss(num) {
       if (powerup.kind === "blue") {
         hasFirepower = true;
         hasDualFire = true;
+        showBanner("DUAL CANNONS ACTIVATED!", 1600, "power");
       } else if (powerup.kind === "arcbomb") {
         hasArcBomb = true;
+        showBanner("BOMBARDIER ACTIVATED!", 1600, "power");
       } else {
         hasFirepower = true;
+        showBanner("FIREPOWER ACTIVATED!", 1600, "power");
       }
     }
   }
@@ -6762,7 +6605,7 @@ function triggerBoss(num) {
             const dispH = dispW * aspect;
             stormCloudsDecorative.push({
                 x: W + dispW,
-                y: H * 0.05 + Math.random() * Math.max(20, (groundLevelY() - H * 0.42) - H * 0.05 - 20), // stays above the rooftops instead of dipping down over the buildings
+                y: H * 0.05 + Math.random() * (H * 0.55), // spread across more vertical area
                 w: dispW,
                 h: dispH,
                 speed: 25 + Math.random() * 20, // slower drift for dramatic effect
@@ -7021,17 +6864,16 @@ function triggerBoss(num) {
       if (p.type === "smoke") {
         ctx.globalAlpha = Math.max(0, t) * 0.55;
         const r = p.r * (1 + (1 - t) * p.growth);
-        const smokeColor = p.color ? p.color.replace("#", "").match(/.{2}/g).map(c => parseInt(c, 16)) : [90, 85, 80];
         const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-        grad.addColorStop(0, `rgba(${smokeColor[0]},${smokeColor[1]},${smokeColor[2]},0.8)`);
-        grad.addColorStop(1, `rgba(${smokeColor[0]},${smokeColor[1]},${smokeColor[2]},0)`);
+        grad.addColorStop(0, "rgba(90,85,80,0.8)");
+        grad.addColorStop(1, "rgba(90,85,80,0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.fill();
       } else {
         ctx.globalAlpha = Math.max(0, t);
-        ctx.fillStyle = p.color || "#ffdd66";
+        ctx.fillStyle = "#ffdd66";
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r * t, 0, Math.PI * 2);
         ctx.fill();
@@ -7271,9 +7113,8 @@ function triggerBoss(num) {
       const h = w * aspect;
       ctx.save();
       ctx.translate(b.x, b.y);
-      // boss3_shell: flame comes out the back, so rotate 180° from velocity direction
-      ctx.rotate((b.rotation || 0) + (b.spriteKey === "boss3_shell" ? Math.PI : 0));
-      drawMotionBlur(img, 0, 0, w, h, (b.rotation || 0) + (b.spriteKey === "boss3_shell" ? Math.PI : 0), b.vx, b.vy);
+      ctx.rotate(b.rotation || 0);
+      drawMotionBlur(img, 0, 0, w, h, b.rotation || 0, b.vx, b.vy);
       ctx.drawImage(img, -w / 2, -h / 2, w, h);
       ctx.restore();
     });
@@ -7606,8 +7447,6 @@ function triggerBoss(num) {
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
     startMusic();
-    applyMusicVolume();
-    startSkywardMarch();
     // force hide overlays
     document.getElementById("startOverlay").classList.add("hidden");
     document.getElementById("gameOverOverlay").classList.add("hidden");
@@ -7699,7 +7538,6 @@ function triggerBoss(num) {
     birdFlocks = [];
     birdFlockTimer = 6 + Math.random() * 8;
     initParallaxLayers();
-    initFarBg();
     showBanner("LEVEL 1", 2000, "level");
     
     state = "playing";
@@ -7857,7 +7695,6 @@ function triggerBoss(num) {
     initBuildings();
     initClouds();
     initParallaxLayers(); // resync the background to the restored level immediately — no crossfade, no stray "LEVEL X" banner
-    initFarBg();
 
     // Resume
     state = "playing";
@@ -7957,52 +7794,6 @@ function triggerBoss(num) {
   // ---------- Parallax Background Layers (4 depth levels) ----------
   let parallaxLayers = [];
 
-  // ---------- Far background backdrop — sits behind everything else, even
-  // the distant skyline layer. A slow-drifting atmospheric painting instead
-  // of the flat sky gradient alone. Was added to ASSET_SOURCES but never
-  // actually drawn anywhere — this is what was missing. ----------
-  let farBgTiles = [];
-
-  function initFarBg() {
-    farBgTiles = [];
-    const img = images.farBg;
-    if (!img || !img.naturalWidth) return;
-    const aspect = img.naturalWidth / img.naturalHeight;
-    const tileH = H;
-    const tileW = tileH * aspect;
-    let x = 0;
-    while (x < W + tileW) {
-      farBgTiles.push({ x: x, w: tileW, h: tileH });
-      x += tileW - 1; // slight overlap so the seam never shows
-    }
-  }
-
-  function updateFarBg(dtScale) {
-    const img = images.farBg;
-    if (!img || !img.naturalWidth) return;
-    if (!farBgTiles.length) initFarBg();
-    const speed = 0.015 * dtScale * obstacleSpeedScale(); // slowest layer in the scene — reads as furthest away
-    farBgTiles.forEach(t => (t.x -= speed));
-    while (farBgTiles.length && farBgTiles[0].x + farBgTiles[0].w < -10) {
-      farBgTiles.shift();
-    }
-    const last = farBgTiles[farBgTiles.length - 1];
-    if (!last || last.x + last.w < W + 50) {
-      const aspect = img.naturalWidth / img.naturalHeight;
-      const tileW = H * aspect;
-      farBgTiles.push({ x: last ? last.x + last.w - 1 : 0, w: tileW, h: H });
-    }
-  }
-
-  function drawFarBg() {
-    const img = images.farBg;
-    if (!img || !img.naturalWidth) return;
-    farBgTiles.forEach(t => {
-      ctx.drawImage(img, t.x, 0, t.w, t.h);
-    });
-  }
-
-
   // ---------- Level far-background crossfade ----------
   // Each level uses its own far-background image; when the score crosses a
   // boss threshold (i.e. the level changes) the two backgrounds blend into
@@ -8028,14 +7819,9 @@ function triggerBoss(num) {
     var layer0 = parallaxLayers[0];
     var img = images[layer0.imgKey];
     if (img && img.naturalWidth) {
-      var aspectHW = img.naturalHeight / img.naturalWidth;
-      // Size each tile off screen WIDTH rather than height — some of these
-      // background images are tall portrait photos rather than wide seamless
-      // banners, and sizing off height alone made those into narrow strips
-      // that had to repeat very often, showing an obvious seam/ghosting every
-      // repeat. Sizing off width keeps at most ~2 tiles on screen at once.
-      var tileW = Math.max(W * 0.85, H * 1.25 / aspectHW);
-      var dispH = tileW * aspectHW;
+      var aspect = img.naturalHeight / img.naturalWidth;
+      var dispH = H * 1.25;
+      var tileW = dispH / aspect;
       var x = 0;
       while (x < W + tileW * 2) {
         layer0.items.push({ x: x, w: tileW, h: dispH });
@@ -8071,7 +7857,7 @@ function triggerBoss(num) {
       showBanner("LEVEL " + levelNum, 2000, "level");
     }
     if (bgTransition) {
-      bgTransition.t += dtScale / 210; // ~3.5s eased crossfade at a 60fps baseline
+      bgTransition.t += dtScale / 150; // ~2.5s crossfade at a 60fps baseline
       if (bgTransition.t >= 1) {
         layer0.imgKey = bgTransition.to;
         bgTransition = null;
@@ -8136,8 +7922,7 @@ function triggerBoss(num) {
         if (bgTransition) {
           var fromImg = images[bgTransition.from];
           var toImg = images[bgTransition.to];
-          var rawT = bgTransition.t;
-          var t = rawT * rawT * (3 - 2 * rawT); // smoothstep ease — gentler start/end than a linear fade
+          var t = bgTransition.t;
           if (fromImg && fromImg.naturalWidth) {
             ctx.globalAlpha = 0.55 * (1 - t);
             layer.items.forEach(function(item) {
@@ -8716,12 +8501,10 @@ function triggerBoss(num) {
     grad.addColorStop(1, sky.bottom);
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, W, H);
-    drawFarBg();
 
     const dtScale = dt * 60; // normalize movement speeds tuned at 60fps baseline
 
     updateParallaxLayers(dtScale);
-    updateFarBg(dtScale);
     updateSkyline(dtScale);
     drawSkyline();
 
@@ -8773,7 +8556,6 @@ function triggerBoss(num) {
       initBuildings();
       initClouds();
       initParallaxLayers();
-      initFarBg();
       
       resetPlayer();
     } else if (state !== "playing") {
@@ -8844,7 +8626,6 @@ function triggerBoss(num) {
       initBuildings();
       initClouds();
       initParallaxLayers();
-      initFarBg();
       
       resetPlayer();
       requestAnimationFrame(loop);
