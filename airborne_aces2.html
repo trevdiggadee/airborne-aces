@@ -1054,10 +1054,10 @@ input[type=range].tapSlider::-moz-range-thumb {
   #bossDialogueOverlay .dlgBubble p {
     margin: 0;
     font-family: 'Georgia', 'Times New Roman', serif;
-    font-weight: 800;
+    font-weight: bold;
     font-style: italic;
-    font-size: clamp(23px, 6.2vw, 31px);
-    line-height: 1.45;
+    font-size: clamp(19px, 5.2vw, 26px);
+    line-height: 1.5;
     color: #2b1c10;
     text-align: center;
     min-height: 1.5em; /* reserve space so the bubble doesn't jump as text types in */
@@ -1151,7 +1151,7 @@ input[type=range].tapSlider::-moz-range-thumb {
 
   @media (max-width: 420px) {
     #bossDialogueOverlay { gap: 18px; }
-    #bossDialogueOverlay .dlgBubble p { font-size: 19px; }
+    #bossDialogueOverlay .dlgBubble p { font-size: 13px; }
   }
 
   .gameFlyBtn {
@@ -1315,7 +1315,6 @@ input[type=range].tapSlider::-moz-range-thumb {
 </div>
 </div>
 
-<div id="__deployCanary__" style="position:fixed;top:0;left:0;right:0;z-index:999999;background:#ff0000;color:#fff;font:bold 16px monospace;text-align:center;padding:10px;">TEST BUILD — CANARY-01 — if you can read this, THIS file is live</div>
 <div id="gameScreen" style="display:none;">
 <canvas id="gameCanvas"></canvas>
 
@@ -2568,19 +2567,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
   const ASSET_SOURCES = {
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
-    // DISABLED for testing — skylineFar/L2/L3 are no longer drawn as images anywhere
-    // (drawSkyline/drawParallaxLayers now use a procedural haze fill instead), so these
-    // are just being preloaded and otherwise unused. Commenting out stops the fetch
-    // entirely so we can confirm whether these specific files were the checkerboard source.
-    // skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
-    // skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
-    // skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
+    skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
+    skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
+    skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
     powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0823.png",
-    // DISABLED: farBg (Far_Bg.jpg) — this was the original checkerboard-transparency
-    // asset the drawSkyline/drawParallaxLayers fix was written to stop using. It's not
-    // referenced anywhere in the draw code anymore, so commenting it out here just stops
-    // it from being fetched/preloaded at all — nothing else depends on this key.
-    // farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
+    farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
     bldg_newspaper:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_newspaper.webp?cb=2",
