@@ -3938,21 +3938,22 @@ flyBtn.addEventListener("click", () => { startGame(); });
     skylineX -= speed;
   }
   function drawSkyline() {
-    const img = images.farBg;
-    if (!img || !img.naturalWidth) return;
-    const dispH = H; // full screen height, edge to edge
-    const dispW = dispH * (img.naturalWidth / img.naturalHeight);
-    if (dispW <= 0) return;
-    const y = 0;
-    // skylineX only ever decreases, so it's always <= 0 — JS's % keeps that sign,
-    // landing baseX in (-dispW, 0], which shifts tiles LEFT as time passes (same
-    // direction the buildings scroll, just far slower for the parallax depth feel)
-    const baseX = skylineX % dispW;
+    // The Far_Bg.jpg asset was shipping with its transparent areas baked in
+    // as a literal checkerboard (instead of being flattened onto a solid/sky
+    // color before export), so drawing it here was punching a checkerboard
+    // hole straight through the sky. Rather than depend on that external
+    // image at all, paint a soft procedural haze band using the SAME colors
+    // as the live sky gradient (getSkyColors) — it always matches the
+    // current day/dusk/night/dawn tint exactly, and can never fail to load,
+    // 404, or show through as broken/transparent.
+    const sky = getSkyColors(gameplayScore);
     ctx.save();
-    ctx.globalAlpha = 0.55;
-    for (let x = baseX; x < W + dispW; x += dispW) {
-      ctx.drawImage(img, x, y, dispW, dispH);
-    }
+    ctx.globalAlpha = 0.35;
+    const haze = ctx.createLinearGradient(0, 0, 0, H);
+    haze.addColorStop(0, sky.top);
+    haze.addColorStop(1, sky.bottom);
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, 0, W, H);
     ctx.restore();
   }
 
