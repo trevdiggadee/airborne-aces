@@ -2571,7 +2571,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
     skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0740.png",
     skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0742.png",
     powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0823.png",
-    farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
+    // DISABLED: farBg (Far_Bg.jpg) — this was the original checkerboard-transparency
+    // asset the drawSkyline/drawParallaxLayers fix was written to stop using. It's not
+    // referenced anywhere in the draw code anymore, so commenting it out here just stops
+    // it from being fetched/preloaded at all — nothing else depends on this key.
+    // farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
     bldg_newspaper:  "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_newspaper.webp?cb=2",
