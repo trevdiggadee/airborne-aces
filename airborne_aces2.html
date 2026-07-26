@@ -7819,9 +7819,14 @@ function triggerBoss(num) {
     var layer0 = parallaxLayers[0];
     var img = images[layer0.imgKey];
     if (img && img.naturalWidth) {
-      var aspect = img.naturalHeight / img.naturalWidth;
-      var dispH = H * 1.25;
-      var tileW = dispH / aspect;
+      var aspectHW = img.naturalHeight / img.naturalWidth;
+      // Size each tile off screen WIDTH rather than height — some of these
+      // background images are tall portrait photos rather than wide seamless
+      // banners, and sizing off height alone made those into narrow strips
+      // that had to repeat very often, showing an obvious seam/ghosting every
+      // repeat. Sizing off width keeps at most ~2 tiles on screen at once.
+      var tileW = Math.max(W * 0.85, H * 1.25 / aspectHW);
+      var dispH = tileW * aspectHW;
       var x = 0;
       while (x < W + tileW * 2) {
         layer0.items.push({ x: x, w: tileW, h: dispH });
