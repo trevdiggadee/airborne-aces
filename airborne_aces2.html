@@ -2333,6 +2333,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
     muted = m;
     try { localStorage.setItem("aa_muted", muted ? "1" : "0"); } catch (e) {}
     if (masterGain) masterGain.gain.setTargetAtTime(muted ? 0 : 1, audioCtx.currentTime, 0.02);
+    if (skywardMarch) skywardMarch.muted = muted;
+    if (menuMusic) menuMusic.muted = muted;
     const btn = document.getElementById("muteBtn");
     if (btn) btn.textContent = muted ? "🔇" : "🔊";
   }
@@ -2346,6 +2348,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // optional send to the reverb bus
   function playTone({ freq = 440, duration = 0.1, type = "sine", vol = 0.2, sweep = 0,
                        startDelay = 0, attack = 0.006, detune = 0, reverbSend = 0 }) {
+    ensureAudio();
     if (muted || !audioCtx) return;
     const t0 = audioCtx.currentTime + Math.max(0, startDelay);
     const osc = audioCtx.createOscillator();
@@ -2372,6 +2375,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // filtered noise burst — the workhorse for explosions, wind, thunder, hits
   function playNoise({ duration = 0.2, vol = 0.25, startDelay = 0, filterType = "lowpass",
                         filterFreq = 2000, filterFreqEnd = null, Q = 1, reverbSend = 0 }) {
+    ensureAudio();
     if (muted || !audioCtx) return;
     const t0 = audioCtx.currentTime + Math.max(0, startDelay);
     const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
@@ -3534,7 +3538,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let buildingRowKey = null;
 
   function currentBuildingRowKey() {
-    return BUILDING_ROW_KEYS[bossesDefeatedCount % BUILDING_ROW_KEYS.length];
+    // Always use the first strip for continuous smooth scrolling
+    return BUILDING_ROW_KEYS[0];
   }
 
   function makeBuildingRowTile(xStart, key) {
@@ -3559,11 +3564,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function updateBuildings(dtScale) {
-    const targetKey = currentBuildingRowKey();
-    if (targetKey !== buildingRowKey) {
-      initBuildings(); // level changed — rebuild with that level's strip
-      return;
-    }
+    // Continuous scroll — same image keeps flowing regardless of level
+    // The buildingRowKey is set once at init and never changes mid-game
     const speed = 0.8 * dtScale * (obstacleSpeedScale());
     buildings.forEach(b => (b.x -= speed));
     while (buildings.length && buildings[0].x + buildings[0].w < -10) {
@@ -4438,6 +4440,41 @@ ctx.save();
       const speed = obstacleSpeed * (o.speedMult || 1);
       drawMotionBlur(img, o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, 0, speed, 0);
       ctx.drawImage(img, o.x, drawY, o.w, o.h);
+
+      if (o.type === "mini_blimp") {
+        // blue rocket flame trail behind the mini blimp
+        o.flameTimer = (o.flameTimer || 0) - dt;
+        if (o.flameTimer <= 0) {
+          o.flameTimer = 0.04;
+          const speed = obstacleSpeed * (o.speedMult || 1);
+          const backX = o.x + o.w * 0.15;
+          const backY = drawY + o.h * 0.5;
+          hitParticles.push({
+            type: "spark",
+            x: backX + (Math.random() - 0.5) * 6,
+            y: backY + (Math.random() - 0.5) * 6,
+            vx: -speed * 0.6 + (Math.random() - 0.5) * 40,
+            vy: (Math.random() - 0.5) * 30,
+            life: 0.12 + Math.random() * 0.1,
+            age: 0,
+            r: 3 + Math.random() * 4,
+            color: "#4488ff"
+          });
+          // second, larger blue glow puff
+          hitParticles.push({
+            type: "smoke",
+            x: backX + (Math.random() - 0.5) * 8,
+            y: backY + (Math.random() - 0.5) * 8,
+            vx: -speed * 0.4 + (Math.random() - 0.5) * 20,
+            vy: (Math.random() - 0.5) * 20,
+            life: 0.18 + Math.random() * 0.12,
+            age: 0,
+            r: 5 + Math.random() * 6,
+            growth: 1.5,
+            color: "#66aaff"
+          });
+        }
+      }
 
       if (o.type === "mini_heli" && o.chargeArcs) {
         ctx.save();
@@ -5622,7 +5659,6 @@ const PLAYER_RETORTS = [
 let bossDialogueSkip = null;
 
 function startBossDialogue(num) {
-  if (num !== 3 && skywardPlaying) { fadeOutSkywardMarch(); }
   state = "bossDialogue";
 
   const overlay = document.getElementById("bossDialogueOverlay");
@@ -5759,7 +5795,6 @@ function bossPortraitImg(num) {
 function triggerBoss(num) {
     const cfg = bossConfig(num);
     setMusicTheme(THEME_BOSS);
-    if (num === 3) { startSkywardMarch(); }
     lastBossTriggered = num;
     bossActive = true;
     bossNumber = num;
@@ -6222,7 +6257,6 @@ function triggerBoss(num) {
   }
 
   function defeatBoss() {
-    if (boss && boss.variant === 3) { fadeOutSkywardMarch(); }
     if (boss) {
       const cx = boss.x + boss.w / 2;
       const cy = boss.y + boss.h / 2;
@@ -6607,9 +6641,7 @@ function triggerBoss(num) {
     if (state !== "playing") return false;
     if (bossActive) return !!(boss && boss.kind === "tank");
     const next = nextBossConfig();
-    const raining = !!(next && next.num === 3);
-    if (raining && !skywardPlaying) { startSkywardMarch(); }
-    return raining;
+    return !!(next && next.num === 3);
   }
 
   // Storm cloud animation - 36 frames for floating decorative cloud during rain
@@ -6904,16 +6936,17 @@ function triggerBoss(num) {
       if (p.type === "smoke") {
         ctx.globalAlpha = Math.max(0, t) * 0.55;
         const r = p.r * (1 + (1 - t) * p.growth);
+        const smokeColor = p.color ? p.color.replace("#", "").match(/.{2}/g).map(c => parseInt(c, 16)) : [90, 85, 80];
         const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-        grad.addColorStop(0, "rgba(90,85,80,0.8)");
-        grad.addColorStop(1, "rgba(90,85,80,0)");
+        grad.addColorStop(0, `rgba(${smokeColor[0]},${smokeColor[1]},${smokeColor[2]},0.8)`);
+        grad.addColorStop(1, `rgba(${smokeColor[0]},${smokeColor[1]},${smokeColor[2]},0)`);
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
         ctx.fill();
       } else {
         ctx.globalAlpha = Math.max(0, t);
-        ctx.fillStyle = "#ffdd66";
+        ctx.fillStyle = p.color || "#ffdd66";
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r * t, 0, Math.PI * 2);
         ctx.fill();
@@ -7488,6 +7521,7 @@ function triggerBoss(num) {
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
     startMusic();
+    startSkywardMarch();
     // force hide overlays
     document.getElementById("startOverlay").classList.add("hidden");
     document.getElementById("gameOverOverlay").classList.add("hidden");
