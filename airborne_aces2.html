@@ -1256,6 +1256,59 @@ input[type=range].tapSlider::-moz-range-thumb {
     opacity: 0.25;
     transition: opacity 0.05s ease-in;
   }
+
+  /* MUSIC VOLUME SLIDER */
+  #musicVolumeWrap {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
+    right: 14px;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(#f5e6c8, #d8c3a5);
+    border: 2px solid #6b4a2b;
+    border-radius: 20px;
+    padding: 4px 10px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 0 0 2px #c9a66b;
+  }
+  #musicVolumeWrap label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #3a2a18;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+  }
+  input[type=range].musicVolSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 80px;
+    height: 6px;
+    background: #3a2a18;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range].musicVolSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(#c9a66b, #8b6b3d);
+    border: 2px solid #3a2a18;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+  input[type=range].musicVolSlider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(#c9a66b, #8b6b3d);
+    border: 2px solid #3a2a18;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+
 </style>
 </head>
 
@@ -1320,6 +1373,10 @@ input[type=range].tapSlider::-moz-range-thumb {
 <canvas id="gameCanvas"></canvas>
 
 <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+<div id="musicVolumeWrap">
+  <label>🎵</label>
+  <input type="range" class="musicVolSlider" id="musicVolSlider" min="0" max="100" value="55" aria-label="Music volume">
+</div>
 
 <div id="hudFrame">
   <img id="hudFrameImg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/hudFrame.webp?cb=2" alt="" />
@@ -1393,6 +1450,11 @@ input[type=range].tapSlider::-moz-range-thumb {
     <button class="gameFlyBtn secondaryBtn hidden" id="checkpointBtn">CHECKPOINT</button>
     <button class="gameFlyBtn secondaryBtn" id="menuBtn">CHANGE BLIMP</button>
   </div>
+</div>
+
+<div id="musicVolumeWrap">
+  <label>🎵</label>
+  <input type="range" class="musicVolSlider" id="musicVolSlider" min="0" max="100" value="55" aria-label="Music volume">
 </div>
 
 <div id="bossDialogueOverlay" class="hidden">
@@ -2222,7 +2284,7 @@ let skywardPlaying = false;
 
 function startSkywardMarch() {
   if (!skywardMarch || skywardPlaying) return;
-  skywardMarch.volume = SKYWARD_VOLUME;
+  skywardMarch.volume = musicVolume;
   skywardMarch.play().then(() => { skywardPlaying = true; }).catch(() => {});
 }
 
@@ -2248,6 +2310,32 @@ function fadeOutSkywardMarch() {
     }
   })();
 }
+
+// ---------- Music volume slider ----------
+let musicVolume = 0.55; // 0-1 range
+const musicVolSlider = document.getElementById("musicVolSlider");
+
+try {
+  const savedVol = localStorage.getItem("aa_music_vol");
+  if (savedVol !== null) {
+    musicVolume = parseFloat(savedVol);
+    if (musicVolSlider) musicVolSlider.value = Math.round(musicVolume * 100);
+  }
+} catch (e) {}
+
+function applyMusicVolume() {
+  if (skywardMarch) skywardMarch.volume = musicVolume;
+  if (musicGainNode) musicGainNode.gain.setTargetAtTime(musicVolume, audioCtx ? audioCtx.currentTime : 0, 0.02);
+}
+
+if (musicVolSlider) {
+  musicVolSlider.addEventListener("input", function() {
+    musicVolume = parseInt(this.value, 10) / 100;
+    applyMusicVolume();
+    try { localStorage.setItem("aa_music_vol", String(musicVolume)); } catch (e) {}
+  });
+}
+
 
 
 const flyBtn = document.getElementById("flyBtn");
@@ -2303,11 +2391,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
     masterGain.connect(audioCtx.destination);
 
     sfxGainNode = audioCtx.createGain();
-    sfxGainNode.gain.value = 1;
+    sfxGainNode.gain.value = 1.4;
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = 0.55;
+    musicGainNode.gain.value = musicVolume;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -2403,19 +2491,19 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxFlap() {
-    playNoise({ duration: 0.09, vol: 0.045, filterType: "bandpass", filterFreq: 900, filterFreqEnd: 380, Q: 0.8 });
-    playTone({ freq: 230, duration: 0.09, type: "triangle", vol: 0.08, sweep: 130, attack: 0.004 });
+    playNoise({ duration: 0.09, vol: 0.08, filterType: "bandpass", filterFreq: 900, filterFreqEnd: 380, Q: 0.8 });
+    playTone({ freq: 230, duration: 0.09, type: "triangle", vol: 0.14, sweep: 130, attack: 0.004 });
   }
 
   function sfxShoot() {
-    playTone({ freq: 920, duration: 0.05, type: "square", vol: 0.05, sweep: -520, attack: 0.002 });
-    playTone({ freq: 1500, duration: 0.02, type: "square", vol: 0.03, attack: 0.001 });
+    playTone({ freq: 920, duration: 0.05, type: "square", vol: 0.12, sweep: -520, attack: 0.002 });
+    playTone({ freq: 1500, duration: 0.02, type: "square", vol: 0.08, attack: 0.001 });
   }
 
   function sfxExplosion(size = 1) {
-    playNoise({ duration: 0.26 + size * 0.12, vol: 0.17 + size * 0.08, filterType: "lowpass",
+    playNoise({ duration: 0.26 + size * 0.12, vol: 0.28 + size * 0.12, filterType: "lowpass",
       filterFreq: 3200, filterFreqEnd: 180, Q: 0.8, reverbSend: 0.45 });
-    playTone({ freq: 82, duration: 0.22 + size * 0.1, type: "sawtooth", vol: 0.12 + size * 0.06,
+    playTone({ freq: 82, duration: 0.22 + size * 0.1, type: "sawtooth", vol: 0.22 + size * 0.10,
       sweep: -45, attack: 0.005, reverbSend: 0.2 });
     for (let i = 0; i < 3; i++) {
       playNoise({ duration: 0.03, vol: 0.05, filterType: "highpass", filterFreq: 2600, startDelay: 0.02 + i * 0.045 });
@@ -2423,20 +2511,20 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxHit() {
-    playNoise({ duration: 0.12, vol: 0.14, filterType: "bandpass", filterFreq: 1300, Q: 1.5 });
-    playTone({ freq: 145, duration: 0.15, type: "sawtooth", vol: 0.17, sweep: -85, attack: 0.003 });
+    playNoise({ duration: 0.12, vol: 0.24, filterType: "bandpass", filterFreq: 1300, Q: 1.5 });
+    playTone({ freq: 145, duration: 0.15, type: "sawtooth", vol: 0.28, sweep: -85, attack: 0.003 });
   }
 
   function sfxPowerup() {
     [0, 4, 7, 12].forEach((iv, i) => {
-      playTone({ freq: noteFreq(64 + iv), duration: 0.14, type: "triangle", vol: 0.1,
+      playTone({ freq: noteFreq(64 + iv), duration: 0.14, type: "triangle", vol: 0.18,
         sweep: 40, startDelay: i * 0.07, attack: 0.004, reverbSend: 0.3 });
     });
   }
 
   function sfxHeart() {
-    playTone({ freq: 660, duration: 0.16, type: "sine", vol: 0.12, sweep: 140, reverbSend: 0.35 });
-    playTone({ freq: 990, duration: 0.14, type: "sine", vol: 0.06, startDelay: 0.03, reverbSend: 0.35 });
+    playTone({ freq: 660, duration: 0.16, type: "sine", vol: 0.22, sweep: 140, reverbSend: 0.35 });
+    playTone({ freq: 990, duration: 0.14, type: "sine", vol: 0.12, startDelay: 0.03, reverbSend: 0.35 });
   }
 
   function sfxBossDefeat() {
@@ -2450,8 +2538,8 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxCrash() {
-    playNoise({ duration: 0.42, vol: 0.22, filterType: "lowpass", filterFreq: 2600, filterFreqEnd: 150, reverbSend: 0.35 });
-    playTone({ freq: 90, duration: 0.42, type: "sawtooth", vol: 0.18, sweep: -65, attack: 0.005, reverbSend: 0.2 });
+    playNoise({ duration: 0.42, vol: 0.35, filterType: "lowpass", filterFreq: 2600, filterFreqEnd: 150, reverbSend: 0.35 });
+    playTone({ freq: 90, duration: 0.42, type: "sawtooth", vol: 0.30, sweep: -65, attack: 0.005, reverbSend: 0.2 });
     playTone({ freq: 55, duration: 0.5, type: "sine", vol: 0.12, startDelay: 0.05 });
   }
 
@@ -2461,9 +2549,9 @@ flyBtn.addEventListener("click", () => { startGame(); });
   }
 
   function sfxThunder() {
-    playNoise({ duration: 0.6, vol: 0.16, filterType: "lowpass", filterFreq: 500, filterFreqEnd: 80, reverbSend: 0.55 });
+    playNoise({ duration: 0.6, vol: 0.28, filterType: "lowpass", filterFreq: 500, filterFreqEnd: 80, reverbSend: 0.55 });
     playNoise({ duration: 0.12, vol: 0.1, filterType: "highpass", filterFreq: 3000, startDelay: 0.01 });
-    playTone({ freq: 50, duration: 0.6, type: "sawtooth", vol: 0.1, sweep: -15, reverbSend: 0.35 });
+    playTone({ freq: 50, duration: 0.6, type: "sawtooth", vol: 0.20, sweep: -15, reverbSend: 0.35 });
   }
 
   function sfxDeflect() {
@@ -4340,6 +4428,40 @@ ctx.save();
         if (Math.abs(o.deflectVy) < 4) o.deflectVy = 0;
       }
 
+      // mini_blimp blue rocket flame trail
+      if (o.type === "mini_blimp") {
+        o.flameTimer = (o.flameTimer || 0) - dt;
+        if (o.flameTimer <= 0) {
+          o.flameTimer = 0.04;
+          const speed = obstacleSpeed * (o.speedMult || 1);
+          const backX = o.x + o.w * 0.15;
+          const backY = o.y + Math.sin(o.bobPhase) * o.bobAmount + o.h * 0.5;
+          hitParticles.push({
+            type: "spark",
+            x: backX + (Math.random() - 0.5) * 6,
+            y: backY + (Math.random() - 0.5) * 6,
+            vx: -speed * 0.6 + (Math.random() - 0.5) * 40,
+            vy: (Math.random() - 0.5) * 30,
+            life: 0.12 + Math.random() * 0.1,
+            age: 0,
+            r: 3 + Math.random() * 4,
+            color: "#4488ff"
+          });
+          hitParticles.push({
+            type: "smoke",
+            x: backX + (Math.random() - 0.5) * 8,
+            y: backY + (Math.random() - 0.5) * 8,
+            vx: -speed * 0.4 + (Math.random() - 0.5) * 20,
+            vy: (Math.random() - 0.5) * 20,
+            life: 0.18 + Math.random() * 0.12,
+            age: 0,
+            r: 5 + Math.random() * 6,
+            growth: 1.5,
+            color: "#66aaff"
+          });
+        }
+      }
+
       // boss 4's mini crackles with a little electrical charge — refresh the
       // arcs on a timer so they flicker rather than staying static
       if (o.type === "mini_heli") {
@@ -4440,41 +4562,6 @@ ctx.save();
       const speed = obstacleSpeed * (o.speedMult || 1);
       drawMotionBlur(img, o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, 0, speed, 0);
       ctx.drawImage(img, o.x, drawY, o.w, o.h);
-
-      if (o.type === "mini_blimp") {
-        // blue rocket flame trail behind the mini blimp
-        o.flameTimer = (o.flameTimer || 0) - dt;
-        if (o.flameTimer <= 0) {
-          o.flameTimer = 0.04;
-          const speed = obstacleSpeed * (o.speedMult || 1);
-          const backX = o.x + o.w * 0.15;
-          const backY = drawY + o.h * 0.5;
-          hitParticles.push({
-            type: "spark",
-            x: backX + (Math.random() - 0.5) * 6,
-            y: backY + (Math.random() - 0.5) * 6,
-            vx: -speed * 0.6 + (Math.random() - 0.5) * 40,
-            vy: (Math.random() - 0.5) * 30,
-            life: 0.12 + Math.random() * 0.1,
-            age: 0,
-            r: 3 + Math.random() * 4,
-            color: "#4488ff"
-          });
-          // second, larger blue glow puff
-          hitParticles.push({
-            type: "smoke",
-            x: backX + (Math.random() - 0.5) * 8,
-            y: backY + (Math.random() - 0.5) * 8,
-            vx: -speed * 0.4 + (Math.random() - 0.5) * 20,
-            vy: (Math.random() - 0.5) * 20,
-            life: 0.18 + Math.random() * 0.12,
-            age: 0,
-            r: 5 + Math.random() * 6,
-            growth: 1.5,
-            color: "#66aaff"
-          });
-        }
-      }
 
       if (o.type === "mini_heli" && o.chargeArcs) {
         ctx.save();
@@ -7521,6 +7608,7 @@ function triggerBoss(num) {
     ensureAudio();
     setMusicTheme(THEME_NORMAL);
     startMusic();
+    applyMusicVolume();
     startSkywardMarch();
     // force hide overlays
     document.getElementById("startOverlay").classList.add("hidden");
