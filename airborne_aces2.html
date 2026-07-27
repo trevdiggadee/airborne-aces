@@ -3886,7 +3886,7 @@ function endCutscene() {
   function makeBuildingRowTile(xStart, key) {
     const img = images[key];
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3.2;
-    const h = H * 0.33; // +10%
+    const h = H * 0.396; // was 0.33, +20%
     const w = h * aspect;
     return { x: xStart, w, h };
   }
@@ -3954,7 +3954,7 @@ function endCutscene() {
     sketchSkylineTiles = [];
     const img = images.sketchSkyline;
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 1.5;
-    const h = H * 0.33; // +10%
+    const h = H * 0.495; // was 0.33, +50% (now anchored at ground, same base as power lines)
     const w = h * aspect;
     let x = 0;
     while (x < W + w) {
@@ -3972,7 +3972,7 @@ function endCutscene() {
     const last = sketchSkylineTiles[sketchSkylineTiles.length - 1];
     if (!last || last.x + last.w < W + 200) {
       const startX = last ? last.x + last.w - 1 : 0;
-      const h = last ? last.h : H * 0.33;
+      const h = last ? last.h : H * 0.495;
       const aspect = last ? last.w / last.h : 1.5;
       sketchSkylineTiles.push({ x: startX, w: h * aspect, h: h });
     }
@@ -3982,11 +3982,9 @@ function endCutscene() {
     const img = images.sketchSkyline;
     if (!img || !img.naturalWidth) return;
     const groundY = groundLevelY();
-    const powerlineH = H * 0.242; // matches the power lines' own display height (+10%)
-    // Anchored so its lower portion sits directly behind the power lines band
-    // (they're drawn after this, so they naturally paint over it) instead of
-    // floating above with a gap of plain sky in between.
-    const bottomY = groundY - powerlineH * 0.5;
+    // Anchored to the same ground base as the power lines (not floating above
+    // them) — taller now, so it still reaches well above where it used to.
+    const bottomY = groundY;
     ctx.save();
     ctx.globalAlpha = 0.8; // darker/more visible while still reading as distant (was 0.5)
     sketchSkylineTiles.forEach(t => {
@@ -4007,7 +4005,7 @@ function endCutscene() {
     powerlineTiles = [];
     const img = images.powerlines;
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3;
-    const h = H * 0.242; // +10%
+    const h = H * 0.2904; // was 0.242, +20%
     const w = h * aspect;
     let x = 0;
     while (x < W + w) {
@@ -4025,7 +4023,7 @@ function endCutscene() {
     const last = powerlineTiles[powerlineTiles.length - 1];
     if (!last || last.x + last.w < W + 200) {
       const startX = last ? last.x + last.w - 1 : 0;
-      const h = last ? last.h : H * 0.242;
+      const h = last ? last.h : H * 0.2904;
       const aspect = last ? last.w / last.h : 3;
       powerlineTiles.push({ x: startX, w: h * aspect, h: h });
     }
@@ -4182,7 +4180,7 @@ function endCutscene() {
   function makeStreetlamp(xStart) {
     const img = images.streetlamp1;
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 0.3;
-    const h = (H * 0.33) * 0.25; // matches the fixed building height, capped at 25% of it
+    const h = (H * 0.396) * 0.25; // matches the fixed building height (now +20%), capped at 25% of it
     const w = h * aspect;
     return { x: xStart, w, h };
   }
