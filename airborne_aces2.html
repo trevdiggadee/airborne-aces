@@ -1917,6 +1917,41 @@ function renderPlaceholder(key) {
         ctx.fillRect(w * 0.12 + rx * w * 0.3, h * 0.2 + ry * h * 0.15, w * 0.16, h * 0.08);
       }
     }
+  } else if (key === "skylineCityscape") {
+    w = 1200; h = 220; c = phCanvas(w, h); ctx = c.getContext("2d");
+    // Stylized steampunk city skyline silhouette — matches the uploaded image's style
+    ctx.fillStyle = "#5a4a3a";
+    // left cluster — shorter buildings
+    ctx.fillRect(20, 80, 45, 140);
+    ctx.fillRect(70, 60, 35, 160);
+    ctx.fillRect(110, 90, 50, 130);
+    ctx.fillRect(165, 50, 40, 170);
+    // center — the tall skyscrapers
+    ctx.fillRect(220, 20, 55, 200);
+    ctx.fillRect(285, 10, 45, 210);
+    ctx.fillRect(340, 30, 60, 190);
+    ctx.fillRect(410, 5, 50, 215);
+    ctx.fillRect(470, 25, 55, 195);
+    // right cluster
+    ctx.fillRect(540, 70, 40, 150);
+    ctx.fillRect(590, 55, 50, 165);
+    ctx.fillRect(650, 85, 45, 135);
+    ctx.fillRect(705, 45, 55, 175);
+    ctx.fillRect(770, 65, 40, 155);
+    // domes and spires on top of select buildings
+    ctx.fillStyle = "#6b5a48";
+    ctx.beginPath(); ctx.arc(287, 10, 22, Math.PI, 0); ctx.fill();
+    ctx.beginPath(); ctx.arc(435, 5, 28, Math.PI, 0); ctx.fill();
+    ctx.fillRect(242, 0, 12, 20);
+    ctx.fillRect(417, 0, 10, 5);
+    ctx.fillRect(497, 10, 8, 15);
+    // subtle window lights
+    ctx.fillStyle = "rgba(201,166,107,0.35)";
+    for (let bx = 30; bx < 800; bx += 80) {
+      for (let by = 100; by < 200; by += 25) {
+        if (Math.random() > 0.4) ctx.fillRect(bx + Math.random()*20, by, 4 + Math.random()*4, 6);
+      }
+    }
   } else if (key === "cloud") {
     w = 180; h = 90; c = phCanvas(w, h); ctx = c.getContext("2d");
     ctx.fillStyle = "rgba(255,255,255,0.92)";
@@ -2203,7 +2238,17 @@ if (PLACEHOLDER_MODE) {
   document.querySelector(".stageBg").src = renderPlaceholder("asset_extra_03");
   document.querySelector(".cloudLayer.cA").src = renderPlaceholder("asset_extra_04");
   document.querySelector(".cloudLayer.cB").src = renderPlaceholder("asset_extra_05");
+  document.querySelector(".cloudLayer.cB").src = renderPlaceholder("asset_extra_05");
   document.querySelector(".menuBanner img").src = renderPlaceholder("menuBanner");
+
+  // Cityscape placeholder for the new parallax layer
+  images.skylineCityscape = new Image();
+  images.skylineCityscape.src = renderPlaceholder("skylineCityscape");
+
+  // Patch the cityscape asset for placeholder mode
+  images.skylineCityscape = new Image();
+  images.skylineCityscape.src = renderPlaceholder("skylineCityscape");
+
   document.getElementById("healthImg").src = renderPlaceholder("heartPickup");
 
   const numBtnImgs = document.querySelectorAll(".numBtn img");
@@ -2947,6 +2992,7 @@ function endCutscene() {
   // ---------- Assets ----------
   const ASSET_SOURCES = {
     blimp:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp.webp?cb=2",
+    skylineCityscape: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skyline_cityscape.png?cb=2",
     cloud:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/cloud.webp?cb=2",
     skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
     skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0845.png",
@@ -3899,6 +3945,7 @@ function endCutscene() {
       buildings.push(b);
       x += b.w; // edge-to-edge — pre-blended to tile seamlessly
     }
+    initCityscape();
     initStreetlamps();
     initPowerlines();
   }
@@ -3989,7 +4036,56 @@ function endCutscene() {
     ctx.restore();
   }
 
-  // ---------- Street (sidewalk + road) — sits beneath the buildings, gives
+  
+// ---------- Cityscape skyline (decorative parallax) — sits behind the power lines,
+// scrolling slower than buildings but faster than the far backdrop, giving a proper
+// mid-ground city silhouette layer. The transparent PNG tiles seamlessly edge-to-edge.
+let cityscapeTiles = [];
+
+function initCityscape() {
+  cityscapeTiles = [];
+  const img = images.skylineCityscape;
+  const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 5.5;
+  const h = H * 0.35; // tall enough to read as a skyline, not a sliver
+  const w = h * aspect;
+  let x = 0;
+  while (x < W + w) {
+    cityscapeTiles.push({ x: x, w: w, h: h });
+    x += w - 1; // slight overlap so the seam never shows
+  }
+}
+
+function updateCityscape(dtScale) {
+  const speed = 0.15 * dtScale * obstacleSpeedScale(); // slower than powerlines (0.4x), faster than skyline (0.05x)
+  cityscapeTiles.forEach(t => (t.x -= speed));
+  while (cityscapeTiles.length && cityscapeTiles[0].x + cityscapeTiles[0].w < -10) {
+    cityscapeTiles.shift();
+  }
+  const last = cityscapeTiles[cityscapeTiles.length - 1];
+  if (!last || last.x + last.w < W + 200) {
+    const startX = last ? last.x + last.w - 1 : 0;
+    const h = last ? last.h : H * 0.35;
+    const aspect = last ? last.w / last.h : 5.5;
+    cityscapeTiles.push({ x: startX, w: h * aspect, h: h });
+  }
+}
+
+function drawCityscape() {
+  const img = images.skylineCityscape;
+  if (!img || !img.naturalWidth) return;
+  const groundY = groundLevelY();
+  ctx.save();
+  // Slight sepia tint to blend with the steampunk palette, plus reduced opacity
+  // so it reads as a distant atmospheric layer rather than competing with gameplay
+  ctx.globalAlpha = 0.55;
+  ctx.filter = "sepia(0.25) saturate(0.85)";
+  cityscapeTiles.forEach(t => {
+    ctx.drawImage(img, t.x, groundY - t.h, t.w, t.h);
+  });
+  ctx.restore();
+}
+
+// ---------- Street (sidewalk + road) — sits beneath the buildings, gives
   // the ground plane an actual surface instead of a flat color strip. Scrolls
   // in sync with the buildings so it reads as one continuous street. ----------
   let streetScrollX = 0;
@@ -9064,7 +9160,8 @@ function triggerBoss(num) {
       elapsedMs = performance.now() - runStartTime;
       updateFlipClock(elapsedMs);
       updateBuildings(dtScale);
-      updatePowerlines(dtScale);
+      updateCityscape(dtScale);
+    updatePowerlines(dtScale);
       updateStreet(dtScale);
       updateBuildingSmoke(dt);
       updateStreetlamps(dtScale);
@@ -9115,6 +9212,7 @@ function triggerBoss(num) {
     }
 
     drawParallaxLayers();
+    drawCityscape();
     drawPowerlines();
     drawStreet();
     drawBuildings();
