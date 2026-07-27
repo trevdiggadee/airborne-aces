@@ -2951,8 +2951,8 @@ function endCutscene() {
     skylineFar: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFar.webp",
     skylineFarL2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0845.png",
     skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0844.png",
-    skylineFarSilhouette: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skylineFarSilhouette.webp",
     powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/powerlines.webp",
+    sketchSkyline: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/sketchSkyline.webp",
     farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
@@ -3901,8 +3901,8 @@ function endCutscene() {
       x += b.w; // edge-to-edge — pre-blended to tile seamlessly
     }
     initStreetlamps();
-    initCitySkyline();
     initPowerlines();
+    initSketchSkyline();
   }
 
   function updateBuildings(dtScale) {
@@ -3944,46 +3944,49 @@ function endCutscene() {
     });
   }
 
-  // ---------- Distant skyline silhouette — sits BEHIND the power lines layer
-  // and drifts even slower (further back = more distant, less parallax
-  // movement). Same tiling approach as the power line layer. ----------
-  let citySkylineTiles = [];
+  // ---------- Distant sketch-skyline layer — sits behind the power lines,
+  // positioned twice as high up (twice the vertical offset from the ground)
+  // so it reads as further back/taller in the distance. Same tiling/scroll
+  // approach as the power lines, just slower since it's further away. ----------
+  let sketchSkylineTiles = [];
 
-  function initCitySkyline() {
-    citySkylineTiles = [];
-    const img = images.skylineFarSilhouette;
-    const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 4;
-    const h = H * 0.24;
+  function initSketchSkyline() {
+    sketchSkylineTiles = [];
+    const img = images.sketchSkyline;
+    const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 1.5;
+    const h = H * 0.3;
     const w = h * aspect;
     let x = 0;
     while (x < W + w) {
-      citySkylineTiles.push({ x: x, w: w, h: h });
-      x += w - 1; // slight overlap so the seam never shows
+      sketchSkylineTiles.push({ x: x, w: w, h: h });
+      x += w - 1;
     }
   }
 
-  function updateCitySkyline(dtScale) {
-    const speed = 0.2 * dtScale * obstacleSpeedScale(); // slower than the power lines' 0.4x — reads as further back
-    citySkylineTiles.forEach(t => (t.x -= speed));
-    while (citySkylineTiles.length && citySkylineTiles[0].x + citySkylineTiles[0].w < -10) {
-      citySkylineTiles.shift();
+  function updateSketchSkyline(dtScale) {
+    const speed = 0.2 * dtScale * obstacleSpeedScale(); // slower than power lines — further back
+    sketchSkylineTiles.forEach(t => (t.x -= speed));
+    while (sketchSkylineTiles.length && sketchSkylineTiles[0].x + sketchSkylineTiles[0].w < -10) {
+      sketchSkylineTiles.shift();
     }
-    const last = citySkylineTiles[citySkylineTiles.length - 1];
+    const last = sketchSkylineTiles[sketchSkylineTiles.length - 1];
     if (!last || last.x + last.w < W + 200) {
       const startX = last ? last.x + last.w - 1 : 0;
-      const h = last ? last.h : H * 0.24;
-      const aspect = last ? last.w / last.h : 4;
-      citySkylineTiles.push({ x: startX, w: h * aspect, h: h });
+      const h = last ? last.h : H * 0.3;
+      const aspect = last ? last.w / last.h : 1.5;
+      sketchSkylineTiles.push({ x: startX, w: h * aspect, h: h });
     }
   }
 
-  function drawCitySkyline() {
-    const img = images.skylineFarSilhouette;
+  function drawSketchSkyline() {
+    const img = images.sketchSkyline;
     if (!img || !img.naturalWidth) return;
     const groundY = groundLevelY();
+    const powerlineH = H * 0.22; // matches the power lines' own display height
+    const bottomY = groundY - powerlineH * 2; // twice the power lines' height offset above ground
     ctx.save();
-    citySkylineTiles.forEach(t => {
-      ctx.drawImage(img, t.x, groundY - t.h, t.w, t.h);
+    sketchSkylineTiles.forEach(t => {
+      ctx.drawImage(img, t.x, bottomY - t.h, t.w, t.h);
     });
     ctx.restore();
   }
@@ -9110,8 +9113,8 @@ function triggerBoss(num) {
       elapsedMs = performance.now() - runStartTime;
       updateFlipClock(elapsedMs);
       updateBuildings(dtScale);
-      updateCitySkyline(dtScale);
       updatePowerlines(dtScale);
+      updateSketchSkyline(dtScale);
       updateStreet(dtScale);
       updateBuildingSmoke(dt);
       updateStreetlamps(dtScale);
@@ -9149,8 +9152,8 @@ function triggerBoss(num) {
       resetPlayer();
     } else if (state !== "playing") {
       updateBuildings(dtScale * 0.4);
-      updateCitySkyline(dtScale * 0.4);
       updatePowerlines(dtScale * 0.4);
+      updateSketchSkyline(dtScale * 0.4);
       updateStreet(dtScale * 0.4);
       updateBuildingSmoke(dt);
       updateStreetlamps(dtScale * 0.4);
@@ -9163,7 +9166,7 @@ function triggerBoss(num) {
     }
 
     drawParallaxLayers();
-    drawCitySkyline();
+    drawSketchSkyline();
     drawPowerlines();
     drawStreet();
     drawBuildings();
