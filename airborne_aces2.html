@@ -1370,85 +1370,6 @@ html, body {
   50% { transform: translate(0, -10px); }
 }
 
-/* Rear engine flame + smoke trail — anchored near the blimp's rear/engine
-   point (same relative spot proven on the menu's hero-blimp propeller/exhaust),
-   drawn BEFORE the blimp <img> in markup so it renders behind the hull. */
-.cutsceneFlameRig {
-  position: absolute;
-  left: 15%;
-  top: 55%;
-  width: 1px;
-  height: 1px;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.cutsceneFlameCore {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 17vw;
-  height: 17vw;
-  max-width: 82px;
-  max-height: 82px;
-  margin-left: -12.5vw;
-  margin-top: -8vw;
-  border-radius: 50%;
-  background: radial-gradient(circle, #fff8dc 0%, #ffd166 20%, #ff9d2e 42%, #ff5a1a 62%, rgba(255,60,10,0) 78%);
-  filter: blur(1.5px);
-  animation: cutsceneFlameFlicker 0.16s ease-in-out infinite alternate;
-}
-
-.cutsceneFlameInner {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 8vw;
-  height: 8vw;
-  max-width: 40px;
-  max-height: 40px;
-  margin-left: -9vw;
-  margin-top: -4vw;
-  border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 0%, #fff2c2 35%, rgba(255,210,120,0) 75%);
-  filter: blur(1px);
-  animation: cutsceneFlameFlicker 0.12s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes cutsceneFlameFlicker {
-  0% { transform: scale(0.82) translateX(0); opacity: 0.82; }
-  100% { transform: scale(1.15) translateX(-4px); opacity: 1; }
-}
-
-.cutsceneSmokeTrail .puff {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 11vw;
-  height: 11vw;
-  max-width: 54px;
-  max-height: 54px;
-  margin-left: -5.5vw;
-  margin-top: -5.5vw;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(220,214,204,0.6) 0%, rgba(170,163,152,0.34) 55%, rgba(170,163,152,0) 76%);
-  filter: blur(1.5px);
-  opacity: 0;
-  animation: cutsceneSmokeRise 2.2s ease-out infinite;
-}
-.cutsceneSmokeTrail .p1 { animation-delay: 0s; }
-.cutsceneSmokeTrail .p2 { animation-delay: 0.32s; }
-.cutsceneSmokeTrail .p3 { animation-delay: 0.64s; }
-.cutsceneSmokeTrail .p4 { animation-delay: 0.96s; }
-.cutsceneSmokeTrail .p5 { animation-delay: 1.28s; }
-.cutsceneSmokeTrail .p6 { animation-delay: 1.6s; }
-
-@keyframes cutsceneSmokeRise {
-  0% { transform: translate(0, 0) scale(0.4); opacity: 0; }
-  14% { opacity: 0.6; }
-  100% { transform: translate(-30vw, 3vw) scale(2.3); opacity: 0; }
-}
-
 .cutsceneTutorWrap {
   position: absolute;
   right: -8%;
@@ -1622,18 +1543,6 @@ html, body {
     <div class="cutsceneGlow right"></div>
 
     <div class="cutsceneBlimpWrap" id="cutsceneBlimpWrap">
-      <div class="cutsceneFlameRig">
-        <div class="cutsceneFlameCore"></div>
-        <div class="cutsceneFlameInner"></div>
-        <div class="cutsceneSmokeTrail">
-          <span class="puff p1"></span>
-          <span class="puff p2"></span>
-          <span class="puff p3"></span>
-          <span class="puff p4"></span>
-          <span class="puff p5"></span>
-          <span class="puff p6"></span>
-        </div>
-      </div>
       <img id="cutsceneBlimpImg" crossorigin="anonymous" src="" alt="" />
     </div>
 
@@ -4782,13 +4691,15 @@ ctx.save();
       // mini blimp jet engine flame + smoke trails
       if (o.type === "mini_blimp") {
         const speed = obstacleSpeed * (o.speedMult || 1);
-        const engineX = o.x + o.w * 0.15;
+        // engine sits at the REAR of the sprite — it flies nose-first, right
+        // to left, so the trailing/rear edge is the right side of its box
+        const engineX = o.x + o.w * 0.85;
         const engineY = o.y + o.h * 0.55;
 
-        // flame particles (hot, bright, short-lived)
+        // flame particles (hot, bright, short-lived) — denser + bigger for more presence
         o.flameTimer -= dt;
         if (o.flameTimer <= 0) {
-          o.flameTimer = 0.015 + Math.random() * 0.02;
+          o.flameTimer = 0.008 + Math.random() * 0.012;
           const angle = Math.PI + (Math.random() - 0.5) * 0.6;
           const flameSpeed = 60 + Math.random() * 80;
           o.flameParticles.push({
@@ -4796,8 +4707,8 @@ ctx.save();
             y: engineY + (Math.random() - 0.5) * o.h * 0.08,
             vx: Math.cos(angle) * flameSpeed + speed * 0.3,
             vy: Math.sin(angle) * flameSpeed * 0.3 + (Math.random() - 0.5) * 20,
-            size: 3 + Math.random() * 6,
-            life: 0.08 + Math.random() * 0.1,
+            size: 5 + Math.random() * 9,
+            life: 0.1 + Math.random() * 0.12,
             age: 0,
             r: 255,
             g: 120 + Math.random() * 80,
@@ -4805,10 +4716,11 @@ ctx.save();
           });
         }
 
-        // smoke particles (cool, dark, longer-lived)
+        // smoke particles (cool, dark, longer-lived) — bigger + longer-lived
+        // so a full trailing "smoke screen" builds up behind it before fading
         o.smokeTimer -= dt;
         if (o.smokeTimer <= 0) {
-          o.smokeTimer = 0.04 + Math.random() * 0.04;
+          o.smokeTimer = 0.02 + Math.random() * 0.02;
           const angle = Math.PI + (Math.random() - 0.5) * 0.5;
           const smokeSpeed = 40 + Math.random() * 50;
           o.smokeParticles.push({
@@ -4816,8 +4728,8 @@ ctx.save();
             y: engineY + (Math.random() - 0.5) * o.h * 0.06,
             vx: Math.cos(angle) * smokeSpeed + speed * 0.2,
             vy: Math.sin(angle) * smokeSpeed * 0.2 + (Math.random() - 0.5) * 15,
-            size: 5 + Math.random() * 10,
-            life: 0.25 + Math.random() * 0.2,
+            size: 7 + Math.random() * 13,
+            life: 0.5 + Math.random() * 0.35,
             age: 0,
             r: 80 + Math.random() * 40,
             g: 75 + Math.random() * 35,
@@ -4843,7 +4755,7 @@ ctx.save();
           p.y += p.vy * dt;
           p.vx *= 0.95;
           p.vy *= 0.95;
-          p.size += dt * 8;
+          p.size += dt * 13;
         });
         o.smokeParticles = o.smokeParticles.filter(p => p.age < p.life);
       }
@@ -4955,7 +4867,7 @@ ctx.save();
         if (o.smokeParticles) {
           o.smokeParticles.forEach(p => {
             const t = p.age / p.life;
-            const alpha = (1 - t) * 0.45;
+            const alpha = (1 - t) * 0.58;
             ctx.save();
             ctx.globalAlpha = alpha;
             const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
