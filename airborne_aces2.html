@@ -2287,7 +2287,7 @@ window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenu
 // on or off (game start, retry, checkpoint resume, crash) automatically drives
 // this track too, with no extra call sites needed. ----------
 const gameplayMusic = document.getElementById("gameplayMusic");
-const GAMEPLAY_MUSIC_VOLUME = 0.45;
+const GAMEPLAY_MUSIC_VOLUME = 0.22;
 const GAMEPLAY_MUSIC_FADE_MS = 900;
 let gameplayMusicMuted = false;
 try { gameplayMusicMuted = localStorage.getItem("aa_muted") === "1"; } catch (e) {}
@@ -2354,7 +2354,6 @@ function startGame(){
   document.getElementById("gameScreen").style.display = "block";
   document.getElementById("startOverlay").classList.add("hidden");
   fadeOutMenuMusic();
-  if (window.__airborneStopGameplayMusic) window.__airborneStopGameplayMusic();
   if (window.__airborneGameStart) window.__airborneGameStart();
 }
 
@@ -2434,7 +2433,7 @@ flyBtn.addEventListener("click", () => { startGame(); });
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = 0.55;
+    musicGainNode.gain.value = 0.3;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -4406,6 +4405,9 @@ ctx.save();
     } else if (type === "mini_heli") {
       // boss 4's mini — 2x bigger
       dispW = Math.min(220, W * 0.44);
+    } else if (type === "mini_ebomb") {
+      // boss 5's mini — 2x bigger, matching the other bosses' minis
+      dispW = Math.min(220, W * 0.44);
     } else {
       dispW = Math.min(70, W * 0.15);
     }
@@ -4638,6 +4640,8 @@ ctx.save();
       const drawY = o.y + Math.sin(o.bobPhase) * o.bobAmount;
       const speed = obstacleSpeed * (o.speedMult || 1);
       drawMotionBlur(img, o.x + o.w / 2, drawY + o.h / 2, o.w, o.h, 0, speed, 0);
+      ctx.drawImage(img, o.x, drawY, o.w, o.h);
+
       // draw jet engine flame + smoke trails behind mini blimps
       if (o.type === "mini_blimp") {
         // smoke first (behind flame)
@@ -4682,7 +4686,7 @@ ctx.save();
         }
       }
 
-      ctx.drawImage(img, o.x, drawY, o.w, o.h);if (o.type === "mini_heli" && o.chargeArcs) {
+      if (o.type === "mini_heli" && o.chargeArcs) {
         ctx.save();
         ctx.translate(o.x, drawY);
         o.chargeArcs.forEach(points => {
