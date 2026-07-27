@@ -3983,7 +3983,10 @@ function endCutscene() {
     if (!img || !img.naturalWidth) return;
     const groundY = groundLevelY();
     const powerlineH = H * 0.242; // matches the power lines' own display height (+10%)
-    const bottomY = groundY - powerlineH * 2; // twice the power lines' height offset above ground
+    // Anchored so its lower portion sits directly behind the power lines band
+    // (they're drawn after this, so they naturally paint over it) instead of
+    // floating above with a gap of plain sky in between.
+    const bottomY = groundY - powerlineH * 0.5;
     ctx.save();
     ctx.globalAlpha = 0.5; // hazy/atmospheric so it reads as distant instead of a hard-edged cutout
     sketchSkylineTiles.forEach(t => {
