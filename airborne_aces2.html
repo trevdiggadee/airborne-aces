@@ -270,83 +270,6 @@ html, body {
   opacity: 1;
 }
 
-/* TAP STRENGTH SLIDER */
-.sliderArea {
-  position: absolute;
-  top: 87%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 46%;
-  z-index: 1;
-  text-align: center;
-}
-
-.sliderLabel {
-  display: block;
-  color: #3a2a18;
-  font-size: 3.2vw;
-  font-weight: bold;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-top: 2%;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
-}
-
-input[type=range].tapSlider {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 9vw;
-  max-height: 36px;
-  background: transparent;
-  margin: 0;
-  cursor: pointer;
-  display: block;
-}
-
-input[type=range].tapSlider:focus {
-  outline: none;
-}
-
-input[type=range].tapSlider::-webkit-slider-runnable-track {
-  width: 100%;
-  height: 9vw;
-  max-height: 36px;
-  background: url("https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_01.webp?cb=2") no-repeat center / 100% 100%;
-}
-
-input[type=range].tapSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 5.5vw;
-  height: 5.5vw;
-  max-width: 22px;
-  max-height: 22px;
-  border-radius: 50%;
-  background: url("https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_02.webp?cb=2") no-repeat center / contain;
-  margin-top: calc((9vw - 5.5vw) / 2);
-  box-shadow: 0 2px 3px rgba(0,0,0,0.55);
-}
-
-input[type=range].tapSlider::-moz-range-track {
-  width: 100%;
-  height: 9vw;
-  max-height: 36px;
-  background: url("https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_01.webp?cb=2") no-repeat center / 100% 100%;
-  border: none;
-}
-
-input[type=range].tapSlider::-moz-range-thumb {
-  width: 5.5vw;
-  height: 5.5vw;
-  max-width: 22px;
-  max-height: 22px;
-  border: none;
-  border-radius: 50%;
-  background: url("https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_02.webp?cb=2") no-repeat center / contain;
-  box-shadow: 0 2px 3px rgba(0,0,0,0.55);
-}
-
-
 /* ===== Game screen styles ===== */
 #gameScreen {
     background: #3b2a1a;
@@ -553,57 +476,6 @@ input[type=range].tapSlider::-moz-range-thumb {
     justify-content: center;
     z-index: 12;
     cursor: pointer;
-  }
-
-  #settingsBtn {
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
-    right: 62px;
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    background: linear-gradient(#f5e6c8, #d8c3a5);
-    border: 3px solid #6b4a2b;
-    border-radius: 50%;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 0 0 2px #c9a66b;
-    font-size: 16px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 12;
-    cursor: pointer;
-  }
-
-  #volumePanel {
-    position: fixed;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 62px);
-    right: 14px;
-    width: 200px;
-    padding: 14px 16px;
-    background: linear-gradient(#f5e6c8, #d8c3a5);
-    border: 3px solid #6b4a2b;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.45), inset 0 0 0 2px #c9a66b;
-    z-index: 13;
-  }
-  #volumePanel.hidden { display: none; }
-  #volumePanel .volumeRow {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 10px;
-  }
-  #volumePanel .volumeRow:last-child { margin-bottom: 0; }
-  #volumePanel .volumeLabel {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 13px;
-    font-weight: 700;
-    color: #3a2a18;
-  }
-  #volumePanel input[type=range] {
-    width: 100%;
-    accent-color: #8b6b3d;
   }
 
 /* ---------- Flip Clock — Classic mechanical flip cards ---------- */
@@ -1407,6 +1279,194 @@ input[type=range].tapSlider::-moz-range-thumb {
     #tutorialGuide .tutGuideChar { width: 52px; height: 52px; }
     #tutorialGuide .tutBubble p { font-size: 12px; }
   }
+
+/* ===== TAKE-FLIGHT CUTSCENE — close-up briefing between the menu and gameplay ===== */
+.cutsceneScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.cutsceneStage {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  aspect-ratio: 780 / 1398;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #1a0f06;
+}
+
+.cutsceneBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(60% 45% at 20% 42%, rgba(255,196,110,0.38) 0%, rgba(255,196,110,0) 68%),
+    radial-gradient(60% 45% at 80% 40%, rgba(140,190,255,0.24) 0%, rgba(140,190,255,0) 68%),
+    linear-gradient(180deg, #6b4a2b 0%, #3a2410 55%, #150c05 100%);
+  animation: cutsceneBgDrift 7s ease-in-out infinite alternate;
+}
+
+@keyframes cutsceneBgDrift {
+  0% { filter: brightness(1); }
+  100% { filter: brightness(1.1); }
+}
+
+.cutsceneCloud {
+  position: absolute;
+  z-index: 1;
+  opacity: 0.28;
+  filter: blur(1px);
+  pointer-events: none;
+}
+.cutsceneCloud.cc1 { top: 8%; left: -6%; width: 46%; animation: driftCloudA 10s ease-in-out infinite; }
+.cutsceneCloud.cc2 { top: 60%; right: -8%; width: 42%; animation: driftCloudB 12s ease-in-out infinite; }
+
+.cutsceneVignette {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: radial-gradient(120% 90% at 50% 42%, rgba(0,0,0,0) 38%, rgba(0,0,0,0.68) 100%);
+  pointer-events: none;
+}
+
+.cutsceneGlow {
+  position: absolute;
+  top: 26%;
+  width: 58%;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  filter: blur(26px);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 2;
+}
+.cutsceneGlow.left { left: -14%; background: radial-gradient(circle, rgba(255,196,110,0.55) 0%, rgba(255,196,110,0) 70%); }
+.cutsceneGlow.right { right: -14%; background: radial-gradient(circle, rgba(140,190,255,0.42) 0%, rgba(140,190,255,0) 70%); }
+
+.cutsceneBlimpWrap {
+  position: absolute;
+  left: -14%;
+  top: 21%;
+  width: 70%;
+  z-index: 3;
+  filter: drop-shadow(0 18px 26px rgba(0,0,0,0.55));
+  animation: cutsceneBlimpIn 0.7s cubic-bezier(.2,.9,.25,1) both,
+             cutsceneBlimpFloat 4s ease-in-out 0.7s infinite;
+}
+.cutsceneBlimpWrap img { display: block; width: 100%; }
+
+@keyframes cutsceneBlimpIn {
+  0% { transform: translateX(-55%) scale(0.85); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes cutsceneBlimpFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(0, -10px); }
+}
+
+.cutsceneTutorWrap {
+  position: absolute;
+  right: -8%;
+  top: 13%;
+  width: 64%;
+  aspect-ratio: 1 / 1;
+  z-index: 4;
+  background-repeat: no-repeat;
+  background-size: 600% 600%;
+  filter: drop-shadow(0 18px 24px rgba(0,0,0,0.6));
+  animation: cutsceneTutorIn 0.7s 0.15s cubic-bezier(.2,.9,.25,1) both,
+             cutsceneTutorFloat 3.6s ease-in-out 0.85s infinite;
+}
+@keyframes cutsceneTutorIn {
+  0% { transform: translateX(55%) scale(0.85); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes cutsceneTutorFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(0, -8px); }
+}
+
+.cutsceneSkip {
+  position: absolute;
+  top: 4%;
+  right: 5%;
+  z-index: 10;
+  background: rgba(20,12,4,0.55);
+  color: #f5e6c8;
+  border: 1.5px solid rgba(245,230,200,0.5);
+  border-radius: 20px;
+  padding: 1.6% 3.6%;
+  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+  font-size: 3vw;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  animation: cutsceneFadeIn 0.6s 0.3s both;
+}
+
+@keyframes cutsceneFadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.cutsceneDialogue {
+  position: absolute;
+  left: 4%;
+  right: 4%;
+  bottom: 6%;
+  z-index: 10;
+  background: linear-gradient(#f5e6c8, #e6d3ab);
+  border: 3px solid #8b6b3d;
+  border-radius: 14px;
+  box-shadow: 0 8px 0 rgba(0,0,0,0.25), 0 14px 24px rgba(0,0,0,0.45);
+  padding: 3.4% 4.5% 3.8%;
+  animation: cutsceneDialogueIn 0.5s 0.35s cubic-bezier(.2,.9,.25,1) both;
+}
+@keyframes cutsceneDialogueIn {
+  0% { transform: translateY(40px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.cutsceneNameplate {
+  display: inline-block;
+  background: linear-gradient(#8b6b3d, #5e4420);
+  color: #f5e6c8;
+  font-weight: bold;
+  font-size: 3.2vw;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1.2% 3.4%;
+  border-radius: 6px;
+  border: 1.5px solid #c9a66b;
+  margin-bottom: 1.6%;
+}
+
+.cutsceneText {
+  margin: 0;
+  color: #3a2410;
+  font-size: 3.75vw;
+  line-height: 1.42;
+  font-weight: 600;
+}
+
+.cutsceneTapHint {
+  display: block;
+  text-align: right;
+  margin-top: 1.2%;
+  font-size: 2.8vw;
+  color: #6b4a2b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  animation: cutscenePulse 1.3s ease-in-out infinite;
+}
+@keyframes cutscenePulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
 </style>
 </head>
 
@@ -1471,28 +1531,39 @@ input[type=range].tapSlider::-moz-range-thumb {
     <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_10.webp?cb=2" alt="" />
   </button>
 
-  <div class="sliderArea">
-    <input type="range" class="tapSlider" min="1" max="5" value="3" aria-label="Tap Strength" />
-    <span class="sliderLabel">Tap Strength</span>
-  </div>
 </div>
+</div>
+
+<div id="cutsceneScreen" class="cutsceneScreen" style="display:none;">
+  <div class="cutsceneStage">
+    <div class="cutsceneBg"></div>
+    <img class="cutsceneCloud cc1" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_04.webp?cb=2" alt="" />
+    <img class="cutsceneCloud cc2" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_05.webp?cb=2" alt="" />
+    <div class="cutsceneGlow left"></div>
+    <div class="cutsceneGlow right"></div>
+
+    <div class="cutsceneBlimpWrap" id="cutsceneBlimpWrap">
+      <img id="cutsceneBlimpImg" crossorigin="anonymous" src="" alt="" />
+    </div>
+
+    <div class="cutsceneTutorWrap" id="cutsceneTutorWrap"></div>
+
+    <div class="cutsceneVignette"></div>
+
+    <button class="cutsceneSkip" id="cutsceneSkip" type="button">Skip &#9654;</button>
+
+    <div class="cutsceneDialogue" id="cutsceneDialogue">
+      <span class="cutsceneNameplate">Flight Tutor</span>
+      <p class="cutsceneText" id="cutsceneText"></p>
+      <span class="cutsceneTapHint">Tap to continue</span>
+    </div>
+  </div>
 </div>
 
 <div id="gameScreen" style="display:none;">
 <canvas id="gameCanvas"></canvas>
 
 <button id="muteBtn" aria-label="Toggle sound">🔊</button>
-<button id="settingsBtn" aria-label="Sound settings">⚙</button>
-<div id="volumePanel" class="hidden">
-  <div class="volumeRow">
-    <span class="volumeLabel">Music</span>
-    <input type="range" id="musicVolSlider" min="0" max="100" value="100" aria-label="Music volume" />
-  </div>
-  <div class="volumeRow">
-    <span class="volumeLabel">Sound FX</span>
-    <input type="range" id="sfxVolSlider" min="0" max="100" value="100" aria-label="Sound effects volume" />
-  </div>
-</div>
 
 <div id="hudFrame">
   <img id="hudFrameImg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/hudFrame.webp?cb=2" alt="" />
@@ -2142,18 +2213,6 @@ if (PLACEHOLDER_MODE) {
 
   const stormIconEl = document.getElementById("stormIcon");
   if (stormIconEl) stormIconEl.src = renderPlaceholder("stormCloud");
-
-  const phStyle = document.createElement("style");
-  phStyle.textContent =
-    'input[type=range].tapSlider::-webkit-slider-runnable-track,' +
-    'input[type=range].tapSlider::-moz-range-track {' +
-    '  background-image: url("' + renderPlaceholder("asset_extra_01") + '") !important;' +
-    '}' +
-    'input[type=range].tapSlider::-webkit-slider-thumb,' +
-    'input[type=range].tapSlider::-moz-range-thumb {' +
-    '  background-image: url("' + renderPlaceholder("asset_extra_02") + '") !important;' +
-    '}';
-  document.head.appendChild(phStyle);
 }
 </script>
 
@@ -2169,6 +2228,10 @@ const BLIMP_DATA = {
 // blimps with a real in-game flight animation get that same animation on the
 // menu hero card too; anything not listed here just shows its static image
 const AA_ASSET_BASE = "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/";
+
+// ---------- Flight-tutor cutscene assets — 36-frame idle/talk loop baked into a 6x6 sheet ----------
+const TUTOR_SHEET_URL = AA_ASSET_BASE + "tutor_dialogue_sheet.webp?cb=2";
+const TUTOR_COLS = 6, TUTOR_ROWS = 6, TUTOR_FRAMES = 36, TUTOR_FPS = 20;
 function heroFramesFor(count, prefix) {
   return Array.from({ length: count }, (_, i) => AA_ASSET_BASE + prefix + String(i + 1).padStart(2, "0") + ".webp?cb=2");
 }
@@ -2290,29 +2353,14 @@ preloadImages(Object.values(BLIMP_DATA).map(b => blimpSrc(b)));
 if (!(typeof PLACEHOLDER_MODE !== "undefined" && PLACEHOLDER_MODE)) {
   preloadImages(Object.values(HERO_ANIM).flatMap(a => a.urls));
 }
+preloadImages([TUTOR_SHEET_URL]);
 
 // ---------- Menu background music — a real audio file, faded in/out at the
 // loop seam so restarting the track doesn't sound like a hard cut ----------
 const menuMusic = document.getElementById("menuMusic");
-const MENU_MUSIC_VOLUME = 0.5;   // target volume once fully faded in
+const MENU_MUSIC_VOLUME = 0.25;   // target volume once fully faded in (lowered 50% so SFX read louder)
 const MENU_MUSIC_FADE_SEC = 1.5; // fade in at the start / fade out near the end of each loop
 let menuMusicUnlocked = false;   // becomes true once a user gesture lets audio actually play
-
-// user-adjustable music volume (0-1), separate from the mute toggle — shared
-// across menu music and gameplay music, set via the in-game volume panel
-let musicVolPref = 1;
-try { const v = localStorage.getItem("aa_music_vol"); if (v !== null) musicVolPref = parseFloat(v); } catch (e) {}
-if (isNaN(musicVolPref)) musicVolPref = 1;
-
-function setMusicVolumePref(v) {
-  musicVolPref = Math.max(0, Math.min(1, v));
-  try { localStorage.setItem("aa_music_vol", String(musicVolPref)); } catch (e) {}
-  if (gameplayMusic && !gameplayMusic.paused) {
-    gameplayMusic.volume = gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME * musicVolPref;
-  }
-}
-window.__airborneSetMusicVolumePref = setMusicVolumePref;
-window.__airborneGetMusicVolumePref = () => musicVolPref;
 
 try {
   menuMusicUnlocked = false;
@@ -2326,14 +2374,13 @@ function menuMusicFadeStep() {
   if (menuMusic.dataset.userMuted === "1") { menuMusic.volume = 0; return; }
   const t = menuMusic.currentTime;
   const d = menuMusic.duration;
-  const target = MENU_MUSIC_VOLUME * musicVolPref;
-  let vol = target;
+  let vol = MENU_MUSIC_VOLUME;
   if (t < MENU_MUSIC_FADE_SEC) {
-    vol = target * (t / MENU_MUSIC_FADE_SEC);
+    vol = MENU_MUSIC_VOLUME * (t / MENU_MUSIC_FADE_SEC);
   } else if (t > d - MENU_MUSIC_FADE_SEC) {
-    vol = target * Math.max(0, (d - t) / MENU_MUSIC_FADE_SEC);
+    vol = MENU_MUSIC_VOLUME * Math.max(0, (d - t) / MENU_MUSIC_FADE_SEC);
   }
-  menuMusic.volume = Math.max(0, Math.min(target, vol));
+  menuMusic.volume = Math.max(0, Math.min(MENU_MUSIC_VOLUME, vol));
 }
 if (menuMusic) menuMusic.addEventListener("timeupdate", menuMusicFadeStep);
 
@@ -2366,7 +2413,7 @@ window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenu
 // on or off (game start, retry, checkpoint resume, crash) automatically drives
 // this track too, with no extra call sites needed. ----------
 const gameplayMusic = document.getElementById("gameplayMusic");
-const GAMEPLAY_MUSIC_VOLUME = 0.22;
+const GAMEPLAY_MUSIC_VOLUME = 0.11; // lowered 50% so SFX read louder
 const GAMEPLAY_MUSIC_FADE_MS = 900;
 let gameplayMusicMuted = false;
 try { gameplayMusicMuted = localStorage.getItem("aa_muted") === "1"; } catch (e) {}
@@ -2390,7 +2437,7 @@ function fadeGameplayMusicVolume(target, thenPause) {
 function startGameplayMusic() {
   if (!gameplayMusic) return;
   if (gameplayMusic.paused) gameplayMusic.play().catch(() => {});
-  fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME * musicVolPref, false);
+  fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME, false);
 }
 
 function stopGameplayMusic() {
@@ -2401,7 +2448,7 @@ function stopGameplayMusic() {
 function setGameplayMusicMuted(m) {
   gameplayMusicMuted = m;
   if (gameplayMusic && !gameplayMusic.paused) {
-    gameplayMusic.volume = m ? 0 : GAMEPLAY_MUSIC_VOLUME * musicVolPref;
+    gameplayMusic.volume = m ? 0 : GAMEPLAY_MUSIC_VOLUME;
   }
 }
 
@@ -2463,7 +2510,68 @@ flyBtn.addEventListener("pointerdown", (e) => {
 ["pointerup", "pointercancel", "pointerleave"].forEach(evt => {
   flyBtn.addEventListener(evt, () => flyBtn.classList.remove("pressed"));
 });
-flyBtn.addEventListener("click", () => { startGame(); });
+flyBtn.addEventListener("click", () => { showTutorCutscene(); });
+
+// ---------- Take-Flight cutscene: close-up briefing from the flight tutor ----------
+const TUTOR_LINE = "Engines primed, dial locked in \u2014 keep her nose up and watch the skyline out there, ace!";
+
+const cutsceneScreen = document.getElementById("cutsceneScreen");
+const cutsceneBlimpImg = document.getElementById("cutsceneBlimpImg");
+const cutsceneTutorWrap = document.getElementById("cutsceneTutorWrap");
+const cutsceneTextEl = document.getElementById("cutsceneText");
+const cutsceneSkipBtn = document.getElementById("cutsceneSkip");
+
+let tutorAnimTimer = null;
+function setTutorFrame(i) {
+  const col = i % TUTOR_COLS;
+  const row = Math.floor(i / TUTOR_COLS);
+  const posX = (col / (TUTOR_COLS - 1)) * 100;
+  const posY = (row / (TUTOR_ROWS - 1)) * 100;
+  cutsceneTutorWrap.style.backgroundPosition = posX + "% " + posY + "%";
+}
+function startTutorSpriteAnim() {
+  cutsceneTutorWrap.style.backgroundImage = 'url("' + TUTOR_SHEET_URL + '")';
+  let frame = 0;
+  setTutorFrame(0);
+  if (tutorAnimTimer) clearInterval(tutorAnimTimer);
+  tutorAnimTimer = setInterval(() => {
+    frame = (frame + 1) % TUTOR_FRAMES;
+    setTutorFrame(frame);
+  }, 1000 / TUTOR_FPS);
+}
+function stopTutorSpriteAnim() {
+  if (tutorAnimTimer) { clearInterval(tutorAnimTimer); tutorAnimTimer = null; }
+}
+
+let cutsceneAdvanceTimer = null;
+let cutsceneDone = true;
+
+function showTutorCutscene() {
+  cutsceneDone = false;
+  document.getElementById("menuScreen").style.display = "none";
+  cutsceneScreen.style.display = "block";
+
+  const data = BLIMP_DATA[selectedBlimp] || BLIMP_DATA.blimp1;
+  cutsceneBlimpImg.src = blimpSrc(data);
+  cutsceneTextEl.textContent = TUTOR_LINE;
+
+  startTutorSpriteAnim();
+
+  cutsceneScreen.addEventListener("click", advanceCutscene);
+  cutsceneSkipBtn.addEventListener("click", advanceCutscene);
+  cutsceneAdvanceTimer = setTimeout(advanceCutscene, 6000);
+}
+
+function advanceCutscene() {
+  if (cutsceneDone) return;
+  cutsceneDone = true;
+  if (cutsceneAdvanceTimer) { clearTimeout(cutsceneAdvanceTimer); cutsceneAdvanceTimer = null; }
+  cutsceneScreen.removeEventListener("click", advanceCutscene);
+  cutsceneSkipBtn.removeEventListener("click", advanceCutscene);
+  stopTutorSpriteAnim();
+  cutsceneScreen.style.display = "none";
+  startGame();
+}
 
 
 
@@ -2480,14 +2588,6 @@ flyBtn.addEventListener("click", () => { startGame(); });
   // assets, so nothing to fail to load and no licensing concerns.
   let muted = false;
   try { muted = localStorage.getItem("aa_muted") === "1"; } catch (e) { muted = false; }
-
-  // separate volume sliders for music vs. sound effects (0-1), independent of
-  // the all-or-nothing mute toggle above — lets the player balance the two
-  let sfxVolPref = 1;
-  try { const v = localStorage.getItem("aa_sfx_vol"); if (v !== null) sfxVolPref = parseFloat(v); } catch (e) {}
-  if (isNaN(sfxVolPref)) sfxVolPref = 1;
-
-  let musicVolPref = (window.__airborneGetMusicVolumePref ? window.__airborneGetMusicVolumePref() : 1);
 
   let audioCtx = null;
   let masterGain = null;
@@ -2516,11 +2616,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
     masterGain.connect(audioCtx.destination);
 
     sfxGainNode = audioCtx.createGain();
-    sfxGainNode.gain.value = sfxVolPref;
+    sfxGainNode.gain.value = 1;
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = 0.3 * musicVolPref;
+    musicGainNode.gain.value = 0.3;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -8111,50 +8211,6 @@ function triggerBoss(num) {
       ensureAudio();
       setMuted(!muted);
     });
-  }
-
-  const settingsBtn = document.getElementById("settingsBtn");
-  const volumePanel = document.getElementById("volumePanel");
-  const musicVolSlider = document.getElementById("musicVolSlider");
-  const sfxVolSlider = document.getElementById("sfxVolSlider");
-
-  if (musicVolSlider) musicVolSlider.value = Math.round(musicVolPref * 100);
-  if (sfxVolSlider) sfxVolSlider.value = Math.round(sfxVolPref * 100);
-
-  if (settingsBtn && volumePanel) {
-    settingsBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      ensureAudio();
-      volumePanel.classList.toggle("hidden");
-    });
-    // tapping anywhere else on the game screen closes the panel
-    document.addEventListener("pointerdown", (e) => {
-      if (volumePanel.classList.contains("hidden")) return;
-      if (e.target === settingsBtn || volumePanel.contains(e.target)) return;
-      volumePanel.classList.add("hidden");
-    });
-  }
-
-  if (musicVolSlider) {
-    musicVolSlider.addEventListener("input", (e) => {
-      e.stopPropagation();
-      musicVolPref = musicVolSlider.value / 100;
-      try { localStorage.setItem("aa_music_vol", String(musicVolPref)); } catch (err) {}
-      if (musicGainNode) musicGainNode.gain.value = 0.3 * musicVolPref;
-      if (window.__airborneSetMusicVolumePref) window.__airborneSetMusicVolumePref(musicVolPref);
-    });
-    musicVolSlider.addEventListener("pointerdown", (e) => e.stopPropagation());
-  }
-
-  if (sfxVolSlider) {
-    sfxVolSlider.addEventListener("input", (e) => {
-      e.stopPropagation();
-      sfxVolPref = sfxVolSlider.value / 100;
-      try { localStorage.setItem("aa_sfx_vol", String(sfxVolPref)); } catch (err) {}
-      if (sfxGainNode) sfxGainNode.gain.value = sfxVolPref;
-    });
-    sfxVolSlider.addEventListener("pointerdown", (e) => e.stopPropagation());
-    sfxVolSlider.addEventListener("change", () => { ensureAudio(); sfxClick(); }); // audible feedback on release
   }
 
   // Bridge for the menu screen: calling this begins gameplay immediately,
