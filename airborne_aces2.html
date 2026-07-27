@@ -555,6 +555,57 @@ input[type=range].tapSlider::-moz-range-thumb {
     cursor: pointer;
   }
 
+  #settingsBtn {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    right: 62px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: linear-gradient(#f5e6c8, #d8c3a5);
+    border: 3px solid #6b4a2b;
+    border-radius: 50%;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4), inset 0 0 0 2px #c9a66b;
+    font-size: 16px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 12;
+    cursor: pointer;
+  }
+
+  #volumePanel {
+    position: fixed;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 62px);
+    right: 14px;
+    width: 200px;
+    padding: 14px 16px;
+    background: linear-gradient(#f5e6c8, #d8c3a5);
+    border: 3px solid #6b4a2b;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.45), inset 0 0 0 2px #c9a66b;
+    z-index: 13;
+  }
+  #volumePanel.hidden { display: none; }
+  #volumePanel .volumeRow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  #volumePanel .volumeRow:last-child { margin-bottom: 0; }
+  #volumePanel .volumeLabel {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3a2a18;
+  }
+  #volumePanel input[type=range] {
+    width: 100%;
+    accent-color: #8b6b3d;
+  }
+
 /* ---------- Flip Clock — Classic mechanical flip cards ---------- */
   #timerFrame {
     position: absolute;
@@ -1431,6 +1482,17 @@ input[type=range].tapSlider::-moz-range-thumb {
 <canvas id="gameCanvas"></canvas>
 
 <button id="muteBtn" aria-label="Toggle sound">🔊</button>
+<button id="settingsBtn" aria-label="Sound settings">⚙</button>
+<div id="volumePanel" class="hidden">
+  <div class="volumeRow">
+    <span class="volumeLabel">Music</span>
+    <input type="range" id="musicVolSlider" min="0" max="100" value="100" aria-label="Music volume" />
+  </div>
+  <div class="volumeRow">
+    <span class="volumeLabel">Sound FX</span>
+    <input type="range" id="sfxVolSlider" min="0" max="100" value="100" aria-label="Sound effects volume" />
+  </div>
+</div>
 
 <div id="hudFrame">
   <img id="hudFrameImg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/hudFrame.webp?cb=2" alt="" />
@@ -2236,6 +2298,22 @@ const MENU_MUSIC_VOLUME = 0.5;   // target volume once fully faded in
 const MENU_MUSIC_FADE_SEC = 1.5; // fade in at the start / fade out near the end of each loop
 let menuMusicUnlocked = false;   // becomes true once a user gesture lets audio actually play
 
+// user-adjustable music volume (0-1), separate from the mute toggle — shared
+// across menu music and gameplay music, set via the in-game volume panel
+let musicVolPref = 1;
+try { const v = localStorage.getItem("aa_music_vol"); if (v !== null) musicVolPref = parseFloat(v); } catch (e) {}
+if (isNaN(musicVolPref)) musicVolPref = 1;
+
+function setMusicVolumePref(v) {
+  musicVolPref = Math.max(0, Math.min(1, v));
+  try { localStorage.setItem("aa_music_vol", String(musicVolPref)); } catch (e) {}
+  if (gameplayMusic && !gameplayMusic.paused) {
+    gameplayMusic.volume = gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME * musicVolPref;
+  }
+}
+window.__airborneSetMusicVolumePref = setMusicVolumePref;
+window.__airborneGetMusicVolumePref = () => musicVolPref;
+
 try {
   menuMusicUnlocked = false;
   const wasMuted = localStorage.getItem("aa_muted") === "1";
@@ -2248,13 +2326,14 @@ function menuMusicFadeStep() {
   if (menuMusic.dataset.userMuted === "1") { menuMusic.volume = 0; return; }
   const t = menuMusic.currentTime;
   const d = menuMusic.duration;
-  let vol = MENU_MUSIC_VOLUME;
+  const target = MENU_MUSIC_VOLUME * musicVolPref;
+  let vol = target;
   if (t < MENU_MUSIC_FADE_SEC) {
-    vol = MENU_MUSIC_VOLUME * (t / MENU_MUSIC_FADE_SEC);
+    vol = target * (t / MENU_MUSIC_FADE_SEC);
   } else if (t > d - MENU_MUSIC_FADE_SEC) {
-    vol = MENU_MUSIC_VOLUME * Math.max(0, (d - t) / MENU_MUSIC_FADE_SEC);
+    vol = target * Math.max(0, (d - t) / MENU_MUSIC_FADE_SEC);
   }
-  menuMusic.volume = Math.max(0, Math.min(MENU_MUSIC_VOLUME, vol));
+  menuMusic.volume = Math.max(0, Math.min(target, vol));
 }
 if (menuMusic) menuMusic.addEventListener("timeupdate", menuMusicFadeStep);
 
@@ -2311,7 +2390,7 @@ function fadeGameplayMusicVolume(target, thenPause) {
 function startGameplayMusic() {
   if (!gameplayMusic) return;
   if (gameplayMusic.paused) gameplayMusic.play().catch(() => {});
-  fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME, false);
+  fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME * musicVolPref, false);
 }
 
 function stopGameplayMusic() {
@@ -2322,7 +2401,7 @@ function stopGameplayMusic() {
 function setGameplayMusicMuted(m) {
   gameplayMusicMuted = m;
   if (gameplayMusic && !gameplayMusic.paused) {
-    gameplayMusic.volume = m ? 0 : GAMEPLAY_MUSIC_VOLUME;
+    gameplayMusic.volume = m ? 0 : GAMEPLAY_MUSIC_VOLUME * musicVolPref;
   }
 }
 
@@ -2402,6 +2481,14 @@ flyBtn.addEventListener("click", () => { startGame(); });
   let muted = false;
   try { muted = localStorage.getItem("aa_muted") === "1"; } catch (e) { muted = false; }
 
+  // separate volume sliders for music vs. sound effects (0-1), independent of
+  // the all-or-nothing mute toggle above — lets the player balance the two
+  let sfxVolPref = 1;
+  try { const v = localStorage.getItem("aa_sfx_vol"); if (v !== null) sfxVolPref = parseFloat(v); } catch (e) {}
+  if (isNaN(sfxVolPref)) sfxVolPref = 1;
+
+  let musicVolPref = (window.__airborneGetMusicVolumePref ? window.__airborneGetMusicVolumePref() : 1);
+
   let audioCtx = null;
   let masterGain = null;
   let sfxGainNode = null;
@@ -2429,11 +2516,11 @@ flyBtn.addEventListener("click", () => { startGame(); });
     masterGain.connect(audioCtx.destination);
 
     sfxGainNode = audioCtx.createGain();
-    sfxGainNode.gain.value = 1;
+    sfxGainNode.gain.value = sfxVolPref;
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = 0.3;
+    musicGainNode.gain.value = 0.3 * musicVolPref;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -8024,6 +8111,50 @@ function triggerBoss(num) {
       ensureAudio();
       setMuted(!muted);
     });
+  }
+
+  const settingsBtn = document.getElementById("settingsBtn");
+  const volumePanel = document.getElementById("volumePanel");
+  const musicVolSlider = document.getElementById("musicVolSlider");
+  const sfxVolSlider = document.getElementById("sfxVolSlider");
+
+  if (musicVolSlider) musicVolSlider.value = Math.round(musicVolPref * 100);
+  if (sfxVolSlider) sfxVolSlider.value = Math.round(sfxVolPref * 100);
+
+  if (settingsBtn && volumePanel) {
+    settingsBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      ensureAudio();
+      volumePanel.classList.toggle("hidden");
+    });
+    // tapping anywhere else on the game screen closes the panel
+    document.addEventListener("pointerdown", (e) => {
+      if (volumePanel.classList.contains("hidden")) return;
+      if (e.target === settingsBtn || volumePanel.contains(e.target)) return;
+      volumePanel.classList.add("hidden");
+    });
+  }
+
+  if (musicVolSlider) {
+    musicVolSlider.addEventListener("input", (e) => {
+      e.stopPropagation();
+      musicVolPref = musicVolSlider.value / 100;
+      try { localStorage.setItem("aa_music_vol", String(musicVolPref)); } catch (err) {}
+      if (musicGainNode) musicGainNode.gain.value = 0.3 * musicVolPref;
+      if (window.__airborneSetMusicVolumePref) window.__airborneSetMusicVolumePref(musicVolPref);
+    });
+    musicVolSlider.addEventListener("pointerdown", (e) => e.stopPropagation());
+  }
+
+  if (sfxVolSlider) {
+    sfxVolSlider.addEventListener("input", (e) => {
+      e.stopPropagation();
+      sfxVolPref = sfxVolSlider.value / 100;
+      try { localStorage.setItem("aa_sfx_vol", String(sfxVolPref)); } catch (err) {}
+      if (sfxGainNode) sfxGainNode.gain.value = sfxVolPref;
+    });
+    sfxVolSlider.addEventListener("pointerdown", (e) => e.stopPropagation());
+    sfxVolSlider.addEventListener("change", () => { ensureAudio(); sfxClick(); }); // audible feedback on release
   }
 
   // Bridge for the menu screen: calling this begins gameplay immediately,
