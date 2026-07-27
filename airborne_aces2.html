@@ -3954,7 +3954,7 @@ function endCutscene() {
     sketchSkylineTiles = [];
     const img = images.sketchSkyline;
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 1.5;
-    const h = H * 0.3;
+    const h = H * 0.33; // +10%
     const w = h * aspect;
     let x = 0;
     while (x < W + w) {
@@ -3964,7 +3964,7 @@ function endCutscene() {
   }
 
   function updateSketchSkyline(dtScale) {
-    const speed = 0.2 * dtScale * obstacleSpeedScale(); // slower than power lines — further back
+    const speed = 0.35 * dtScale * obstacleSpeedScale(); // between parallax layer 3 (0.28) and power lines (0.4) — matches its position in the draw order
     sketchSkylineTiles.forEach(t => (t.x -= speed));
     while (sketchSkylineTiles.length && sketchSkylineTiles[0].x + sketchSkylineTiles[0].w < -10) {
       sketchSkylineTiles.shift();
@@ -3972,7 +3972,7 @@ function endCutscene() {
     const last = sketchSkylineTiles[sketchSkylineTiles.length - 1];
     if (!last || last.x + last.w < W + 200) {
       const startX = last ? last.x + last.w - 1 : 0;
-      const h = last ? last.h : H * 0.3;
+      const h = last ? last.h : H * 0.33;
       const aspect = last ? last.w / last.h : 1.5;
       sketchSkylineTiles.push({ x: startX, w: h * aspect, h: h });
     }
@@ -3988,7 +3988,7 @@ function endCutscene() {
     // floating above with a gap of plain sky in between.
     const bottomY = groundY - powerlineH * 0.5;
     ctx.save();
-    ctx.globalAlpha = 0.5; // hazy/atmospheric so it reads as distant instead of a hard-edged cutout
+    ctx.globalAlpha = 0.8; // darker/more visible while still reading as distant (was 0.5)
     sketchSkylineTiles.forEach(t => {
       ctx.drawImage(img, t.x, bottomY - t.h, t.w, t.h);
     });
@@ -8397,9 +8397,9 @@ function triggerBoss(num) {
   function initParallaxLayers() {
     parallaxLayers = [
       { depth: 0.03, items: [], imgKey: currentLevelBgKey(), imgX: 0 },
-      { depth: 0.08, items: [], color: 'rgba(100,80,55,0.35)', itemH: H * 0.22, density: 0.012 },
-      { depth: 0.18, items: [], color: 'rgba(70,55,35,0.45)', itemH: H * 0.14, density: 0.018 },
-      { depth: 0.35, items: [], color: 'rgba(50,40,25,0.55)', itemH: H * 0.08, density: 0.025 }
+      { depth: 0.08, items: [], color: 'rgba(100,80,55,0.35)', itemH: H * 0.242, density: 0.012 }, // +10%
+      { depth: 0.18, items: [], color: 'rgba(70,55,35,0.45)', itemH: H * 0.154, density: 0.018 }, // +10%
+      { depth: 0.28, items: [], color: 'rgba(50,40,25,0.55)', itemH: H * 0.088, density: 0.025 } // +10% height; depth lowered from 0.35 so it still scrolls slower than the sketch skyline drawn in front of it (see below)
     ];
     bgTransition = null;
     // Layer 0: skylineFar image - tile across screen, 25% taller than full
