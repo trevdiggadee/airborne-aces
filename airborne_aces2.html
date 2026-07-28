@@ -1192,26 +1192,68 @@ html, body {
     align-items: flex-end;
     gap: 8px;
     max-width: min(72vw, 320px);
-    animation: tutFadeIn 0.35s ease-out;
   }
   #tutorialGuide.hidden { display: none !important; }
 
-  @keyframes tutFadeIn {
-    from { opacity: 0; transform: translateY(-14px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
   #tutorialGuide .tutGuideChar {
-    width: 64px;
-    height: 64px;
-    animation: tutFloat 2.2s ease-in-out infinite;
+    width: 80px;
+    height: 80px;
     position: relative;
+    animation: tutCharFlyIn 0.9s cubic-bezier(.25,.85,.25,1.15) both,
+               tutFloat 2.2s ease-in-out 0.9s infinite;
   }
   #tutorialGuide .tutGuideChar img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
+  }
+
+  /* swoops in from off-screen (up and to the right), with motion blur that
+     sharpens as it settles into place, then hands off into the float loop */
+  @keyframes tutCharFlyIn {
+    0%   { opacity: 0; transform: translate(190px, -210px) rotate(24deg) scale(0.6); filter: blur(6px) drop-shadow(0 4px 6px rgba(0,0,0,0.45)); }
+    50%  { opacity: 1; filter: blur(1px) drop-shadow(0 4px 6px rgba(0,0,0,0.45)); }
+    72%  { transform: translate(-12px, 9px) rotate(-7deg) scale(1.1); filter: blur(0px) drop-shadow(0 4px 6px rgba(0,0,0,0.45)); }
+    88%  { transform: translate(4px, -4px) rotate(3deg) scale(0.97); }
+    100% { transform: translate(0,0) rotate(0deg) scale(1); filter: blur(0px) drop-shadow(0 4px 6px rgba(0,0,0,0.45)); }
+  }
+
+  /* a bright sparkle pulse right as it lands, plus a short streak of motion
+     lines trailing back toward where it flew in from */
+  #tutorialGuide .tutGuideChar::after {
+    content: "";
+    position: absolute;
+    inset: -22%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,244,200,0.95) 0%, rgba(255,224,150,0.45) 42%, rgba(255,224,150,0) 72%);
+    opacity: 0;
+    pointer-events: none;
+    animation: tutLandSparkle 0.55s ease-out 0.78s both;
+  }
+  @keyframes tutLandSparkle {
+    0%   { opacity: 0; transform: scale(0.3); }
+    35%  { opacity: 0.95; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1.7); }
+  }
+  #tutorialGuide .tutGuideChar::before {
+    content: "";
+    position: absolute;
+    top: 42%;
+    right: 100%;
+    width: 46px;
+    height: 3px;
+    background: linear-gradient(to left, rgba(255,255,255,0.8), rgba(255,255,255,0));
+    border-radius: 2px;
+    opacity: 0;
+    pointer-events: none;
+    animation: tutMotionStreak 0.5s ease-out both;
+  }
+  @keyframes tutMotionStreak {
+    0%   { opacity: 0; transform: translateX(-10px) scaleX(0.4); }
+    25%  { opacity: 0.85; }
+    70%  { opacity: 0.4; transform: translateX(18px) scaleX(1.3); }
+    100% { opacity: 0; transform: translateX(30px) scaleX(1.5); }
   }
 
   /* small exhaust puffs near the character's own smokestack/vent, scaled
@@ -1261,6 +1303,12 @@ html, body {
     box-shadow: 0 6px 16px rgba(0,0,0,0.45), inset 0 0 0 2px #c9a66b;
     padding: 12px 14px 12px;
     position: relative;
+    opacity: 0;
+    animation: tutBubbleIn 0.35s ease-out 0.85s both;
+  }
+  @keyframes tutBubbleIn {
+    from { opacity: 0; transform: scale(0.85) translateY(-6px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
   }
   #tutorialGuide .tutBubble::after {
     content: "";
@@ -1312,7 +1360,7 @@ html, body {
 
   @media (max-width: 420px) {
     #tutorialGuide { max-width: 68vw; }
-    #tutorialGuide .tutGuideChar { width: 52px; height: 52px; }
+    #tutorialGuide .tutGuideChar { width: 65px; height: 65px; }
     #tutorialGuide .tutBubble p { font-size: 12px; }
   }
 
@@ -2812,6 +2860,17 @@ function endCutscene() {
     [0, 4, 7, 12].forEach((iv, i) => {
       playTone({ freq: noteFreq(64 + iv), duration: 0.14, type: "triangle", vol: 0.1,
         sweep: 40, startDelay: i * 0.07, attack: 0.004, reverbSend: 0.3 });
+    });
+  }
+
+  function sfxTutorialArrive() {
+    // quick descending whoosh as the character swoops in
+    playTone({ freq: 950, duration: 0.3, type: "sawtooth", vol: 0.055, sweep: -700, attack: 0.005, reverbSend: 0.2 });
+    playTone({ freq: 500, duration: 0.22, type: "sine", vol: 0.04, sweep: -260, startDelay: 0.04 });
+    // bright ascending chime right as it lands, timed to the CSS landing sparkle
+    [0, 4, 7].forEach((iv, i) => {
+      playTone({ freq: noteFreq(72 + iv), duration: 0.24, type: "triangle", vol: 0.09,
+        sweep: 50, startDelay: 0.34 + i * 0.055, attack: 0.005, reverbSend: 0.3 });
     });
   }
 
@@ -7949,6 +8008,8 @@ function triggerBoss(num) {
     const img = document.getElementById("tutGuideImg");
     document.getElementById("tutBubbleText").textContent = TUTORIAL_TEXT;
     overlay.classList.remove("hidden");
+    ensureAudio();
+    sfxTutorialArrive();
 
     // cycle through the 25-frame guide animation while the bubble is up
     let frame = 0;
