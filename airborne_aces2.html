@@ -1205,12 +1205,48 @@ html, body {
     width: 64px;
     height: 64px;
     animation: tutFloat 2.2s ease-in-out infinite;
+    position: relative;
   }
   #tutorialGuide .tutGuideChar img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
+  }
+
+  /* small exhaust puffs near the character's own smokestack/vent, scaled
+     down from the menu hero blimp's smoke effect for this much smaller icon */
+  .tutGuideSmoke {
+    position: absolute;
+    left: 45%;
+    top: 16%;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+  .tutGuideSmoke .puff {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    margin-top: -6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(225,220,210,0.7) 0%, rgba(225,220,210,0.3) 55%, rgba(225,220,210,0) 75%);
+    filter: blur(0.75px);
+    opacity: 0;
+    animation: tutPuffRise 2.4s ease-out infinite;
+  }
+  .tutGuideSmoke .p1 { animation-delay: 0s; }
+  .tutGuideSmoke .p2 { animation-delay: 0.6s; }
+  .tutGuideSmoke .p3 { animation-delay: 1.2s; }
+  .tutGuideSmoke .p4 { animation-delay: 1.8s; }
+
+  @keyframes tutPuffRise {
+    0% { transform: translate(0, 0) scale(0.35); opacity: 0; }
+    15% { opacity: 0.75; }
+    100% { transform: translate(-40%, -85%) scale(1.5); opacity: 0; }
   }
 
   @keyframes tutFloat {
@@ -1481,6 +1517,12 @@ html, body {
 <div id="tutorialGuide" class="hidden">
   <div class="tutGuideChar">
     <img src="" alt="" id="tutGuideImg">
+    <div class="tutGuideSmoke">
+      <div class="puff p1"></div>
+      <div class="puff p2"></div>
+      <div class="puff p3"></div>
+      <div class="puff p4"></div>
+    </div>
   </div>
   <div class="tutBubble">
     <p id="tutBubbleText"></p>
@@ -3548,6 +3590,31 @@ function endCutscene() {
     storm_cloud_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_34.webp?cb=2",
     storm_cloud_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_35.webp?cb=2",
     storm_cloud_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_36.webp?cb=2",
+    tutorial_guide_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_01.png?cb=1",
+    tutorial_guide_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_02.png?cb=1",
+    tutorial_guide_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_03.png?cb=1",
+    tutorial_guide_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_04.png?cb=1",
+    tutorial_guide_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_05.png?cb=1",
+    tutorial_guide_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_06.png?cb=1",
+    tutorial_guide_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_07.png?cb=1",
+    tutorial_guide_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_08.png?cb=1",
+    tutorial_guide_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_09.png?cb=1",
+    tutorial_guide_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_10.png?cb=1",
+    tutorial_guide_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_11.png?cb=1",
+    tutorial_guide_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_12.png?cb=1",
+    tutorial_guide_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_13.png?cb=1",
+    tutorial_guide_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_14.png?cb=1",
+    tutorial_guide_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_15.png?cb=1",
+    tutorial_guide_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_16.png?cb=1",
+    tutorial_guide_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_17.png?cb=1",
+    tutorial_guide_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_18.png?cb=1",
+    tutorial_guide_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_19.png?cb=1",
+    tutorial_guide_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_20.png?cb=1",
+    tutorial_guide_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_21.png?cb=1",
+    tutorial_guide_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_22.png?cb=1",
+    tutorial_guide_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_23.png?cb=1",
+    tutorial_guide_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_24.png?cb=1",
+    tutorial_guide_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_25.png?cb=1",
     storm_cloud_unique_00: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_00.png",
     storm_cloud_unique_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_01.png",
     storm_cloud_unique_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_02.png",
@@ -7133,6 +7200,10 @@ function triggerBoss(num) {
   const STORM_CLOUD_FPS = 12;
   const STORM_CLOUD_KEYS = Array.from({ length: STORM_CLOUD_FRAME_COUNT }, (_, i) => `storm_cloud_${String(i + 1).padStart(2, "0")}`);
 
+  const TUTORIAL_GUIDE_FRAME_COUNT = 25;
+  const TUTORIAL_GUIDE_FPS = 17; // matches the source animation's native frame rate
+  const TUTORIAL_GUIDE_KEYS = Array.from({ length: TUTORIAL_GUIDE_FRAME_COUNT }, (_, i) => `tutorial_guide_${String(i + 1).padStart(2, "0")}`);
+
   function updateRain(dt) {
     const raining = isRainLevel();
     if (raining) {
@@ -7876,14 +7947,25 @@ function triggerBoss(num) {
     state = "tutorial";
     const overlay = document.getElementById("tutorialGuide");
     const img = document.getElementById("tutGuideImg");
-    img.src = (images.heartPickup && images.heartPickup.naturalWidth) ? images.heartPickup.src : "";
     document.getElementById("tutBubbleText").textContent = TUTORIAL_TEXT;
     overlay.classList.remove("hidden");
+
+    // cycle through the 25-frame guide animation while the bubble is up
+    let frame = 0;
+    function setFrame() {
+      const key = TUTORIAL_GUIDE_KEYS[frame % TUTORIAL_GUIDE_FRAME_COUNT];
+      const frameImg = images[key];
+      if (frameImg && frameImg.naturalWidth) img.src = frameImg.src;
+      frame++;
+    }
+    setFrame();
+    const animTimerId = setInterval(setFrame, 1000 / TUTORIAL_GUIDE_FPS);
 
     let done = false;
     function finish() {
       if (done) return;
       done = true;
+      clearInterval(animTimerId);
       overlay.classList.add("hidden");
       skipBtn.removeEventListener("click", finish);
       if (state === "tutorial") { state = "playing"; startGame(); }
@@ -8303,11 +8385,7 @@ function triggerBoss(num) {
   let pendingStart = false;
   function bridgeStart() {
     if (assetsLoaded === assetKeys.length) {
-      // NOTE: startTutorial() (the floating tip bubble at the start of a run)
-      // is on hold for now — going straight into gameplay instead. The
-      // function itself is left intact below so it can be re-enabled later
-      // by swapping this call back to startTutorial().
-      startGame();
+      startTutorial();
     } else {
       pendingStart = true;
     }
@@ -9227,7 +9305,7 @@ function triggerBoss(num) {
       requestAnimationFrame(loop);
       if (pendingStart) {
         pendingStart = false;
-        startGame();
+        startTutorial();
       }
     } catch (err) {
       showRuntimeError(err);
