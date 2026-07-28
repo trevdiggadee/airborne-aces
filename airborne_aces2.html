@@ -1205,48 +1205,12 @@ html, body {
     width: 64px;
     height: 64px;
     animation: tutFloat 2.2s ease-in-out infinite;
-    position: relative;
   }
   #tutorialGuide .tutGuideChar img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
-  }
-
-  /* small exhaust puffs near the character's own smokestack/vent, scaled
-     down from the menu hero blimp's smoke effect for this much smaller icon */
-  .tutGuideSmoke {
-    position: absolute;
-    left: 45%;
-    top: 16%;
-    width: 1px;
-    height: 1px;
-    pointer-events: none;
-  }
-  .tutGuideSmoke .puff {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 12px;
-    height: 12px;
-    margin-left: -6px;
-    margin-top: -6px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(225,220,210,0.7) 0%, rgba(225,220,210,0.3) 55%, rgba(225,220,210,0) 75%);
-    filter: blur(0.75px);
-    opacity: 0;
-    animation: tutPuffRise 2.4s ease-out infinite;
-  }
-  .tutGuideSmoke .p1 { animation-delay: 0s; }
-  .tutGuideSmoke .p2 { animation-delay: 0.6s; }
-  .tutGuideSmoke .p3 { animation-delay: 1.2s; }
-  .tutGuideSmoke .p4 { animation-delay: 1.8s; }
-
-  @keyframes tutPuffRise {
-    0% { transform: translate(0, 0) scale(0.35); opacity: 0; }
-    15% { opacity: 0.75; }
-    100% { transform: translate(-40%, -85%) scale(1.5); opacity: 0; }
   }
 
   @keyframes tutFloat {
@@ -1416,17 +1380,12 @@ html, body {
   background-repeat: no-repeat;
   background-size: 600% 600%;
   filter: drop-shadow(0 18px 24px rgba(0,0,0,0.6));
-  animation: cutsceneTutorSlideIn 0.7s 0.15s cubic-bezier(.2,.9,.25,1) both,
-             cutsceneTutorFadeIn 0.7s 0.15s ease-out both,
+  animation: cutsceneTutorIn 0.7s 0.15s cubic-bezier(.2,.9,.25,1) both,
              cutsceneTutorFloat 3.6s ease-in-out 0.85s infinite;
 }
-@keyframes cutsceneTutorSlideIn {
-  0% { right: -90%; }
-  100% { right: -8%; }
-}
-@keyframes cutsceneTutorFadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+@keyframes cutsceneTutorIn {
+  0% { transform: translateX(55%) scale(0.85); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
 }
 @keyframes cutsceneTutorFloat {
   0%, 100% { transform: translate(0, 0); }
@@ -1522,12 +1481,6 @@ html, body {
 <div id="tutorialGuide" class="hidden">
   <div class="tutGuideChar">
     <img src="" alt="" id="tutGuideImg">
-    <div class="tutGuideSmoke">
-      <div class="puff p1"></div>
-      <div class="puff p2"></div>
-      <div class="puff p3"></div>
-      <div class="puff p4"></div>
-    </div>
   </div>
   <div class="tutBubble">
     <p id="tutBubbleText"></p>
@@ -2460,7 +2413,7 @@ window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenu
 // on or off (game start, retry, checkpoint resume, crash) automatically drives
 // this track too, with no extra call sites needed. ----------
 const gameplayMusic = document.getElementById("gameplayMusic");
-const GAMEPLAY_MUSIC_VOLUME = 0.11; // lowered 50% so SFX read louder
+const GAMEPLAY_MUSIC_VOLUME = 0.25; // music at 25%
 const GAMEPLAY_MUSIC_FADE_MS = 900;
 let gameplayMusicMuted = false;
 try { gameplayMusicMuted = localStorage.getItem("aa_muted") === "1"; } catch (e) {}
@@ -2696,7 +2649,7 @@ function endCutscene() {
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = 0.3;
+    musicGainNode.gain.value = 0.25;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -3000,6 +2953,10 @@ function endCutscene() {
     skylineFarL3: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0844.png",
     powerlines: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/powerlines.webp",
     sketchSkyline: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/sketchSkyline.webp",
+    vehicle_towtruck: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/vehicle_towtruck.webp",
+    vehicle_tanker: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/vehicle_tanker.webp",
+    vehicle_transit: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/vehicle_transit.webp",
+    vehicle_roadster: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/vehicle_roadster.webp",
     farBg: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/Far_Bg.jpg",
     bldg_cinema:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_cinema.webp?cb=2",
     bldg_apothecary: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/bldg_apothecary.webp?cb=2",
@@ -3016,8 +2973,6 @@ function endCutscene() {
     bldg_l3_pipeworks:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0770.png",
     streetrow1: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow1.webp",
     streetrow2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow2.webp",
-    streetrowBuildings: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow_buildings.webp",
-    streetTexture: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/street_texture.webp",
     streetlamp1:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0734.png",
     boss:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
     boss2:           "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2.webp?cb=2",
@@ -3597,31 +3552,6 @@ function endCutscene() {
     storm_cloud_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_34.webp?cb=2",
     storm_cloud_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_35.webp?cb=2",
     storm_cloud_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_36.webp?cb=2",
-    tutorial_guide_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_01.png?cb=1",
-    tutorial_guide_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_02.png?cb=1",
-    tutorial_guide_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_03.png?cb=1",
-    tutorial_guide_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_04.png?cb=1",
-    tutorial_guide_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_05.png?cb=1",
-    tutorial_guide_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_06.png?cb=1",
-    tutorial_guide_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_07.png?cb=1",
-    tutorial_guide_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_08.png?cb=1",
-    tutorial_guide_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_09.png?cb=1",
-    tutorial_guide_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_10.png?cb=1",
-    tutorial_guide_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_11.png?cb=1",
-    tutorial_guide_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_12.png?cb=1",
-    tutorial_guide_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_13.png?cb=1",
-    tutorial_guide_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_14.png?cb=1",
-    tutorial_guide_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_15.png?cb=1",
-    tutorial_guide_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_16.png?cb=1",
-    tutorial_guide_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_17.png?cb=1",
-    tutorial_guide_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_18.png?cb=1",
-    tutorial_guide_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_19.png?cb=1",
-    tutorial_guide_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_20.png?cb=1",
-    tutorial_guide_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_21.png?cb=1",
-    tutorial_guide_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_22.png?cb=1",
-    tutorial_guide_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_23.png?cb=1",
-    tutorial_guide_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_24.png?cb=1",
-    tutorial_guide_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/tutorial_guide_25.png?cb=1",
     storm_cloud_unique_00: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_00.png",
     storm_cloud_unique_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_01.png",
     storm_cloud_unique_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_02.png",
@@ -3927,8 +3857,8 @@ function endCutscene() {
   window.addEventListener("orientationchange", resize);
   resize();
 
-  // ---------- Buildings — continuous panoramic street-row strips (one per
-  // level, cycling through until more level-specific art is provided),
+  // ---------- Buildings — now continuous panoramic street-row strips (one
+  // per level, cycling through until more level-specific art is provided),
   // scrolling in sync with the rest of the ground plane. Replaces the old
   // discrete per-building-sprite system. ----------
   const BUILDING_ROW_KEYS = ['streetrow1', 'streetrow2'];
@@ -3941,9 +3871,7 @@ function endCutscene() {
   // short building just because it's within the same tile as a tall one.
   const STREETROW1_PROFILE = [0.302, 0.302, 0.302, 0.302, 0.24, 0.252, 0.406, 0.348, 0.348, 0.346, 0.365, 0.61, 0.61, 0.61, 0.431, 0.177, 0.15, 0.177, 0.177, 0.177, 0.542, 0.35, 0.35, 0.342, 0.342, 0.35, 0.431, 0.431, 0.431, 0.45, 0.142, 0.012, 0.104, 0.535, 0.448, 0.392, 0.404, 0.419, 0.621, 0.621, 0.625, 0.662, 0.683, 0.302, 0.233, 0.206, 0.202, 0.208, 0.223, 0.198, 0.219, 0.229, 0.433, 0.446, 0.456, 0.46, 0.492, 0.488, 0.452, 0.44];
   const STREETROW2_PROFILE = [0.242, 0.265, 0.287, 0.31, 0.237, 0.242, 0.317, 0.317, 0.277, 0.287, 0.398, 0.396, 0.348, 0.319, 0.277, 0.275, 0.319, 0.285, 0.265, 0.225, 0.258, 0.258, 0.188, 0.362, 0.323, 0.323, 0.56, 0.56, 0.104, 0.063, 0.104, 0.325, 0.325, 0.315, 0.398, 0.0, 0.0, 0.333, 0.356, 0.625, 0.425, 0.212, 0.183, 0.204, 0.183, 0.217, 0.446, 0.465, 0.408, 0.433, 0.435, 0.317, 0.262, 0.238, 0.192, 0.185, 0.225, 0.269, 0.46, 0.479];
-  // measured the same way from streetrow_buildings.webp's alpha channel
-  const STREETROW_BUILDINGS_PROFILE = [0.553, 0.547, 0.534, 0.553, 0.553, 0.602, 0.602, 0.559, 0.553, 0.553, 0.596, 0.528, 0.516, 0.602, 0.559, 0.702, 0.702, 0.422, 0.652, 0.559, 0.602, 0.404, 0.59, 0.739, 0.547, 0.484, 0.491, 0.658, 0.658, 0.64, 0.658, 0.522, 0.497, 0.491, 0.528, 0.658, 0.379, 0.379, 0.466, 0.422, 0.627, 0.627, 0.28, 0.28, 0.814, 0.416, 0.478, 0.484, 0.311, 0.497, 0.478, 0.671, 0.671, 0.683, 0.323, 0.317, 0.317, 0.565, 0.602, 0.59];
-  const BUILDING_ROW_PROFILES = { streetrow1: STREETROW1_PROFILE, streetrow2: STREETROW2_PROFILE, streetrowBuildings: STREETROW_BUILDINGS_PROFILE };
+  const BUILDING_ROW_PROFILES = { streetrow1: STREETROW1_PROFILE, streetrow2: STREETROW2_PROFILE };
 
   function buildingProfileTopFrac(b, sampleX) {
     const profile = BUILDING_ROW_PROFILES[buildingRowKey];
@@ -3962,7 +3890,7 @@ function endCutscene() {
   function makeBuildingRowTile(xStart, key) {
     const img = images[key];
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3.2;
-    const h = H * 0.396; // was 0.33, +20% (reverted from the +25% custom-art experiment)
+    const h = H * 0.396; // was 0.33, +20%
     const w = h * aspect;
     return { x: xStart, w, h };
   }
@@ -4015,12 +3943,8 @@ function endCutscene() {
     const groundY = groundLevelY();
     const img = images[buildingRowKey];
     if (!img || !img.naturalWidth) return;
-    // nudge the whole row down slightly so its base sits under the street
-    // band instead of butting a hard seam against it — drawStreet() paints
-    // after this and covers the overlap, blending the two together
-    const streetOverlap = Math.max(10, H * 0.014);
     buildings.forEach(b => {
-      ctx.drawImage(img, b.x, groundY - b.h + streetOverlap, b.w, b.h);
+      ctx.drawImage(img, b.x, groundY - b.h, b.w, b.h);
     });
   }
 
@@ -4044,7 +3968,7 @@ function endCutscene() {
   }
 
   function updateSketchSkyline(dtScale) {
-    const speed = 0.28 * dtScale * obstacleSpeedScale(); // matches parallax layer 3 depth
+    const speed = 0.35 * dtScale * obstacleSpeedScale(); // between parallax layer 3 (0.28) and power lines (0.4) — matches its position in the draw order
     sketchSkylineTiles.forEach(t => (t.x -= speed));
     while (sketchSkylineTiles.length && sketchSkylineTiles[0].x + sketchSkylineTiles[0].w < -10) {
       sketchSkylineTiles.shift();
@@ -4132,20 +4056,50 @@ function endCutscene() {
 
   function drawStreet() {
     const groundY = groundLevelY();
-    const bandH = H - groundY; // anchored to the very bottom of the canvas
+    const bandH = H - groundY;
+    const sidewalkH = bandH * 0.4;
+    const curbH = Math.max(2, bandH * 0.06);
+    const roadY = groundY + sidewalkH;
+    const roadH = bandH - sidewalkH;
 
-    const img = images.streetTexture;
-    if (img && img.naturalWidth) {
-      const aspect = img.naturalWidth / img.naturalHeight;
-      const tileW = bandH * aspect;
-      const offset = ((streetScrollX % tileW) + tileW) % tileW;
-      for (let x = -offset - tileW; x < W + tileW; x += tileW) {
-        ctx.drawImage(img, x, groundY, tileW, bandH);
-      }
-    } else {
-      // fallback flat fill in case the texture hasn't loaded yet
-      ctx.fillStyle = "#332a22";
-      ctx.fillRect(0, groundY, W, bandH);
+    // sidewalk
+    ctx.fillStyle = "#8a7f6c";
+    ctx.fillRect(0, groundY, W, sidewalkH);
+    // sidewalk slab seams
+    ctx.strokeStyle = "rgba(60,52,40,0.35)";
+    ctx.lineWidth = 1.5;
+    const slabW = 46;
+    const slabOffset = ((streetScrollX % slabW) + slabW) % slabW;
+    for (let x = -slabOffset; x < W; x += slabW) {
+      ctx.beginPath();
+      ctx.moveTo(x, groundY + 2);
+      ctx.lineTo(x, groundY + sidewalkH - 1);
+      ctx.stroke();
+    }
+
+    // curb
+    ctx.fillStyle = "#4a4234";
+    ctx.fillRect(0, roadY - curbH, W, curbH);
+
+    // road
+    ctx.fillStyle = "#332a22";
+    ctx.fillRect(0, roadY, W, roadH);
+    // subtle road texture band
+    const grad = ctx.createLinearGradient(0, roadY, 0, roadY + roadH);
+    grad.addColorStop(0, "rgba(0,0,0,0.15)");
+    grad.addColorStop(0.5, "rgba(255,255,255,0.03)");
+    grad.addColorStop(1, "rgba(0,0,0,0.2)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, roadY, W, roadH);
+
+    // dashed center line
+    const dashW = 26, dashGap = 18, dashH = Math.max(2, roadH * 0.1);
+    const dashCycle = dashW + dashGap;
+    const dashOffset = ((streetScrollX % dashCycle) + dashCycle) % dashCycle;
+    ctx.fillStyle = "rgba(196,164,102,0.75)";
+    const dashY = roadY + roadH / 2 - dashH / 2;
+    for (let x = -dashOffset; x < W; x += dashCycle) {
+      ctx.fillRect(x, dashY, dashW, dashH);
     }
   }
 
@@ -4274,29 +4228,32 @@ function endCutscene() {
     });
   }
 
-  // ---------- Ground vehicles (decorative, no collision) — trucks, buses,
-  // and tanks driving along the street in both directions for variety. Real
-  // art isn't ready yet, so these are drawn procedurally as placeholders;
-  // swap in sprites later by replacing the body of drawGroundVehicles(). ----------
+  // ---------- Ground vehicles (decorative, no collision) — real art, two
+  // types driving each direction (matching each image's natural facing, so
+  // nothing needs to be mirrored). ----------
   let groundVehicles = [];
   let vehicleSpawnTimer = 3 + Math.random() * 4;
-  const VEHICLE_TYPES = ["truck", "bus", "tank"];
-  const VEHICLE_COLORS = ["#5c4a3a", "#3a5c4a", "#4a4a5c", "#6b4a2b", "#5c3a3a", "#454038"];
+  // dir: 1 = drives left-to-right (art faces right), -1 = right-to-left (art faces left)
+  const VEHICLE_DEFS = [
+    { key: "vehicle_towtruck", dir: 1 },
+    { key: "vehicle_tanker", dir: 1 },
+    { key: "vehicle_transit", dir: -1 },
+    { key: "vehicle_roadster", dir: -1 }
+  ];
 
   function spawnGroundVehicle() {
-    const type = VEHICLE_TYPES[Math.floor(Math.random() * VEHICLE_TYPES.length)];
-    const dir = Math.random() < 0.5 ? 1 : -1; // 1 = drives left-to-right, -1 = right-to-left
+    const def = VEHICLE_DEFS[Math.floor(Math.random() * VEHICLE_DEFS.length)];
+    const img = images[def.key];
+    const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 2.4;
     const scale = Math.min(1.6, W / 500);
-    const w = (type === "bus" ? 70 : type === "tank" ? 54 : 58) * scale;
-    const h = (type === "tank" ? 26 : 32) * scale;
+    const h = 46 * scale;
+    const w = h * aspect;
     groundVehicles.push({
-      type,
-      x: dir === 1 ? -w - 20 : W + 20,
+      key: def.key,
+      x: def.dir === 1 ? -w - 20 : W + 20,
       w, h,
-      dir,
-      speed: (26 + Math.random() * 22) * scale,
-      wheelPhase: Math.random() * Math.PI * 2,
-      color: VEHICLE_COLORS[Math.floor(Math.random() * VEHICLE_COLORS.length)]
+      dir: def.dir,
+      speed: (26 + Math.random() * 22) * scale
     });
   }
 
@@ -4309,7 +4266,6 @@ function endCutscene() {
     const worldScroll = 0.8 * dtScale * obstacleSpeedScale(); // same ground-plane speed as buildings
     groundVehicles.forEach(v => {
       v.x += v.dir * v.speed * dt - worldScroll;
-      v.wheelPhase += dt * 9;
     });
     groundVehicles = groundVehicles.filter(v => v.x > -160 && v.x < W + 160);
   }
@@ -4317,74 +4273,10 @@ function endCutscene() {
   function drawGroundVehicles() {
     const groundY = groundLevelY();
     groundVehicles.forEach(v => {
+      const img = images[v.key];
+      if (!img || !img.naturalWidth) return;
       const y = groundY - v.h;
-      ctx.save();
-      ctx.translate(v.x, y);
-      if (v.dir === -1) ctx.scale(-1, 1); // face its direction of travel
-
-      if (v.type === "tank") {
-        // tracks
-        ctx.fillStyle = "rgba(20,18,16,0.9)";
-        ctx.fillRect(0, v.h * 0.62, v.w, v.h * 0.38);
-        ctx.fillStyle = "rgba(60,55,50,0.9)";
-        const wheelR = v.h * 0.16;
-        for (let i = 0; i < 5; i++) {
-          const wx = v.w * 0.1 + i * (v.w * 0.2);
-          ctx.save();
-          ctx.translate(wx, v.h * 0.82);
-          ctx.rotate(v.wheelPhase);
-          ctx.beginPath(); ctx.arc(0, 0, wheelR, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = "rgba(20,18,16,0.9)"; ctx.lineWidth = 1.2;
-          ctx.beginPath(); ctx.moveTo(-wheelR, 0); ctx.lineTo(wheelR, 0); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(0, -wheelR); ctx.lineTo(0, wheelR); ctx.stroke();
-          ctx.restore();
-        }
-        // hull + turret
-        ctx.fillStyle = v.color;
-        ctx.fillRect(v.w * 0.06, v.h * 0.32, v.w * 0.88, v.h * 0.32);
-        ctx.beginPath();
-        ctx.arc(v.w * 0.45, v.h * 0.32, v.h * 0.24, Math.PI, 0);
-        ctx.fill();
-        ctx.fillRect(v.w * 0.62, v.h * 0.14, v.w * 0.42, v.h * 0.1); // barrel
-      } else {
-        // wheels
-        ctx.fillStyle = "rgba(20,18,16,0.9)";
-        const wheelR = v.h * 0.19;
-        [v.w * 0.2, v.w * 0.8].forEach(wx => {
-          ctx.save();
-          ctx.translate(wx, v.h * 0.86);
-          ctx.rotate(v.wheelPhase);
-          ctx.beginPath(); ctx.arc(0, 0, wheelR, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = "rgba(90,85,80,0.9)"; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(-wheelR, 0); ctx.lineTo(wheelR, 0); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(0, -wheelR); ctx.lineTo(0, wheelR); ctx.stroke();
-          ctx.restore();
-        });
-        // body
-        ctx.fillStyle = v.color;
-        const r = 4;
-        ctx.beginPath();
-        ctx.moveTo(r, v.h * 0.14);
-        ctx.arcTo(v.w, v.h * 0.14, v.w, v.h * 0.68, r);
-        ctx.arcTo(v.w, v.h * 0.68, 0, v.h * 0.68, r);
-        ctx.arcTo(0, v.h * 0.68, 0, v.h * 0.14, r);
-        ctx.arcTo(0, v.h * 0.14, v.w, v.h * 0.14, r);
-        ctx.closePath();
-        ctx.fill();
-        if (v.type === "truck") {
-          ctx.fillRect(-v.w * 0.16, v.h * 0.3, v.w * 0.2, v.h * 0.38); // cab
-        }
-        // windows
-        ctx.fillStyle = "rgba(200,222,235,0.75)";
-        const winCount = v.type === "bus" ? 4 : 2;
-        for (let i = 0; i < winCount; i++) {
-          ctx.fillRect(v.w * (0.08 + i * 0.8 / winCount), v.h * 0.2, v.w * 0.5 / winCount, v.h * 0.22);
-        }
-        // a thin brass-ish trim stripe, matching the game's steampunk palette
-        ctx.fillStyle = "rgba(180,140,80,0.55)";
-        ctx.fillRect(0, v.h * 0.5, v.w, v.h * 0.05);
-      }
-      ctx.restore();
+      ctx.drawImage(img, v.x, y, v.w, v.h);
     });
   }
 
@@ -7183,10 +7075,6 @@ function triggerBoss(num) {
   const STORM_CLOUD_FPS = 12;
   const STORM_CLOUD_KEYS = Array.from({ length: STORM_CLOUD_FRAME_COUNT }, (_, i) => `storm_cloud_${String(i + 1).padStart(2, "0")}`);
 
-  const TUTORIAL_GUIDE_FRAME_COUNT = 25;
-  const TUTORIAL_GUIDE_FPS = 17; // matches the source animation's native frame rate
-  const TUTORIAL_GUIDE_KEYS = Array.from({ length: TUTORIAL_GUIDE_FRAME_COUNT }, (_, i) => `tutorial_guide_${String(i + 1).padStart(2, "0")}`);
-
   function updateRain(dt) {
     const raining = isRainLevel();
     if (raining) {
@@ -7930,25 +7818,14 @@ function triggerBoss(num) {
     state = "tutorial";
     const overlay = document.getElementById("tutorialGuide");
     const img = document.getElementById("tutGuideImg");
+    img.src = (images.heartPickup && images.heartPickup.naturalWidth) ? images.heartPickup.src : "";
     document.getElementById("tutBubbleText").textContent = TUTORIAL_TEXT;
     overlay.classList.remove("hidden");
-
-    // cycle through the 25-frame guide animation while the bubble is up
-    let frame = 0;
-    function setFrame() {
-      const key = TUTORIAL_GUIDE_KEYS[frame % TUTORIAL_GUIDE_FRAME_COUNT];
-      const frameImg = images[key];
-      if (frameImg && frameImg.naturalWidth) img.src = frameImg.src;
-      frame++;
-    }
-    setFrame();
-    const animTimerId = setInterval(setFrame, 1000 / TUTORIAL_GUIDE_FPS);
 
     let done = false;
     function finish() {
       if (done) return;
       done = true;
-      clearInterval(animTimerId);
       overlay.classList.add("hidden");
       skipBtn.removeEventListener("click", finish);
       if (state === "tutorial") { state = "playing"; startGame(); }
@@ -8368,7 +8245,11 @@ function triggerBoss(num) {
   let pendingStart = false;
   function bridgeStart() {
     if (assetsLoaded === assetKeys.length) {
-      startTutorial();
+      // NOTE: startTutorial() (the floating tip bubble at the start of a run)
+      // is on hold for now — going straight into gameplay instead. The
+      // function itself is left intact below so it can be re-enabled later
+      // by swapping this call back to startTutorial().
+      startGame();
     } else {
       pendingStart = true;
     }
@@ -9231,8 +9112,8 @@ function triggerBoss(num) {
     drawParallaxLayers();
     drawSketchSkyline();
     drawPowerlines();
-    drawBuildings();
     drawStreet();
+    drawBuildings();
     drawBuildingSmoke();
     drawStreetlamps();
     drawGroundVehicles();
@@ -9288,7 +9169,7 @@ function triggerBoss(num) {
       requestAnimationFrame(loop);
       if (pendingStart) {
         pendingStart = false;
-        startTutorial();
+        startGame();
       }
     } catch (err) {
       showRuntimeError(err);
