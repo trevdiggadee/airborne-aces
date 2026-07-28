@@ -1077,6 +1077,101 @@ html, body {
     #bossDialogueOverlay .dlgBubble p { font-size: 13px; }
   }
 
+  /* ---------- Volume Control Panel ---------- */
+  #volumePanel {
+    position: absolute;
+    top: 2.5%;
+    right: 3%;
+    z-index: 10;
+    background: linear-gradient(180deg, rgba(30,18,8,0.88), rgba(20,12,5,0.92));
+    border: 2px solid #c9a66b;
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(201,166,107,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 140px;
+    backdrop-filter: blur(4px);
+  }
+
+  #volumePanel:hover {
+    border-color: #f5e6c8;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(245,230,200,0.5);
+  }
+
+  #volumePanel .volRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  #volumePanel .volLabel {
+    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+    font-size: 11px;
+    font-weight: bold;
+    color: #f5e6c8;
+    letter-spacing: 1px;
+    min-width: 52px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+
+  #volumePanel .volValue {
+    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #c9a66b;
+    min-width: 32px;
+    text-align: right;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+
+  #volumePanel .volSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 70px;
+    height: 6px;
+    background: linear-gradient(90deg, #3a2512, #5e4420);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  #volumePanel .volSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #f5e6c8, #c9a66b);
+    border: 2px solid #8b6b3d;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+
+  #volumePanel .volSlider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #f5e6c8, #c9a66b);
+    border: 2px solid #8b6b3d;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    cursor: pointer;
+  }
+
+  @media (max-width: 420px) {
+    #volumePanel {
+      top: 1.5%;
+      right: 2%;
+      padding: 7px 10px;
+      min-width: 120px;
+      gap: 6px;
+    }
+    #volumePanel .volLabel { font-size: 10px; min-width: 46px; }
+    #volumePanel .volValue { font-size: 9px; min-width: 28px; }
+    #volumePanel .volSlider { width: 55px; height: 5px; }
+  }
+
   .gameFlyBtn {
     padding: 16px 48px;
     background: linear-gradient(#8b1e1e, #5e1212);
@@ -1530,6 +1625,20 @@ html, body {
   <button class="numBtn n4" onclick="selectBlimp('blimp4', this)" aria-label="Steampunk">
     <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_10.webp?cb=2" alt="" />
   </button>
+
+  <!-- VOLUME CONTROL PANEL -->
+  <div id="volumePanel">
+    <div class="volRow">
+      <span class="volLabel">🎵 MUSIC</span>
+      <input type="range" id="musicVolSlider" min="0" max="100" value="25" class="volSlider">
+      <span class="volValue" id="musicVolValue">25%</span>
+    </div>
+    <div class="volRow">
+      <span class="volLabel">🔊 SFX</span>
+      <input type="range" id="sfxVolSlider" min="0" max="100" value="100" class="volSlider">
+      <span class="volValue" id="sfxVolValue">100%</span>
+    </div>
+  </div>
 
 </div>
 </div>
@@ -2358,14 +2467,13 @@ preloadImages([TUTOR_SHEET_URL]);
 // ---------- Menu background music — a real audio file, faded in/out at the
 // loop seam so restarting the track doesn't sound like a hard cut ----------
 const menuMusic = document.getElementById("menuMusic");
-const MENU_MUSIC_VOLUME = 0.25;   // target volume once fully faded in (lowered 50% so SFX read louder)
 const MENU_MUSIC_FADE_SEC = 1.5; // fade in at the start / fade out near the end of each loop
 let menuMusicUnlocked = false;   // becomes true once a user gesture lets audio actually play
 
 try {
   menuMusicUnlocked = false;
   const wasMuted = localStorage.getItem("aa_muted") === "1";
-  if (menuMusic) menuMusic.volume = 0; // always start silent; timeupdate ramps it up
+  if (menuMusic) menuMusic.volume = 0; // always start silent; timeupdate ramps it up via musicVolume
   if (wasMuted && menuMusic) menuMusic.dataset.userMuted = "1";
 } catch (e) {}
 
@@ -2374,13 +2482,13 @@ function menuMusicFadeStep() {
   if (menuMusic.dataset.userMuted === "1") { menuMusic.volume = 0; return; }
   const t = menuMusic.currentTime;
   const d = menuMusic.duration;
-  let vol = MENU_MUSIC_VOLUME;
+  let vol = musicVolume;
   if (t < MENU_MUSIC_FADE_SEC) {
-    vol = MENU_MUSIC_VOLUME * (t / MENU_MUSIC_FADE_SEC);
+    vol = musicVolume * (t / MENU_MUSIC_FADE_SEC);
   } else if (t > d - MENU_MUSIC_FADE_SEC) {
-    vol = MENU_MUSIC_VOLUME * Math.max(0, (d - t) / MENU_MUSIC_FADE_SEC);
+    vol = musicVolume * Math.max(0, (d - t) / MENU_MUSIC_FADE_SEC);
   }
-  menuMusic.volume = Math.max(0, Math.min(MENU_MUSIC_VOLUME, vol));
+  menuMusic.volume = Math.max(0, Math.min(musicVolume, vol));
 }
 if (menuMusic) menuMusic.addEventListener("timeupdate", menuMusicFadeStep);
 
@@ -2406,6 +2514,33 @@ document.addEventListener("pointerdown", function unlockMenuMusic() {
 
 window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenuMusic(); };
 
+// ---------- Volume Slider Event Listeners ----------
+(function initVolumeControls() {
+  const musicSlider = document.getElementById("musicVolSlider");
+  const sfxSlider = document.getElementById("sfxVolSlider");
+  const musicVal = document.getElementById("musicVolValue");
+  const sfxVal = document.getElementById("sfxVolValue");
+
+  if (musicSlider) {
+    musicSlider.value = Math.round(musicVolume * 100);
+    if (musicVal) musicVal.textContent = musicSlider.value + "%";
+    musicSlider.addEventListener("input", function() {
+      const v = parseInt(this.value, 10) / 100;
+      setMusicVolume(v);
+      if (musicVal) musicVal.textContent = this.value + "%";
+    });
+  }
+  if (sfxSlider) {
+    sfxSlider.value = Math.round(sfxVolume * 100);
+    if (sfxVal) sfxVal.textContent = sfxSlider.value + "%";
+    sfxSlider.addEventListener("input", function() {
+      const v = parseInt(this.value, 10) / 100;
+      setSfxVolume(v);
+      if (sfxVal) sfxVal.textContent = this.value + "%";
+    });
+  }
+})();
+
 // ---------- Gameplay background music — a real audio file (skyward-march 2.mp3)
 // that plays during actual flight. Controlled from the inner game IIFE via the
 // window bridge below, hooked into its existing startMusic()/stopMusic()/
@@ -2413,7 +2548,6 @@ window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenu
 // on or off (game start, retry, checkpoint resume, crash) automatically drives
 // this track too, with no extra call sites needed. ----------
 const gameplayMusic = document.getElementById("gameplayMusic");
-const GAMEPLAY_MUSIC_VOLUME = 0.25; // music at 25%
 const GAMEPLAY_MUSIC_FADE_MS = 900;
 let gameplayMusicMuted = false;
 try { gameplayMusicMuted = localStorage.getItem("aa_muted") === "1"; } catch (e) {}
@@ -2423,9 +2557,10 @@ function fadeGameplayMusicVolume(target, thenPause) {
   if (!gameplayMusic) return;
   const startVol = gameplayMusic.volume;
   const startedAt = performance.now();
+  const actualTarget = muted ? 0 : target;
   (function step() {
     const p = Math.min(1, (performance.now() - startedAt) / GAMEPLAY_MUSIC_FADE_MS);
-    gameplayMusic.volume = startVol + (target - startVol) * p;
+    gameplayMusic.volume = startVol + (actualTarget - startVol) * p;
     if (p < 1) {
       requestAnimationFrame(step);
     } else if (thenPause) {
@@ -2437,7 +2572,7 @@ function fadeGameplayMusicVolume(target, thenPause) {
 function startGameplayMusic() {
   if (!gameplayMusic) return;
   if (gameplayMusic.paused) gameplayMusic.play().catch(() => {});
-  fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : GAMEPLAY_MUSIC_VOLUME, false);
+  fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : musicVolume, false);
 }
 
 function stopGameplayMusic() {
@@ -2448,7 +2583,7 @@ function stopGameplayMusic() {
 function setGameplayMusicMuted(m) {
   gameplayMusicMuted = m;
   if (gameplayMusic && !gameplayMusic.paused) {
-    gameplayMusic.volume = m ? 0 : GAMEPLAY_MUSIC_VOLUME;
+    gameplayMusic.volume = m ? 0 : musicVolume;
   }
 }
 
@@ -2618,6 +2753,16 @@ function endCutscene() {
   let muted = false;
   try { muted = localStorage.getItem("aa_muted") === "1"; } catch (e) { muted = false; }
 
+  // ---------- Volume Control State ----------
+  let musicVolume = 0.25;
+  let sfxVolume = 1.0;
+  try {
+    const savedMV = localStorage.getItem("aa_music_vol");
+    const savedSV = localStorage.getItem("aa_sfx_vol");
+    if (savedMV !== null) musicVolume = Math.max(0, Math.min(1, parseFloat(savedMV)));
+    if (savedSV !== null) sfxVolume = Math.max(0, Math.min(1, parseFloat(savedSV)));
+  } catch (e) {}
+
   let audioCtx = null;
   let masterGain = null;
   let sfxGainNode = null;
@@ -2649,7 +2794,7 @@ function endCutscene() {
     sfxGainNode.connect(masterGain);
 
     musicGainNode = audioCtx.createGain();
-    musicGainNode.gain.value = 0.25;
+    musicGainNode.gain.value = musicVolume;
     musicGainNode.connect(masterGain);
 
     // a short synthetic "room" reverb — an exponentially decaying noise impulse,
@@ -2680,6 +2825,20 @@ function endCutscene() {
     if (btn) btn.textContent = muted ? "🔇" : "🔊";
   }
 
+  function setMusicVolume(v) {
+    musicVolume = Math.max(0, Math.min(1, v));
+    try { localStorage.setItem("aa_music_vol", String(musicVolume)); } catch (e) {}
+    if (menuMusic) menuMusic.volume = muted ? 0 : musicVolume;
+    if (gameplayMusic) gameplayMusic.volume = muted ? 0 : musicVolume;
+    if (musicGainNode) musicGainNode.gain.setTargetAtTime(muted ? 0 : musicVolume, audioCtx.currentTime, 0.05);
+  }
+
+  function setSfxVolume(v) {
+    sfxVolume = Math.max(0, Math.min(1, v));
+    try { localStorage.setItem("aa_sfx_vol", String(sfxVolume)); } catch (e) {}
+    if (sfxGainNode) sfxGainNode.gain.setTargetAtTime(muted ? 0 : sfxVolume, audioCtx.currentTime, 0.05);
+  }
+
   function noteFreq(midi) {
     return 440 * Math.pow(2, (midi - 69) / 12);
   }
@@ -2690,6 +2849,7 @@ function endCutscene() {
   function playTone({ freq = 440, duration = 0.1, type = "sine", vol = 0.2, sweep = 0,
                        startDelay = 0, attack = 0.006, detune = 0, reverbSend = 0 }) {
     if (muted || !audioCtx) return;
+    vol *= sfxVolume;
     const t0 = audioCtx.currentTime + Math.max(0, startDelay);
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -2716,6 +2876,7 @@ function endCutscene() {
   function playNoise({ duration = 0.2, vol = 0.25, startDelay = 0, filterType = "lowpass",
                         filterFreq = 2000, filterFreqEnd = null, Q = 1, reverbSend = 0 }) {
     if (muted || !audioCtx) return;
+    vol *= sfxVolume;
     const t0 = audioCtx.currentTime + Math.max(0, startDelay);
     const bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * duration));
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
@@ -2871,11 +3032,11 @@ function endCutscene() {
       osc.type = "triangle";
       osc.frequency.setValueAtTime(noteFreq(leadNote), time);
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(0.11, time + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.11 * musicVolume, time + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + dur * 1.7);
       osc.connect(gain); gain.connect(musicGainNode);
       const send = audioCtx.createGain();
-      send.gain.value = 0.2;
+      send.gain.value = 0.2 * musicVolume;
       gain.connect(send); send.connect(reverbNode);
       osc.start(time); osc.stop(time + dur * 1.8);
     }
@@ -2886,13 +3047,13 @@ function endCutscene() {
       osc.type = "sine";
       osc.frequency.setValueAtTime(noteFreq(bassNote - 12), time);
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(0.16, time + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.16 * musicVolume, time + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + dur * 1.9);
       osc.connect(gain); gain.connect(musicGainNode);
       osc.start(time); osc.stop(time + dur * 2);
     }
     if (t.hat[step] && !muted) {
-      playNoise({ duration: 0.035, vol: 0.03, filterType: "highpass", filterFreq: 6500, startDelay: delay });
+      playNoise({ duration: 0.035, vol: 0.03 * musicVolume, filterType: "highpass", filterFreq: 6500, startDelay: delay });
     }
     if (t.kick[step]) {
       const osc = audioCtx.createOscillator();
@@ -2901,7 +3062,7 @@ function endCutscene() {
       osc.frequency.setValueAtTime(140, time);
       osc.frequency.exponentialRampToValueAtTime(50, time + 0.1);
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(0.15, time + 0.006);
+      gain.gain.exponentialRampToValueAtTime(0.15 * musicVolume, time + 0.006);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.13);
       osc.connect(gain); gain.connect(musicGainNode);
       osc.start(time); osc.stop(time + 0.15);
@@ -3562,6 +3723,7 @@ function endCutscene() {
     storm_cloud_unique_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_07.png",
     storm_cloud_unique_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_08.png",
     storm_cloud_unique_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_unique_09.png",
+    street_texture: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/street_texture.webp",
   };
 
   const BOSS_THROW_FRAME_COUNT = 25;
@@ -3933,8 +4095,7 @@ function endCutscene() {
   }
 
   // shared ground line — raised up from the very bottom edge so there's room
-  // for a proper street/sidewalk band beneath the buildings instead of just
-  // a flat color strip
+  // for the street texture band beneath the buildings
   function groundLevelY() {
     return H - Math.max(58, H * 0.088);
   }
@@ -4044,9 +4205,9 @@ function endCutscene() {
     ctx.restore();
   }
 
-  // ---------- Street (sidewalk + road) — sits beneath the buildings, gives
-  // the ground plane an actual surface instead of a flat color strip. Scrolls
-  // in sync with the buildings so it reads as one continuous street. ----------
+  // ---------- Street texture — tiled panoramic road strip that sits above
+  // the buildings, anchored to the bottom. Scrolls in sync with the buildings
+  // so vehicles driving on it stay locked to the road surface. ----------
   let streetScrollX = 0;
 
   function updateStreet(dtScale) {
@@ -4057,49 +4218,21 @@ function endCutscene() {
   function drawStreet() {
     const groundY = groundLevelY();
     const bandH = H - groundY;
-    const sidewalkH = bandH * 0.4;
-    const curbH = Math.max(2, bandH * 0.06);
-    const roadY = groundY + sidewalkH;
-    const roadH = bandH - sidewalkH;
-
-    // sidewalk
-    ctx.fillStyle = "#8a7f6c";
-    ctx.fillRect(0, groundY, W, sidewalkH);
-    // sidewalk slab seams
-    ctx.strokeStyle = "rgba(60,52,40,0.35)";
-    ctx.lineWidth = 1.5;
-    const slabW = 46;
-    const slabOffset = ((streetScrollX % slabW) + slabW) % slabW;
-    for (let x = -slabOffset; x < W; x += slabW) {
-      ctx.beginPath();
-      ctx.moveTo(x, groundY + 2);
-      ctx.lineTo(x, groundY + sidewalkH - 1);
-      ctx.stroke();
+    const img = images.street_texture;
+    if (!img || !img.naturalWidth) {
+      // fallback: dark asphalt band
+      ctx.fillStyle = "#332a22";
+      ctx.fillRect(0, groundY, W, bandH);
+      return;
     }
-
-    // curb
-    ctx.fillStyle = "#4a4234";
-    ctx.fillRect(0, roadY - curbH, W, curbH);
-
-    // road
-    ctx.fillStyle = "#332a22";
-    ctx.fillRect(0, roadY, W, roadH);
-    // subtle road texture band
-    const grad = ctx.createLinearGradient(0, roadY, 0, roadY + roadH);
-    grad.addColorStop(0, "rgba(0,0,0,0.15)");
-    grad.addColorStop(0.5, "rgba(255,255,255,0.03)");
-    grad.addColorStop(1, "rgba(0,0,0,0.2)");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, roadY, W, roadH);
-
-    // dashed center line
-    const dashW = 26, dashGap = 18, dashH = Math.max(2, roadH * 0.1);
-    const dashCycle = dashW + dashGap;
-    const dashOffset = ((streetScrollX % dashCycle) + dashCycle) % dashCycle;
-    ctx.fillStyle = "rgba(196,164,102,0.75)";
-    const dashY = roadY + roadH / 2 - dashH / 2;
-    for (let x = -dashOffset; x < W; x += dashCycle) {
-      ctx.fillRect(x, dashY, dashW, dashH);
+    // Tile the street texture across the full width, anchored to the bottom.
+    const texW = img.naturalWidth;
+    const texH = img.naturalHeight;
+    const drawH = bandH;
+    const drawW = drawH * (texW / texH);
+    const offset = ((streetScrollX % drawW) + drawW) % drawW;
+    for (let x = -offset; x < W + drawW; x += drawW) {
+      ctx.drawImage(img, x, groundY, drawW, drawH);
     }
   }
 
@@ -4272,10 +4405,15 @@ function endCutscene() {
 
   function drawGroundVehicles() {
     const groundY = groundLevelY();
+    const bandH = H - groundY;
     groundVehicles.forEach(v => {
       const img = images[v.key];
       if (!img || !img.naturalWidth) return;
-      const y = groundY - v.h;
+      // Lane positioning: street texture has yellow center line
+      // dir=1 (faces right, drives L->R) => LEFT lane (lower half of band, below center line)
+      // dir=-1 (faces left, drives R->L) => RIGHT lane (upper half of band, above center line)
+      const laneOffset = v.dir === 1 ? bandH * 0.62 : bandH * 0.15;
+      const y = groundY + laneOffset - v.h;
       ctx.drawImage(img, v.x, y, v.w, v.h);
     });
   }
@@ -9112,9 +9250,9 @@ function triggerBoss(num) {
     drawParallaxLayers();
     drawSketchSkyline();
     drawPowerlines();
-    drawStreet();
     drawBuildings();
     drawBuildingSmoke();
+    drawStreet();
     drawStreetlamps();
     drawGroundVehicles();
     drawBossShadow();
