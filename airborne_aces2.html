@@ -4028,13 +4028,13 @@ function endCutscene() {
   const BUILDING_ROW_PROFILES = { streetrow1: STREETROW1_PROFILE, streetrow2: STREETROW2_PROFILE };
 
   function buildingProfileTopFrac(b, sampleX) {
-    const profile = BUILDING_ROW_PROFILES[buildingRowKey];
+    const profile = BUILDING_ROW_PROFILES[b.key] || BUILDING_ROW_PROFILES[buildingRowKey];
     if (!profile) return 0;
     const localFrac = Math.max(0, Math.min(0.9999, (sampleX - b.x) / b.w));
     const idx = Math.floor(localFrac * profile.length);
     return profile[idx];
   }
-  let buildings = []; // tiles of the current strip: { x, w, h }
+  let buildings = []; // tiles of the current strip: { x, w, h, key }
   let buildingRowKey = null;
 
   function currentBuildingRowKey() {
@@ -4046,7 +4046,7 @@ function endCutscene() {
     const aspect = (img && img.naturalWidth) ? img.naturalWidth / img.naturalHeight : 3.2;
     const h = H * 0.396; // was 0.33, +20%
     const w = h * aspect;
-    return { x: xStart, w, h };
+    return { x: xStart, w, h, key };
   }
 
   function initBuildings() {
@@ -4065,11 +4065,10 @@ function endCutscene() {
   }
 
   function updateBuildings(dtScale) {
-    const targetKey = currentBuildingRowKey();
-    if (targetKey !== buildingRowKey) {
-      initBuildings(); // level changed — rebuild with that level's strip
-      return;
-    }
+    // Each tile keeps the row key it was created with — a level change only
+    // affects tiles spawned from here on, so the new strip scrolls in
+    // naturally from the right instead of the whole row instantly popping.
+    buildingRowKey = currentBuildingRowKey();
     const speed = 0.8 * dtScale * (obstacleSpeedScale());
     buildings.forEach(b => (b.x -= speed));
     while (buildings.length && buildings[0].x + buildings[0].w < -10) {
@@ -4096,9 +4095,9 @@ function endCutscene() {
 
   function drawBuildings() {
     const groundY = groundLevelY();
-    const img = images[buildingRowKey];
-    if (!img || !img.naturalWidth) return;
     buildings.forEach(b => {
+      const img = images[b.key] || images[buildingRowKey];
+      if (!img || !img.naturalWidth) return;
       ctx.drawImage(img, b.x, groundY - b.h, b.w, b.h);
     });
   }
