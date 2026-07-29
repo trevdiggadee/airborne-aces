@@ -2532,6 +2532,9 @@ function menuMusicFadeStep() {
 if (menuMusic) menuMusic.addEventListener("timeupdate", menuMusicFadeStep);
 
 function startMenuMusic() {
+  // MP3 music disabled for now per request — function body left intact so
+  // this is a one-line revert (just remove the early return) to bring it back.
+  return;
   if (!menuMusic) return;
   if (menuMusic.paused) {
     menuMusic.play().then(() => { menuMusicUnlocked = true; }).catch(() => {});
@@ -2581,6 +2584,9 @@ function fadeGameplayMusicVolume(target, thenPause) {
 }
 
 function startGameplayMusic() {
+  // MP3 music disabled for now per request — function body left intact so
+  // this is a one-line revert (just remove the early return) to bring it back.
+  return;
   if (!gameplayMusic) return;
   if (gameplayMusic.paused) gameplayMusic.play().catch(() => {});
   fadeGameplayMusicVolume(gameplayMusicMuted ? 0 : musicVolumePref, false);
@@ -4023,8 +4029,8 @@ function endCutscene() {
   // the real building silhouette instead of a flat rectangle across the
   // whole strip — otherwise the player takes damage over open sky above a
   // short building just because it's within the same tile as a tall one.
-  const STREETROW1_PROFILE = [0.5, 0.159, 0.47, 0.335, 0.451, 0.439, 0.384, 0.433, 0.305, 0.335, 0.494, 0.226, 0.311, 0.39, 0.402, 0.439, 0.567, 0.476, 0.402, 0.463, 0.384, 0.396, 0.299, 0.573, 0.305, 0.402, 0.415, 0.488, 0.488, 0.36, 0.415, 0.421, 0.152, 0.165, 0.494, 0.445, 0.512, 0.238, 0.335, 0.238, 0.53, 0.427, 0.213, 0.409, 0.22, 0.305, 0.311, 0.409, 0.384, 0.244, 0.579, 0.445, 0.573, 0.415, 0.5, 0.427, 0.335, 0.396, 0.299, 0.433];
-  const STREETROW2_PROFILE = [0.447, 0.326, 0.379, 0.25, 0.333, 0.561, 0.409, 0.386, 0.364, 0.258, 0.409, 0.273, 0.455, 0.379, 0.288, 0.295, 0.47, 0.341, 0.394, 0.265, 0.182, 0.114, 0.477, 0.205, 0.424, 0.394, 0.538, 0.47, 0.265, 0.402, 0.447, 0.341, 0.515, 0.341, 0.303, 0.402, 0.409, 0.417, 0.47, 0.364, 0.356, 0.47, 0.379, 0.447, 0.341, 0.379, 0.394, 0.439, 0.424, 0.295, 0.356, 0.424, 0.409, 0.386, 0.462, 0.432, 0.447, 0.477, 0.311, 0.561];
+  const STREETROW1_PROFILE = [0.484, 0.161, 0.478, 0.342, 0.46, 0.447, 0.391, 0.441, 0.311, 0.342, 0.503, 0.23, 0.317, 0.398, 0.41, 0.447, 0.578, 0.484, 0.41, 0.472, 0.391, 0.404, 0.304, 0.584, 0.311, 0.41, 0.422, 0.497, 0.497, 0.366, 0.422, 0.429, 0.155, 0.168, 0.503, 0.453, 0.522, 0.242, 0.342, 0.242, 0.54, 0.435, 0.217, 0.416, 0.224, 0.311, 0.317, 0.416, 0.391, 0.248, 0.59, 0.453, 0.584, 0.422, 0.509, 0.435, 0.342, 0.404, 0.304, 0.435];
+  const STREETROW2_PROFILE = [0.488, 0.333, 0.388, 0.256, 0.341, 0.574, 0.419, 0.395, 0.372, 0.264, 0.419, 0.279, 0.465, 0.388, 0.295, 0.302, 0.481, 0.349, 0.403, 0.271, 0.186, 0.116, 0.488, 0.209, 0.434, 0.403, 0.55, 0.481, 0.271, 0.411, 0.457, 0.349, 0.527, 0.349, 0.31, 0.411, 0.419, 0.426, 0.481, 0.372, 0.364, 0.481, 0.388, 0.457, 0.349, 0.388, 0.403, 0.45, 0.434, 0.302, 0.364, 0.434, 0.419, 0.395, 0.473, 0.442, 0.457, 0.488, 0.318, 0.574];
   const BUILDING_ROW_PROFILES = { streetrow1: STREETROW1_PROFILE, streetrow2: STREETROW2_PROFILE };
 
   function buildingProfileTopFrac(b, sampleX) {
@@ -4095,10 +4101,11 @@ function endCutscene() {
 
   function drawBuildings() {
     const groundY = groundLevelY();
+    const overlap = Math.max(4, H * 0.006); // small downward nudge so the base meets the street with no gap
     buildings.forEach(b => {
       const img = images[b.key] || images[buildingRowKey];
       if (!img || !img.naturalWidth) return;
-      ctx.drawImage(img, b.x, groundY - b.h, b.w, b.h);
+      ctx.drawImage(img, b.x, groundY - b.h + overlap, b.w, b.h);
     });
   }
 
