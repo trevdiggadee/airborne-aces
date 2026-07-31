@@ -29,7 +29,7 @@
     bldg_l3_minetower:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0769.png",
     bldg_l3_pipeworks:   "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0770.png",
     streetrow1: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow1.webp",
-    streetrow2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/streetrow2.webp",
+    streetrow2: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/level2_buildings_strip.png",
     streetlamp1:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/IMG_0734.png",
     boss:            "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss_throw_01.webp?cb=2",
     boss2:           "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/boss2.webp?cb=2",
