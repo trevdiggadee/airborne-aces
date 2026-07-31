@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="format-detection" content="telephone=no" />
+<title>Airborne Aces</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+</head>
+
+<body>
+
+<!-- Screen Effects Overlay Layers -->
+<div id="screenChromatic" class="screen-chromatic"></div>
+<div id="screenGrain" class="screen-grain"></div>
+<div id="screenScanlines" class="screen-scanlines"></div>
+<div id="screenFlash" class="screen-flash"></div>
+
+<div id="tutorialGuide" class="hidden">
+  <div class="tutGuideChar">
+    <img src="" alt="" id="tutGuideImg">
+  </div>
+  <div class="tutBubble">
+    <p id="tutBubbleText"></p>
+    <button type="button" id="tutSkipBtn">GOT IT ▶</button>
+  </div>
+</div>
+
+
+
+<div id="menuScreen">
+<audio id="menuMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/victory_brass_step.mp3"></audio>
+<audio id="gameplayMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skyward-march%202.mp3"></audio>
+<div class="stage">
+  <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_03.webp?cb=2" alt="Airborne Aces" />
+
+  <img class="cloudLayer cA" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_04.webp?cb=2" alt="" />
+  <img class="cloudLayer cB" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_05.webp?cb=2" alt="" />
+
+  <div class="menuBanner">
+    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/menuBanner.webp?cb=2" alt="" />
+  </div>
+
+  <div class="heroBlimpWrap">
+    <img id="heroBlimpImgA" class="heroBlimpLayer" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_06.webp?cb=2" alt="" />
+    <img id="heroBlimpImgB" class="heroBlimpLayer heroBlimpLayerB" crossorigin="anonymous" src="" alt="" />
+    <div class="propBlur" id="propBlur"></div>
+    <div class="smokeParticles" id="smokeParticles">
+      <span class="puff p1"></span>
+      <span class="puff p2"></span>
+      <span class="puff p3"></span>
+      <span class="puff p4"></span>
+      <span class="puff p5"></span>
+    </div>
+  </div>
+
+  <button class="flyBtn" id="flyBtn"></button>
+
+  <button class="numBtn n1 active" onclick="selectBlimp('blimp1', this)" aria-label="Zeppelin Ace">
+    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_07.webp?cb=2" alt="" />
+  </button>
+  <button class="numBtn n2" onclick="selectBlimp('blimp2', this)" aria-label="Deco Liner">
+    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_08.webp?cb=2" alt="" />
+  </button>
+  <button class="numBtn n3" onclick="selectBlimp('blimp3', this)" aria-label="Aero Slicer">
+    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_09.webp?cb=2" alt="" />
+  </button>
+  <button class="numBtn n4" onclick="selectBlimp('blimp4', this)" aria-label="Steampunk">
+    <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_10.webp?cb=2" alt="" />
+  </button>
+
+  <div class="volumePanel">
+    <div class="volumeRow">
+      <span class="volumeIcon">🎵</span>
+      <input type="range" id="musicVolumeSlider" class="volumeSlider" min="0" max="100" value="25" aria-label="Music Volume" />
+      <span class="volumeValue" id="musicVolumeValue">25%</span>
+    </div>
+    <div class="volumeRow">
+      <span class="volumeIcon">🔊</span>
+      <input type="range" id="sfxVolumeSlider" class="volumeSlider" min="0" max="100" value="100" aria-label="Sound Effects Volume" />
+      <span class="volumeValue" id="sfxVolumeValue">100%</span>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div id="cutsceneScreen" class="cutsceneScreen" style="display:none;">
+  <div class="cutsceneStage">
+    <div class="cutsceneBg"></div>
+    <img class="cutsceneCloud cc1" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_04.webp?cb=2" alt="" />
+    <img class="cutsceneCloud cc2" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_05.webp?cb=2" alt="" />
+    <div class="cutsceneGlow left"></div>
+    <div class="cutsceneGlow right"></div>
+
+    <div class="cutsceneBlimpWrap" id="cutsceneBlimpWrap">
+      <img id="cutsceneBlimpImg" crossorigin="anonymous" src="" alt="" />
+    </div>
+
+    <div class="cutsceneTutorWrap" id="cutsceneTutorWrap"></div>
+
+    <div class="cutsceneVignette"></div>
+
+    <button class="cutsceneSkip" id="cutsceneSkip" type="button">Skip &#9654;</button>
+
+    <div class="cutsceneDialogue" id="cutsceneDialogue">
+      <span class="cutsceneNameplate">Flight Tutor</span>
+      <p class="cutsceneText" id="cutsceneText"></p>
+      <span class="cutsceneTapHint">Tap to continue</span>
+    </div>
+  </div>
+</div>
+
+<div id="gameScreen" style="display:none;">
+<canvas id="gameCanvas"></canvas>
+
+<button id="muteBtn" aria-label="Toggle sound">🔊</button>
+
+<div id="hudFrame">
+  <img id="hudFrameImg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/hudFrame.webp?cb=2" alt="" />
+
+  <div id="healthMeter">
+    <img id="healthImg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/heartPickup.webp?cb=2" alt="Health" />
+  </div>
+
+  <div id="bonusHearts"></div>
+
+  <div class="scoreFrame">SCORE: <span id="scoreVal">0</span></div>
+
+  <div id="timerFrame">
+    <div class="flip-clock" id="flipClock">
+      <div class="flip-unit" data-pos="m1">
+        <div class="flip-card-static" id="fc-m1-static">0</div>
+        <div class="flip-card" id="fc-m1" style="display:none;">
+          <div class="flip-card-top" id="fc-m1-top"><span class="digit">0</span></div>
+          <div class="flip-card-bottom" id="fc-m1-bottom"><span class="digit">0</span></div>
+        </div>
+      </div>
+      <div class="flip-unit" data-pos="m2">
+        <div class="flip-card-static" id="fc-m2-static">0</div>
+        <div class="flip-card" id="fc-m2" style="display:none;">
+          <div class="flip-card-top" id="fc-m2-top"><span class="digit">0</span></div>
+          <div class="flip-card-bottom" id="fc-m2-bottom"><span class="digit">0</span></div>
+        </div>
+      </div>
+      <div class="flip-separator"><span></span><span></span></div>
+      <div class="flip-unit" data-pos="s1">
+        <div class="flip-card-static" id="fc-s1-static">0</div>
+        <div class="flip-card" id="fc-s1" style="display:none;">
+          <div class="flip-card-top" id="fc-s1-top"><span class="digit">0</span></div>
+          <div class="flip-card-bottom" id="fc-s1-bottom"><span class="digit">0</span></div>
+        </div>
+      </div>
+      <div class="flip-unit" data-pos="s2">
+        <div class="flip-card-static" id="fc-s2-static">0</div>
+        <div class="flip-card" id="fc-s2" style="display:none;">
+          <div class="flip-card-top" id="fc-s2-top"><span class="digit">0</span></div>
+          <div class="flip-card-bottom" id="fc-s2-bottom"><span class="digit">0</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="stormMeter">
+  <img id="stormIcon" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_1.webp?cb=2" alt="Storm Power" data-stage="0" />
+</div>
+
+<div id="startOverlay" class="overlay">
+  <h1>AIRBORNE ACES</h1>
+  <p>Tap anywhere to climb.<br/>Dodge the balloons and birds!</p>
+  <button class="gameFlyBtn" id="startBtn">FLY!</button>
+</div>
+
+<div id="gameOverOverlay" class="overlay hidden">
+  <span class="ember" style="left:8%; animation-duration:3.4s; animation-delay:0s; --drift:18px;"></span>
+  <span class="ember" style="left:22%; animation-duration:2.8s; animation-delay:0.6s; --drift:-14px;"></span>
+  <span class="ember" style="left:38%; animation-duration:3.8s; animation-delay:0.2s; --drift:22px;"></span>
+  <span class="ember" style="left:58%; animation-duration:3.1s; animation-delay:1.1s; --drift:-20px;"></span>
+  <span class="ember" style="left:74%; animation-duration:3.6s; animation-delay:0.4s; --drift:16px;"></span>
+  <span class="ember" style="left:88%; animation-duration:2.9s; animation-delay:0.9s; --drift:-18px;"></span>
+  <span class="ember" style="left:50%; animation-duration:4.1s; animation-delay:1.5s; --drift:10px;"></span>
+  <div class="overlayPanel">
+    <h1>CRASHED!</h1>
+    <div class="bigScore" id="finalScore">0</div>
+    <div class="bestScore" id="bestScoreLine">Best: 0</div>
+    <button class="gameFlyBtn" id="retryBtn">RETRY</button>
+    <button class="gameFlyBtn secondaryBtn hidden" id="checkpointBtn">CHECKPOINT</button>
+    <button class="gameFlyBtn secondaryBtn" id="menuBtn">CHANGE BLIMP</button>
+  </div>
+</div>
+
+<div id="bossDialogueOverlay" class="hidden">
+  <div class="dlgStage">
+    <div class="dlgPortrait dlgPortraitPlayer">
+      <div class="dlgPortraitFrame"><img id="dlgPlayerImg" src="" alt=""></div>
+      <div class="dlgNamePlate">YOU</div>
+    </div>
+    <div class="dlgVs">VS</div>
+    <div class="dlgPortrait dlgPortraitBoss">
+      <div class="dlgPortraitFrame"><img id="dlgBossImg" src="" alt=""></div>
+      <div class="dlgNamePlate" id="dlgBossName">BOSS</div>
+    </div>
+  </div>
+  <div class="dlgDialogueArea">
+    <div class="dlgBubble dlgBubbleBoss hidden" id="dlgBossBubble">
+      <p id="dlgBossText"></p>
+    </div>
+    <div class="dlgBubble dlgBubblePlayer hidden" id="dlgPlayerBubble">
+      <p id="dlgPlayerText"></p>
+    </div>
+    <button type="button" id="dlgSkipBtn" class="dlgSkipBtn">SKIP ▶</button>
+    <div class="dlgTapHint">TAP TO CONTINUE</div>
+  </div>
+</div>
+</div>
+
+
+<script src="assets-placeholders.js"></script>
+<script src="menu-intro.js"></script>
+<script src="audio.js"></script>
+<script src="asset-loading.js"></script>
+<script src="world-buildings.js"></script>
+<script src="player-obstacles.js"></script>
+<script src="bosses.js"></script>
+<script src="boss-dialogue.js"></script>
+<script src="effects-combat.js"></script>
+<script src="gamestate-ui.js"></script>
+<script src="world-atmosphere.js"></script>
+<script src="main-loop.js"></script>
+
+</body>
+</html>
