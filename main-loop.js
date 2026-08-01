@@ -230,7 +230,7 @@
       requestAnimationFrame(loop);
       if (pendingStart) {
         pendingStart = false;
-        startGame();
+        startTutorial();
       }
     } catch (err) {
       showRuntimeError(err);

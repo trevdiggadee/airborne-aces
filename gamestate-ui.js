@@ -17,29 +17,95 @@
   let checkpointBossesDefeated = 0;
 
   /* ===== Tutorial System ===== */
-  const TUTORIAL_TEXT = "Tap or click to fly! Dodge the buildings, birds, and balloons \u2014 reach each boss to keep going!";
+  // Walks a first-time player through the core mechanics before their first
+  // real run starts. Reuses the same 36-frame Flight Tutor sprite sheet as
+  // the pre-flight cutscene (TUTOR_SHEET_URL/COLS/ROWS/FRAMES/FPS, defined
+  // in menu-intro.js) so the guide here is the same character, not a
+  // placeholder icon.
+  const TUTORIAL_STEPS = [
+    "Tap or click anywhere to climb \u2014 let go and you'll glide back down.",
+    "Dodge the buildings, birds, and balloons \u2014 a hit costs you a heart!",
+    "Grab hearts to heal up, and shields to block one hit for free.",
+    "Dodge cleanly to fill your Storm meter, then tap it for a burst of power.",
+    "Reach the boss at the end of each stretch and beat them to keep flying!"
+  ];
+  const TUTORIAL_STEP_MS = 3400; // auto-advance delay if the player doesn't tap
+
+  let tutGuideAnimTimer = null;
+  function setTutGuideFrame(i) {
+    const el = document.getElementById("tutGuideChar");
+    if (!el) return;
+    const col = i % TUTOR_COLS;
+    const row = Math.floor(i / TUTOR_COLS);
+    el.style.backgroundPosition = (col / (TUTOR_COLS - 1)) * 100 + "% " + (row / (TUTOR_ROWS - 1)) * 100 + "%";
+  }
+  function startTutGuideSpriteAnim() {
+    const el = document.getElementById("tutGuideChar");
+    if (!el) return;
+    el.style.backgroundImage = 'url("' + TUTOR_SHEET_URL + '")';
+    let frame = 0;
+    setTutGuideFrame(0);
+    if (tutGuideAnimTimer) clearInterval(tutGuideAnimTimer);
+    tutGuideAnimTimer = setInterval(() => {
+      frame = (frame + 1) % TUTOR_FRAMES;
+      setTutGuideFrame(frame);
+    }, 1000 / TUTOR_FPS);
+  }
+  function stopTutGuideSpriteAnim() {
+    if (tutGuideAnimTimer) { clearInterval(tutGuideAnimTimer); tutGuideAnimTimer = null; }
+  }
 
   function startTutorial() {
     state = "tutorial";
     const overlay = document.getElementById("tutorialGuide");
-    const img = document.getElementById("tutGuideImg");
-    img.src = (images.heartPickup && images.heartPickup.naturalWidth) ? images.heartPickup.src : "";
-    document.getElementById("tutBubbleText").textContent = TUTORIAL_TEXT;
-    overlay.classList.remove("hidden");
+    const textEl = document.getElementById("tutBubbleText");
+    const stepEl = document.getElementById("tutStepCount");
+    const bubbleEl = overlay.querySelector(".tutBubble");
+    const skipBtn = document.getElementById("tutSkipBtn");
 
+    overlay.classList.remove("hidden");
+    startTutGuideSpriteAnim();
+
+    let stepIndex = 0;
+    let stepTimer = null;
     let done = false;
+
+    function showStep(i) {
+      stepIndex = i;
+      textEl.textContent = TUTORIAL_STEPS[i];
+      stepEl.textContent = (i + 1) + " / " + TUTORIAL_STEPS.length;
+      clearTimeout(stepTimer);
+      stepTimer = setTimeout(advance, TUTORIAL_STEP_MS);
+    }
+
+    function advance() {
+      if (stepIndex < TUTORIAL_STEPS.length - 1) {
+        showStep(stepIndex + 1);
+      } else {
+        finish();
+      }
+    }
+
     function finish() {
       if (done) return;
       done = true;
+      clearTimeout(stepTimer);
+      stopTutGuideSpriteAnim();
       overlay.classList.add("hidden");
-      skipBtn.removeEventListener("click", finish);
+      bubbleEl.removeEventListener("click", advance);
+      skipBtn.removeEventListener("click", onSkip);
       if (state === "tutorial") { state = "playing"; startGame(); }
     }
-    const skipBtn = document.getElementById("tutSkipBtn");
-    skipBtn.addEventListener("click", finish);
 
-    // auto-dismiss after a few seconds even if they never tap the button
-    setTimeout(finish, 5000);
+    function onSkip(e) {
+      e.stopPropagation();
+      finish();
+    }
+
+    bubbleEl.addEventListener("click", advance);
+    skipBtn.addEventListener("click", onSkip);
+
+    showStep(0);
   }
  // bossesDefeatedCount at that same moment — keeps the level/background in sync on resume
 
@@ -450,11 +516,7 @@
   let pendingStart = false;
   function bridgeStart() {
     if (assetsLoaded === assetKeys.length) {
-      // NOTE: startTutorial() (the floating tip bubble at the start of a run)
-      // is on hold for now — going straight into gameplay instead. The
-      // function itself is left intact below so it can be re-enabled later
-      // by swapping this call back to startTutorial().
-      startGame();
+      startTutorial();
     } else {
       pendingStart = true;
     }
