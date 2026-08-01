@@ -241,6 +241,14 @@ document.addEventListener("pointerdown", function unlockMenuMusic() {
 
 window.__airborneShowMenu = () => { startHeroAnimation(selectedBlimp); startMenuMusic(); };
 
+const splashEnterBtn = document.getElementById("splashEnterBtn");
+if (splashEnterBtn) {
+  splashEnterBtn.addEventListener("click", () => {
+    document.getElementById("splashScreen").classList.add("hidden");
+    startMenuMusic();
+  });
+}
+
 // ---------- Gameplay background music — a real audio file (skyward-march 2.mp3)
 // that plays during actual flight. Controlled from the inner game IIFE via the
 // window bridge below, hooked into its existing startMusic()/stopMusic()/

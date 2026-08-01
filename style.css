@@ -21,11 +21,126 @@ html, body {
   height: 100%;
 }
 
+/* ================= SPLASH SCREEN ================= */
+#splashScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background: #1a0f05;
+}
+#splashScreen.hidden { display: none !important; }
+
+.splashBg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.splashGearField {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+}
+.splashGear {
+  position: absolute;
+  border: 6px solid rgba(201,166,107,0.55);
+  border-radius: 50%;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+}
+.splashGear::before {
+  content: "";
+  position: absolute;
+  inset: 22%;
+  border: 3px solid rgba(201,166,107,0.4);
+  border-radius: 50%;
+}
+@keyframes splashSpinCW { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes splashSpinCCW { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+.splashGear.gA { width: 130px; height: 130px; top: -30px; left: -30px; animation: splashSpinCW 22s linear infinite; }
+.splashGear.gB { width: 90px; height: 90px; bottom: 12%; right: -20px; animation: splashSpinCCW 16s linear infinite; }
+.splashGear.gC { width: 60px; height: 60px; top: 12%; right: 8%; animation: splashSpinCW 11s linear infinite; }
+
+.splashContent {
+  position: absolute;
+  top: 9%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  padding: 0 24px;
+  text-align: center;
+  width: 100%;
+}
+
+.splashEyebrow {
+  letter-spacing: 5px;
+  font-size: 11px;
+  color: #c9a66b;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.splashTitle {
+  font-size: clamp(34px, 11vw, 54px);
+  line-height: 0.95;
+  margin: 0;
+  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+  background: linear-gradient(180deg, #fff3d6 0%, #e8c37c 35%, #a8783f 75%, #7a5527 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 2px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+}
+.splashTitle .small {
+  display: block;
+  font-size: 0.42em;
+  letter-spacing: 9px;
+  margin-top: 4px;
+  color: #e3cfa0;
+  -webkit-text-fill-color: #e3cfa0;
+  opacity: 0.9;
+}
+
+.splashEnterBtn {
+  position: absolute;
+  bottom: 9%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-size: 16px;
+  color: #f5e6c8;
+  background: linear-gradient(#a8783f, #6b4a2b);
+  border: 2px solid #c9a66b;
+  border-radius: 10px;
+  padding: 14px 42px;
+  box-shadow: 0 3px 0 #2c1a0a, 0 8px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+  cursor: pointer;
+  text-transform: uppercase;
+  z-index: 2;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s ease;
+}
+.splashEnterBtn:active {
+  transform: translateX(-50%) translateY(3px);
+  box-shadow: 0 0 0 #2c1a0a, 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
 .stage {
   position: relative;
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 780 / 1398;
+  aspect-ratio: 832 / 1248;
   margin: 0 auto;
 }
 
@@ -76,14 +191,7 @@ html, body {
    the banner+medallion artwork sits centered, starting ~28% down from the
    top of the frame and spanning ~88% of the frame's width. */
 .menuBanner {
-  position: absolute;
-  top: 28%;
-  left: 50%;
-  width: 88%;
-  aspect-ratio: 638 / 423;
-  transform: translateX(-50%);
-  z-index: 1;
-  pointer-events: none;
+  display: none;
 }
 
 .menuBanner img {
@@ -98,9 +206,9 @@ html, body {
    motion-blurred spin rather than a hard frame-to-frame pop. */
 .heroBlimpWrap {
   position: absolute;
-  top: 6%;
+  top: 34%;
   left: 50%;
-  width: 54%;
+  width: 46%;
   transform: translateX(-50%);
   z-index: 2;
   animation: floatHero 3s ease-in-out infinite;
@@ -189,91 +297,116 @@ html, body {
 /* TAKE FLIGHT HOTSPOT — invisible button over the baked-in circle */
 .flyBtn {
   position: absolute;
-  top: 52.7%;
-  left: 49.9%;
-  width: 24.9%;
-  height: 13.9%;
+  top: 91.5%;
+  left: 50%;
   transform: translate(-50%, -50%);
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  padding: 0;
+  padding: 12px 44px;
+  background: linear-gradient(#a8783f, #6b4a2b);
+  border: 2px solid #c9a66b;
+  border-radius: 9px;
+  color: #f5e6c8;
+  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+  font-size: 3.6vw;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 #2c1a0a, 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.12s ease-out;
+  transition: transform 0.08s ease-out;
   z-index: 3;
 }
 
-.flyBtn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,214,120,0.55) 0%, rgba(255,214,120,0) 70%);
-  opacity: 0;
-  transition: opacity 0.15s ease-out;
-  pointer-events: none;
+@media (min-width: 480px) {
+  .flyBtn { font-size: 17px; }
 }
 
 .flyBtn.pressed {
-  transform: translate(-50%, -50%) scale(0.94);
+  transform: translate(-50%, -50%) translateY(3px);
+  box-shadow: 0 0 0 #2c1a0a, 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
-.flyBtn.pressed::after {
-  opacity: 1;
-}
-
-/* BLIMP-SELECT NUMBER BUTTONS — hotspots over the "1 2 3 4" dial buttons,
-   each reveals its own glowing-number art when active */
+/* BLIMP-SELECT GRID — 10 squares baked into the hangar background art (2
+   rows x 5 cols). Squares 1-4 are real, playable blimps; 5-10 are locked
+   placeholders for now. Positions measured directly against hangar_bg.jpg. */
 .numBtn {
   position: absolute;
-  top: 75.1%;
-  width: 9%;
-  height: 5.02%;
+  top: 68.3%;
+  width: 15%;
+  height: 10%;
   transform: translate(-50%, -50%);
-  border-radius: 50%;
+  border-radius: 6px;
   border: none;
   background: transparent;
-  padding: 0;
+  padding: 10%;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   z-index: 3;
+  transition: transform 0.1s ease-out;
 }
-.numBtn.n1 { left: 30.9%; }
-.numBtn.n2 { left: 43.7%; }
-.numBtn.n3 { left: 56.2%; }
-.numBtn.n4 { left: 69.0%; }
+.numBtn:active { transform: translate(-50%, -50%) scale(0.93); }
+
+.numBtn.n1 { left: 16.75%; }
+.numBtn.n2 { left: 34.85%; }
+.numBtn.n3 { left: 52.95%; }
+.numBtn.n4 { left: 71.05%; }
 
 .numBtn img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
-  opacity: 0;
-  transition: opacity 0.15s ease-out;
   pointer-events: none;
-  filter: blur(0.4px);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
 }
 
-.numBtn.active img {
-  opacity: 1;
+.numBtn.active {
+  box-shadow: 0 0 0 3px rgba(217,122,63,0.65), 0 0 14px 2px rgba(255,200,120,0.5);
+  border-radius: 8px;
 }
+
+/* LOCKED SLOTS — remaining grid squares, static placeholders */
+.lockedSlot {
+  position: absolute;
+  top: 68.3%;
+  width: 15%;
+  height: 10%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5.5vw;
+  opacity: 0.55;
+  filter: grayscale(0.4);
+  pointer-events: none;
+  z-index: 3;
+}
+@media (min-width: 480px) {
+  .lockedSlot { font-size: 26px; }
+}
+.lockedSlot.n5 { left: 89.15%; }
+.lockedSlot.n6 { top: 83.1%; left: 16.75%; }
+.lockedSlot.n7 { top: 83.1%; left: 34.85%; }
+.lockedSlot.n8 { top: 83.1%; left: 52.95%; }
+.lockedSlot.n9 { top: 83.1%; left: 71.05%; }
+.lockedSlot.n10 { top: 83.1%; left: 89.15%; }
 
 /* ===== Game screen styles ===== */
 /* VOLUME CONTROL PANEL */
 .volumePanel {
   position: absolute;
-  top: 87%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 62%;
-  max-width: 340px;
+  top: 2%;
+  right: 3%;
+  left: auto;
+  transform: none;
+  width: 44%;
+  max-width: 190px;
   z-index: 2;
-  background: linear-gradient(#f5e6c8, #e3cfa0);
+  background: rgba(20,12,4,0.68);
   border: 2px solid #6b4a2b;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 0 0 2px #c9a66b;
-  padding: 8px 12px;
+  padding: 6px 10px;
 }
 
 .volumeRow {
@@ -1263,28 +1396,25 @@ input[type=range].volumeSlider::-moz-range-track {
     align-items: flex-end;
     gap: 8px;
     max-width: min(72vw, 320px);
+    animation: tutFadeIn 0.35s ease-out;
   }
   #tutorialGuide.hidden { display: none !important; }
+
+  @keyframes tutFadeIn {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   #tutorialGuide .tutGuideChar {
     width: 64px;
     height: 64px;
-    background-repeat: no-repeat;
-    background-size: 600% 600%; /* 6x6 tutor sprite sheet — same technique as the cutscene tutor */
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
-    /* IMPORTANT: tutFloat is the only animation allowed to touch `transform`.
-       Two animations on the same element both animating `transform` don't
-       compose in CSS — one silently wins and the other's motion is lost.
-       (Hit this exact bug on the cutscene tutor's entrance before — same
-       fix applies here: keep the entrance off `transform` entirely.) */
-    animation: tutFlyIn 0.6s cubic-bezier(.2,.9,.25,1) both,
-               tutFloat 2.2s ease-in-out 0.6s infinite;
+    animation: tutFloat 2.2s ease-in-out infinite;
   }
-
-  @keyframes tutFlyIn {
-    0%   { margin-right: -140px; width: 45px; height: 45px; opacity: 0; }
-    70%  { margin-right: -6px; width: 67px; height: 67px; opacity: 1; }
-    100% { margin-right: 0; width: 64px; height: 64px; opacity: 1; }
+  #tutorialGuide .tutGuideChar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
   }
 
   @keyframes tutFloat {
@@ -1299,30 +1429,6 @@ input[type=range].volumeSlider::-moz-range-track {
     box-shadow: 0 6px 16px rgba(0,0,0,0.45), inset 0 0 0 2px #c9a66b;
     padding: 12px 14px 12px;
     position: relative;
-    animation: tutBubbleFadeIn 0.35s ease-out 0.45s both;
-    cursor: pointer;
-  }
-  @keyframes tutBubbleFadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  #tutorialGuide .tutStepCount {
-    display: block;
-    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
-    font-size: 10.5px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    color: #8b6b3d;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  #tutorialGuide .tutTapHint {
-    display: block;
-    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
-    font-size: 10.5px;
-    color: #8b6b3d;
-    opacity: 0.7;
-    margin: -4px 0 8px;
   }
   #tutorialGuide .tutBubble::after {
     content: "";
@@ -1478,17 +1584,12 @@ input[type=range].volumeSlider::-moz-range-track {
   background-repeat: no-repeat;
   background-size: 600% 600%;
   filter: drop-shadow(0 18px 24px rgba(0,0,0,0.6));
-  animation: cutsceneTutorSlideIn 0.7s 0.15s cubic-bezier(.2,.9,.25,1) both,
-             cutsceneTutorFadeIn 0.7s 0.15s ease-out both,
+  animation: cutsceneTutorIn 0.7s 0.15s cubic-bezier(.2,.9,.25,1) both,
              cutsceneTutorFloat 3.6s ease-in-out 0.85s infinite;
 }
-@keyframes cutsceneTutorSlideIn {
-  0% { right: -90%; }
-  100% { right: -8%; }
-}
-@keyframes cutsceneTutorFadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+@keyframes cutsceneTutorIn {
+  0% { transform: translateX(55%) scale(0.85); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
 }
 @keyframes cutsceneTutorFloat {
   0%, 100% { transform: translate(0, 0); }

@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="format-detection" content="telephone=no" />
 <title>Airborne Aces</title>
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 </head>
@@ -21,22 +21,36 @@
 <div id="screenFlash" class="screen-flash"></div>
 
 <div id="tutorialGuide" class="hidden">
-  <div class="tutGuideChar" id="tutGuideChar"></div>
+  <div class="tutGuideChar">
+    <img src="" alt="" id="tutGuideImg">
+  </div>
   <div class="tutBubble">
-    <span class="tutStepCount" id="tutStepCount"></span>
     <p id="tutBubbleText"></p>
-    <span class="tutTapHint">Tap to continue</span>
-    <button type="button" id="tutSkipBtn">SKIP ▶</button>
+    <button type="button" id="tutSkipBtn">GOT IT ▶</button>
   </div>
 </div>
 
 
 
+<div id="splashScreen">
+<img class="splashBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/splash_bg.jpg" alt="" />
+<div class="splashGearField">
+  <div class="splashGear gA"></div>
+  <div class="splashGear gB"></div>
+  <div class="splashGear gC"></div>
+</div>
+<div class="splashContent">
+  <div class="splashEyebrow">A Steampunk Sky Adventure</div>
+  <h1 class="splashTitle">AIRBORNE<span class="small">ACES</span></h1>
+  <button class="splashEnterBtn" id="splashEnterBtn">Enter Hangar</button>
+</div>
+</div>
+
 <div id="menuScreen">
 <audio id="menuMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/victory_brass_step.mp3"></audio>
 <audio id="gameplayMusic" loop preload="auto" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/skyward-march%202.mp3"></audio>
 <div class="stage">
-  <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_03.webp?cb=2" alt="Airborne Aces" />
+  <img class="stageBg" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/hangar_bg.jpg" alt="Airborne Aces" />
 
   <img class="cloudLayer cA" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_04.webp?cb=2" alt="" />
   <img class="cloudLayer cB" crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_05.webp?cb=2" alt="" />
@@ -72,6 +86,13 @@
   <button class="numBtn n4" onclick="selectBlimp('blimp4', this)" aria-label="Steampunk">
     <img crossorigin="anonymous" src="https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_10.webp?cb=2" alt="" />
   </button>
+
+  <div class="lockedSlot n5" aria-hidden="true">🔒</div>
+  <div class="lockedSlot n6" aria-hidden="true">🔒</div>
+  <div class="lockedSlot n7" aria-hidden="true">🔒</div>
+  <div class="lockedSlot n8" aria-hidden="true">🔒</div>
+  <div class="lockedSlot n9" aria-hidden="true">🔒</div>
+  <div class="lockedSlot n10" aria-hidden="true">🔒</div>
 
   <div class="volumePanel">
     <div class="volumeRow">
@@ -220,18 +241,18 @@
 </div>
 
 
-<script src="assets-placeholders.js?v=3"></script>
-<script src="menu-intro.js?v=3"></script>
-<script src="audio.js?v=3"></script>
-<script src="asset-loading.js?v=3"></script>
-<script src="world-buildings.js?v=3"></script>
-<script src="player-obstacles.js?v=3"></script>
-<script src="bosses.js?v=3"></script>
-<script src="boss-dialogue.js?v=3"></script>
-<script src="effects-combat.js?v=3"></script>
-<script src="gamestate-ui.js?v=3"></script>
-<script src="world-atmosphere.js?v=3"></script>
-<script src="main-loop.js?v=3"></script>
+<script src="assets-placeholders.js"></script>
+<script src="menu-intro.js"></script>
+<script src="audio.js"></script>
+<script src="asset-loading.js"></script>
+<script src="world-buildings.js"></script>
+<script src="player-obstacles.js"></script>
+<script src="bosses.js"></script>
+<script src="boss-dialogue.js"></script>
+<script src="effects-combat.js"></script>
+<script src="gamestate-ui.js"></script>
+<script src="world-atmosphere.js"></script>
+<script src="main-loop.js"></script>
 
 </body>
 </html>

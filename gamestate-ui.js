@@ -17,95 +17,120 @@
   let checkpointBossesDefeated = 0;
 
   /* ===== Tutorial System ===== */
-  // Walks a first-time player through the core mechanics before their first
-  // real run starts. Reuses the same 36-frame Flight Tutor sprite sheet as
-  // the pre-flight cutscene (TUTOR_SHEET_URL/COLS/ROWS/FRAMES/FPS, defined
-  // in menu-intro.js) so the guide here is the same character, not a
-  // placeholder icon.
+  // A short guided intro shown once at the start of a run: the guide character
+  // flies in from off-screen, then walks the player through the core mechanics
+  // one tip at a time before handing off to real gameplay.
   const TUTORIAL_STEPS = [
-    "Tap or click anywhere to climb \u2014 let go and you'll glide back down.",
-    "Dodge the buildings, birds, and balloons \u2014 a hit costs you a heart!",
-    "Grab hearts to heal up, and shields to block one hit for free.",
-    "Dodge cleanly to fill your Storm meter, then tap it for a burst of power.",
-    "Reach the boss at the end of each stretch and beat them to keep flying!"
+    "Tap or click anywhere to fly \u2014 let go and you'll dip back down!",
+    "Dodge the buildings, birds, and balloons in your way!",
+    "Watch your hearts \u2014 losing them all ends the run!",
+    "Fill the storm meter by flying well, then tap it to unleash it!",
+    "Reach each boss to keep the adventure going. Good luck, ace!"
   ];
-  const TUTORIAL_STEP_MS = 3400; // auto-advance delay if the player doesn't tap
+  const TUTORIAL_STEP_MS = 3200; // time each tip stays up before auto-advancing
 
-  let tutGuideAnimTimer = null;
-  function setTutGuideFrame(i) {
-    const el = document.getElementById("tutGuideChar");
-    if (!el) return;
-    const col = i % TUTOR_COLS;
-    const row = Math.floor(i / TUTOR_COLS);
-    el.style.backgroundPosition = (col / (TUTOR_COLS - 1)) * 100 + "% " + (row / (TUTOR_ROWS - 1)) * 100 + "%";
+  // injects the fly-in / bob / sparkle animation once, so this file doesn't
+  // depend on CSS defined elsewhere
+  let tutorialStyleInjected = false;
+  function injectTutorialStyle() {
+    if (tutorialStyleInjected) return;
+    tutorialStyleInjected = true;
+    const style = document.createElement("style");
+    style.textContent = `
+      #tutorialGuide.tutFlyIn #tutGuideImg {
+        animation: tutCharFlyIn 0.9s cubic-bezier(.25,.85,.25,1.15) both,
+                   tutFloat 2.2s ease-in-out 0.9s infinite;
+      }
+      @keyframes tutCharFlyIn {
+        0%   { opacity: 0; transform: translate(190px, -210px) rotate(24deg) scale(0.6); filter: blur(6px); }
+        50%  { opacity: 1; filter: blur(1px); }
+        72%  { transform: translate(-12px, 9px) rotate(-7deg) scale(1.1); filter: blur(0px); }
+        88%  { transform: translate(4px, -4px) rotate(3deg) scale(0.97); }
+        100% { transform: translate(0,0) rotate(0deg) scale(1); filter: blur(0px); }
+      }
+      @keyframes tutFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-6px); }
+      }
+      #tutBubbleText { transition: opacity 0.18s ease; }
+      #tutBubbleText.tutFading { opacity: 0; }
+    `;
+    document.head.appendChild(style);
   }
-  function startTutGuideSpriteAnim() {
-    const el = document.getElementById("tutGuideChar");
-    if (!el) return;
-    el.style.backgroundImage = 'url("' + TUTOR_SHEET_URL + '")';
-    let frame = 0;
-    setTutGuideFrame(0);
-    if (tutGuideAnimTimer) clearInterval(tutGuideAnimTimer);
-    tutGuideAnimTimer = setInterval(() => {
-      frame = (frame + 1) % TUTOR_FRAMES;
-      setTutGuideFrame(frame);
-    }, 1000 / TUTOR_FPS);
+
+  function sfxTutorialArrive() {
+    if (typeof playTone !== "function") return;
+    playTone({ freq: 950, duration: 0.3, type: "sawtooth", vol: 0.055, sweep: -700, attack: 0.005, reverbSend: 0.2 });
+    playTone({ freq: 500, duration: 0.22, type: "sine", vol: 0.04, sweep: -260, startDelay: 0.04 });
+    [0, 4, 7].forEach((iv, i) => {
+      playTone({ freq: (typeof noteFreq === "function" ? noteFreq(72 + iv) : 440 * Math.pow(2, (iv) / 12)),
+        duration: 0.24, type: "triangle", vol: 0.09, sweep: 50, startDelay: 0.34 + i * 0.055, attack: 0.005, reverbSend: 0.3 });
+    });
   }
-  function stopTutGuideSpriteAnim() {
-    if (tutGuideAnimTimer) { clearInterval(tutGuideAnimTimer); tutGuideAnimTimer = null; }
+
+  function sfxTutorialTip() {
+    if (typeof playTone !== "function") return;
+    playTone({ freq: 720, duration: 0.09, type: "triangle", vol: 0.05, sweep: 60, attack: 0.003 });
   }
 
   function startTutorial() {
     state = "tutorial";
+    injectTutorialStyle();
+    ensureAudio();
+
     const overlay = document.getElementById("tutorialGuide");
+    const img = document.getElementById("tutGuideImg");
     const textEl = document.getElementById("tutBubbleText");
-    const stepEl = document.getElementById("tutStepCount");
-    const bubbleEl = overlay.querySelector(".tutBubble");
     const skipBtn = document.getElementById("tutSkipBtn");
 
-    overlay.classList.remove("hidden");
-    startTutGuideSpriteAnim();
+    // dedicated tutorial guide art if it's been added to the asset list;
+    // falls back to the heart mascot so this never shows a broken image
+    const guideImg = (images.tutorialGuide && images.tutorialGuide.naturalWidth) ? images.tutorialGuide
+      : (images.heartPickup && images.heartPickup.naturalWidth) ? images.heartPickup : null;
+    img.src = guideImg ? guideImg.src : "";
 
-    let stepIndex = 0;
-    let stepTimer = null;
+    overlay.classList.remove("hidden");
+    overlay.classList.remove("tutFlyIn");
+    void overlay.offsetWidth; // restart the fly-in animation each time this runs
+    overlay.classList.add("tutFlyIn");
+    sfxTutorialArrive();
+
+    let step = 0;
     let done = false;
+    let stepTimer = null;
 
     function showStep(i) {
-      stepIndex = i;
-      textEl.textContent = TUTORIAL_STEPS[i];
-      stepEl.textContent = (i + 1) + " / " + TUTORIAL_STEPS.length;
-      clearTimeout(stepTimer);
-      stepTimer = setTimeout(advance, TUTORIAL_STEP_MS);
+      textEl.classList.add("tutFading");
+      setTimeout(() => {
+        textEl.textContent = TUTORIAL_STEPS[i];
+        textEl.classList.remove("tutFading");
+        sfxTutorialTip();
+      }, 180);
     }
 
-    function advance() {
-      if (stepIndex < TUTORIAL_STEPS.length - 1) {
-        showStep(stepIndex + 1);
-      } else {
-        finish();
-      }
+    function nextStep() {
+      if (done) return;
+      step++;
+      if (step >= TUTORIAL_STEPS.length) { finish(); return; }
+      showStep(step);
+      stepTimer = setTimeout(nextStep, TUTORIAL_STEP_MS);
     }
 
     function finish() {
       if (done) return;
       done = true;
       clearTimeout(stepTimer);
-      stopTutGuideSpriteAnim();
       overlay.classList.add("hidden");
-      bubbleEl.removeEventListener("click", advance);
-      skipBtn.removeEventListener("click", onSkip);
+      overlay.classList.remove("tutFlyIn");
+      skipBtn.removeEventListener("click", finish);
       if (state === "tutorial") { state = "playing"; startGame(); }
     }
 
-    function onSkip(e) {
-      e.stopPropagation();
-      finish();
-    }
+    // first tip shows right as the guide lands, timed to its fly-in
+    setTimeout(() => showStep(0), 850);
+    stepTimer = setTimeout(nextStep, 850 + TUTORIAL_STEP_MS);
 
-    bubbleEl.addEventListener("click", advance);
-    skipBtn.addEventListener("click", onSkip);
-
-    showStep(0);
+    skipBtn.addEventListener("click", finish);
   }
  // bossesDefeatedCount at that same moment — keeps the level/background in sync on resume
 
