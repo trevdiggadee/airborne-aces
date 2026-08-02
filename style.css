@@ -21,11 +21,227 @@ html, body {
   height: 100%;
 }
 
+
+/* ================= RADAR SPLASH ================= */
+#splashScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 42%, rgba(0,0,0,0.28) 100%),
+    #1a0f05 url("splash_bg.jpg") center / cover no-repeat;
+}
+#splashScreen.hidden { display: none !important; }
+#splashScreen.fade-out {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+
+.splashSandGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 10%, rgba(242, 220, 170, 0.28) 0%, rgba(201, 166, 107, 0.1) 30%, transparent 58%);
+  animation: sandGlowPulse 6s ease-in-out infinite;
+  will-change: opacity;
+}
+@keyframes sandGlowPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.splashRadar {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  transform: translate(-50%, -50%);
+  width: min(79.8vmin, 87.4vw);
+  height: min(79.8vmin, 87.4vw);
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.75;
+  overflow: visible;
+}
+.splashRadarGlow { display: none !important; }
+.splashRadarSvg {
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
+  position: relative;
+  z-index: 1;
+  transform: translateZ(0);
+}
+.radarRing {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 1.2;
+}
+.radarRing.thick {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 2;
+}
+.radarCross {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+}
+.radarSweep {
+  transform-origin: 200px 200px;
+  animation: radarSweep 4s linear infinite;
+  will-change: transform;
+}
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.radarBlimp .blimpGlow {
+  fill: rgba(255, 255, 255, 0.15);
+  opacity: 0;
+}
+.radarBlimp .blimpBody {
+  fill: rgba(255, 255, 255, 0.35);
+  opacity: 0.35;
+}
+.radarBlimp.b1 {
+  animation: radarBlipPulse 4s infinite;
+}
+@keyframes radarBlipPulse {
+  0%, 32%, 48%, 100% {
+    opacity: 0.35;
+  }
+  36%, 42% {
+    opacity: 1;
+  }
+}
+.radarBlimp.b1 .blimpGlow {
+  animation: radarBlipGlow 4s infinite;
+}
+@keyframes radarBlipGlow {
+  0%, 32%, 48%, 100% { opacity: 0; }
+  36%, 42% { opacity: 0.7; }
+}
+
+.splashParticles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 1;
+}
+.splashParticle {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(245, 230, 200, 0.55);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+.splashParticle.dustUp {
+  animation-name: dustUp;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.splashParticle.dustDrift {
+  animation-name: dustDrift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.splashParticle.dustMote {
+  animation-name: dustMote;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+@keyframes dustUp {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: var(--max-op, 0.5); }
+  90% { opacity: var(--max-op, 0.5); }
+  100% { transform: translate(var(--drift, 0), calc(-1 * var(--fall, 30vh))); opacity: 0; }
+}
+@keyframes dustDrift {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: var(--max-op, 0.4); }
+  85% { opacity: var(--max-op, 0.4); }
+  100% { transform: translate(var(--drift, 40px), calc(-0.6 * var(--fall, 25vh))); opacity: 0; }
+}
+@keyframes dustMote {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.15; }
+  50% { transform: translate(var(--drift, 20px), -12px) scale(1.2); opacity: var(--max-op, 0.45); }
+}
+
+.splashStage {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+  width: 90%;
+  max-width: 520px;
+}
+.splashStage .splashTitle {
+  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+  font-size: clamp(36px, 10vw, 58px);
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+  color: #f5e6c8;
+  text-shadow:
+    0 2px 0 #3a2410,
+    0 4px 12px rgba(0,0,0,0.65),
+    0 0 28px rgba(201,166,107,0.35);
+  margin: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.enterHangarBtn,
+#splashEnterBtn.enterHangarBtn {
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  transform: translateX(-50%);
+  z-index: 5;
+  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+  font-weight: bold;
+  letter-spacing: 2px;
+  font-size: clamp(14px, 3.8vw, 17px);
+  color: #f5e6c8;
+  background: linear-gradient(#a8783f, #6b4a2b);
+  border: 2px solid #c9a66b;
+  border-radius: 10px;
+  padding: 14px 36px;
+  box-shadow: 0 3px 0 #2c1a0a, 0 8px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+  cursor: pointer;
+  text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.08s ease;
+}
+.enterHangarBtn:active,
+#splashEnterBtn.enterHangarBtn:active {
+  transform: translateX(-50%) translateY(3px);
+  box-shadow: 0 0 0 #2c1a0a, 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+/* Hide old gear-based splash chrome when radar splash is active */
+#splashScreen .splashGearField,
+#splashScreen .splashContent,
+#splashScreen .splashBg { display: none !important; }
+
 .stage {
   position: relative;
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 780 / 1398;
+  aspect-ratio: 832 / 1248;
   margin: 0 auto;
 }
 
@@ -76,14 +292,7 @@ html, body {
    the banner+medallion artwork sits centered, starting ~28% down from the
    top of the frame and spanning ~88% of the frame's width. */
 .menuBanner {
-  position: absolute;
-  top: 28%;
-  left: 50%;
-  width: 88%;
-  aspect-ratio: 638 / 423;
-  transform: translateX(-50%);
-  z-index: 1;
-  pointer-events: none;
+  display: none;
 }
 
 .menuBanner img {
@@ -98,9 +307,9 @@ html, body {
    motion-blurred spin rather than a hard frame-to-frame pop. */
 .heroBlimpWrap {
   position: absolute;
-  top: 6%;
+  top: 34%;
   left: 50%;
-  width: 54%;
+  width: 46%;
   transform: translateX(-50%);
   z-index: 2;
   animation: floatHero 3s ease-in-out infinite;
@@ -189,157 +398,345 @@ html, body {
 /* TAKE FLIGHT HOTSPOT — invisible button over the baked-in circle */
 .flyBtn {
   position: absolute;
-  top: 52.7%;
-  left: 49.9%;
-  width: 24.9%;
-  height: 13.9%;
+  top: 91.5%;
+  left: 50%;
   transform: translate(-50%, -50%);
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  padding: 0;
+  padding: 12px 44px;
+  background: linear-gradient(#a8783f, #6b4a2b);
+  border: 2px solid #c9a66b;
+  border-radius: 9px;
+  color: #f5e6c8;
+  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+  font-size: 3.6vw;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 #2c1a0a, 0 6px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.12s ease-out;
+  transition: transform 0.08s ease-out;
   z-index: 3;
 }
 
-.flyBtn::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255,214,120,0.55) 0%, rgba(255,214,120,0) 70%);
-  opacity: 0;
-  transition: opacity 0.15s ease-out;
-  pointer-events: none;
+@media (min-width: 480px) {
+  .flyBtn { font-size: 17px; }
 }
 
 .flyBtn.pressed {
-  transform: translate(-50%, -50%) scale(0.94);
+  transform: translate(-50%, -50%) translateY(3px);
+  box-shadow: 0 0 0 #2c1a0a, 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
-.flyBtn.pressed::after {
-  opacity: 1;
-}
-
-/* BLIMP-SELECT NUMBER BUTTONS — hotspots over the "1 2 3 4" dial buttons,
-   each reveals its own glowing-number art when active */
+/* BLIMP-SELECT GRID — 10 squares baked into the hangar background art (2
+   rows x 5 cols). Squares 1-4 are real, playable blimps; 5-10 are locked
+   placeholders for now. Positions measured directly against hangar_bg.jpg. */
 .numBtn {
   position: absolute;
-  top: 75.1%;
-  width: 9%;
-  height: 5.02%;
+  top: 67%;
+  width: 15%;
+  height: 10%;
   transform: translate(-50%, -50%);
-  border-radius: 50%;
+  border-radius: 6px;
   border: none;
   background: transparent;
-  padding: 0;
+  padding: 2%; /* was 10% — percentage padding resolves against the CONTAINING
+                  BLOCK'S WIDTH on every side, including top/bottom, so 10%
+                  padding on this box consumed more than its own full height
+                  and collapsed the image inside to 0×0. That's why every
+                  grid thumbnail was invisible. */
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   z-index: 3;
+  transition: transform 0.1s ease-out;
 }
-.numBtn.n1 { left: 30.9%; }
-.numBtn.n2 { left: 43.7%; }
-.numBtn.n3 { left: 56.2%; }
-.numBtn.n4 { left: 69.0%; }
+.numBtn:active { transform: translate(-50%, -50%) scale(0.93); }
+
+.numBtn.n1 { left: 17.25%; }
+.numBtn.n2 { left: 33.7%; }
+.numBtn.n3 { left: 50.2%; }
+.numBtn.n4 { left: 66.6%; }
+.numBtn.n5 { left: 83.1%; }
+.numBtn.n6 { top: 79.4%; left: 17.25%; }
+.numBtn.n7 { top: 79.4%; left: 33.7%; }
+.numBtn.n8 { top: 79.4%; left: 50.2%; }
+.numBtn.n9 { top: 79.4%; left: 66.6%; }
+.numBtn.n10 { top: 79.4%; left: 83.1%; }
 
 .numBtn img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
-  opacity: 0;
-  transition: opacity 0.15s ease-out;
   pointer-events: none;
-  filter: blur(0.4px);
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
 }
 
-.numBtn.active img {
-  opacity: 1;
+.numBtn.active {
+  box-shadow: 0 0 0 3px rgba(217,122,63,0.65), 0 0 14px 2px rgba(255,200,120,0.5);
+  border-radius: 8px;
 }
 
-/* ===== Game screen styles ===== */
-/* VOLUME CONTROL PANEL */
-.volumePanel {
+/* LOCKED SLOTS — remaining grid squares, static placeholders */
+.lockedSlot {
   position: absolute;
-  top: 87%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 62%;
-  max-width: 340px;
-  z-index: 2;
-  background: linear-gradient(#f5e6c8, #e3cfa0);
-  border: 2px solid #6b4a2b;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 0 0 2px #c9a66b;
-  padding: 8px 12px;
-}
-
-.volumeRow {
+  top: 67%;
+  width: 15%;
+  height: 10%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
+  justify-content: center;
+  font-size: 5.5vw;
+  opacity: 0.55;
+  filter: grayscale(0.4);
+  pointer-events: none;
+  z-index: 3;
 }
+@media (min-width: 480px) {
+  .lockedSlot { font-size: 26px; }
+}
+.lockedSlot.n5 { left: 83.1%; }
+.lockedSlot.n6 { top: 79.4%; left: 17.25%; }
+.lockedSlot.n7 { top: 79.4%; left: 33.7%; }
+.lockedSlot.n8 { top: 79.4%; left: 50.2%; }
+.lockedSlot.n9 { top: 79.4%; left: 66.6%; }
+.lockedSlot.n10 { top: 79.4%; left: 83.1%; }
 
-.volumeIcon {
-  font-size: 3.4vw;
-  max-font-size: 16px;
-  width: 20px;
+/* ===== BLIMP PROFILE PANEL ===== */
+.blimpProfile {
+  position: absolute;
+  top: 12.5%;
+  right: 3.5%;
+  left: auto;
+  width: 17.7%;
+  max-width: 90px;
+  min-width: 75px;
+  height: auto;
+  max-height: 38.9%;
+  z-index: 8;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 5px 6px 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: #e8dcc0;
   text-align: center;
-  flex: 0 0 auto;
+  gap: 0;
+  background: linear-gradient(165deg, rgba(40,28,16,0.88) 0%, rgba(22,14,8,0.92) 100%);
+  border: 1px solid rgba(160,120,64,0.65);
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 1px rgba(201,166,107,0.2),
+    0 4px 12px rgba(0,0,0,0.4);
 }
 
-.volumeValue {
-  font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
+.bpBadge {
+  width: 28px;
+  margin: 0 auto 3px;
+  flex-shrink: 0;
+}
+.bpBadge svg { width: 100%; height: auto; display: block; }
+
+.bpName {
+  font-size: 9px;
   font-weight: bold;
-  font-size: 2.8vw;
-  min-width: 34px;
-  max-width: 40px;
-  text-align: right;
-  color: #3a2410;
+  letter-spacing: 0.5px;
+  color: #f5ecd8;
+  text-shadow: 0 1px 2px #000;
+  line-height: 1.15;
+  margin: 0 0 1px;
+  width: 100%;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.bpMk {
+  font-size: 7.5px;
+  color: #c9a66b;
+  letter-spacing: 0.4px;
+  margin: 0 0 2px;
+  text-shadow: 0 1px 2px #000;
+  flex-shrink: 0;
+}
+
+.bpDivider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #8b6b3d 12%, #c9a66b 50%, #8b6b3d 88%, transparent);
+  margin: 3px 0;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.bpMeta { display: none !important; }
+.bpMetaRow { display: none !important; }
+
+.bpSection {
+  font-size: 7px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #c9a66b;
+  font-weight: bold;
+  margin: 1px 0 3px;
+  text-shadow: 0 1px 2px #000;
+  flex-shrink: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.bpStats {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   flex: 0 0 auto;
-}
-
-input[type=range].volumeSlider {
-  -webkit-appearance: none;
-  appearance: none;
-  flex: 1 1 auto;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(#4a3420, #6b4a2b);
-  outline: none;
+  padding: 0;
+  box-sizing: border-box;
   margin: 0;
-  cursor: pointer;
+}
+.bpStat {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.bpStatTop {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.bpStatIcon { display: none !important; }
+.bpStatLabel {
+  font-size: 6.5px;
+  color: #e8dcc0;
+  text-align: left;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+.bpSeg {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5px;
+  width: 100%;
+  height: 5px;
+  padding-left: 0;
+  box-sizing: border-box;
+}
+.bpSeg i {
+  flex: 1 1 0;
+  min-width: 0;
+  border-radius: 1.5px;
+  background: #1a1008;
+  border: 1px solid #5a4030;
+  box-sizing: border-box;
+}
+.bpSeg i.on {
+  background: linear-gradient(180deg, #e07060, #a82820 50%, #7a1810);
+  border-color: #c05040;
+  box-shadow: 0 0 2px rgba(180,50,30,0.4);
 }
 
-input[type=range].volumeSlider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #f5e6c8, #c9a66b 70%);
-  border: 2px solid #4a3420;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  cursor: pointer;
+.bpAbility {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  text-align: center;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  min-width: 0;
 }
-
-input[type=range].volumeSlider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #f5e6c8, #c9a66b 70%);
-  border: 2px solid #4a3420;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-  cursor: pointer;
+.bpAbilityIcon { display: none !important; }
+.bpAbilityText {
+  flex: 0 0 auto;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+.bpAbilityName {
+  font-size: 6px;
+  font-weight: bold;
+  color: #f5ecd8;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 2px #000;
+  line-height: 1.2;
+  margin: 0 auto;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  width: 100%;
+}
+.bpAbilityDesc { display: none !important; }
 
-input[type=range].volumeSlider::-moz-range-track {
-  height: 6px;
+.bpUpgrade {
+  width: 100%;
+  padding: 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.bpUpgradeRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 7px;
+  color: #e8dcc0;
+  margin-bottom: 2px;
+  text-shadow: 0 1px 2px #000;
+  white-space: nowrap;
+}
+.bpXpTrack {
+  width: 100%;
+  height: 5px;
+  background: #1a1008;
+  border: 1px solid #c9a66b;
   border-radius: 3px;
-  background: linear-gradient(#4a3420, #6b4a2b);
-  border: none;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 2px rgba(0,0,0,0.5),
+    0 0 6px rgba(201,166,107,0.5),
+    0 0 12px rgba(201,166,107,0.3);
+}
+.bpXpFill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #8b6b3d, #d4b878 40%, #f0e0a8 75%, #fff3c4);
+  transition: width 0.7s ease;
+  border-radius: 2px;
+  box-shadow:
+    0 0 4px rgba(232,213,163,0.85),
+    0 0 10px rgba(201,166,107,0.6),
+    inset 0 0 3px rgba(255,250,220,0.55);
+}
+.bpXpLabel {
+  font-size: 6px;
+  color: #c9a66b;
+  margin-top: 1px;
+  text-align: center;
+  white-space: nowrap;
 }
 
 #gameScreen {
@@ -1263,28 +1660,25 @@ input[type=range].volumeSlider::-moz-range-track {
     align-items: flex-end;
     gap: 8px;
     max-width: min(72vw, 320px);
+    animation: tutFadeIn 0.35s ease-out;
   }
   #tutorialGuide.hidden { display: none !important; }
+
+  @keyframes tutFadeIn {
+    from { opacity: 0; transform: translateY(-14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
 
   #tutorialGuide .tutGuideChar {
     width: 64px;
     height: 64px;
-    background-repeat: no-repeat;
-    background-size: 600% 600%; /* 6x6 tutor sprite sheet — same technique as the cutscene tutor */
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
-    /* IMPORTANT: tutFloat is the only animation allowed to touch `transform`.
-       Two animations on the same element both animating `transform` don't
-       compose in CSS — one silently wins and the other's motion is lost.
-       (Hit this exact bug on the cutscene tutor's entrance before — same
-       fix applies here: keep the entrance off `transform` entirely.) */
-    animation: tutFlyIn 0.6s cubic-bezier(.2,.9,.25,1) both,
-               tutFloat 2.2s ease-in-out 0.6s infinite;
+    animation: tutFloat 2.2s ease-in-out infinite;
   }
-
-  @keyframes tutFlyIn {
-    0%   { margin-right: -140px; width: 45px; height: 45px; opacity: 0; }
-    70%  { margin-right: -6px; width: 67px; height: 67px; opacity: 1; }
-    100% { margin-right: 0; width: 64px; height: 64px; opacity: 1; }
+  #tutorialGuide .tutGuideChar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.45));
   }
 
   @keyframes tutFloat {
@@ -1299,30 +1693,6 @@ input[type=range].volumeSlider::-moz-range-track {
     box-shadow: 0 6px 16px rgba(0,0,0,0.45), inset 0 0 0 2px #c9a66b;
     padding: 12px 14px 12px;
     position: relative;
-    animation: tutBubbleFadeIn 0.35s ease-out 0.45s both;
-    cursor: pointer;
-  }
-  @keyframes tutBubbleFadeIn {
-    from { opacity: 0; transform: translateY(-8px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  #tutorialGuide .tutStepCount {
-    display: block;
-    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
-    font-size: 10.5px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    color: #8b6b3d;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  #tutorialGuide .tutTapHint {
-    display: block;
-    font-family: 'Rockwell', 'Rockwell Nova', 'Roboto Slab', Georgia, serif;
-    font-size: 10.5px;
-    color: #8b6b3d;
-    opacity: 0.7;
-    margin: -4px 0 8px;
   }
   #tutorialGuide .tutBubble::after {
     content: "";
@@ -1478,17 +1848,12 @@ input[type=range].volumeSlider::-moz-range-track {
   background-repeat: no-repeat;
   background-size: 600% 600%;
   filter: drop-shadow(0 18px 24px rgba(0,0,0,0.6));
-  animation: cutsceneTutorSlideIn 0.7s 0.15s cubic-bezier(.2,.9,.25,1) both,
-             cutsceneTutorFadeIn 0.7s 0.15s ease-out both,
+  animation: cutsceneTutorIn 0.7s 0.15s cubic-bezier(.2,.9,.25,1) both,
              cutsceneTutorFloat 3.6s ease-in-out 0.85s infinite;
 }
-@keyframes cutsceneTutorSlideIn {
-  0% { right: -90%; }
-  100% { right: -8%; }
-}
-@keyframes cutsceneTutorFadeIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+@keyframes cutsceneTutorIn {
+  0% { transform: translateX(55%) scale(0.85); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
 }
 @keyframes cutsceneTutorFloat {
   0%, 100% { transform: translate(0, 0); }

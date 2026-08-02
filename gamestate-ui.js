@@ -208,11 +208,11 @@
   const MAX_HEALTH = 4;
   const HEART_KEYS = ["asset_extra_11", "asset_extra_12", "asset_extra_13", "asset_extra_14", "heartPickup"];
   const HEART_URLS = [
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_11.webp?cb=2", // 0 hits left
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_12.webp?cb=2",   // 1 hit left
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_13.webp?cb=2",   // 2 hits left
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_14.webp?cb=2",   // 3 hits left
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/heartPickup.webp?cb=2"   // 4 hits left (full health)
+    "asset_extra_11.webp?cb=2", // 0 hits left
+    "asset_extra_12.webp?cb=2",   // 1 hit left
+    "asset_extra_13.webp?cb=2",   // 2 hits left
+    "asset_extra_14.webp?cb=2",   // 3 hits left
+    "heartPickup.webp?cb=2"   // 4 hits left (full health)
   ];
   const HEART_IMAGES = PLACEHOLDER_MODE ? HEART_KEYS.map(renderPlaceholder) : HEART_URLS;
   const MAX_BONUS_HEARTS = 2; // how many extra hearts can stack on top of a full bar

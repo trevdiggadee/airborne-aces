@@ -13,7 +13,13 @@
   // whole strip — otherwise the player takes damage over open sky above a
   // short building just because it's within the same tile as a tall one.
   const STREETROW1_PROFILE = [0.302, 0.302, 0.302, 0.302, 0.24, 0.252, 0.406, 0.348, 0.348, 0.346, 0.365, 0.61, 0.61, 0.61, 0.431, 0.177, 0.15, 0.177, 0.177, 0.177, 0.542, 0.35, 0.35, 0.342, 0.342, 0.35, 0.431, 0.431, 0.431, 0.45, 0.142, 0.012, 0.104, 0.535, 0.448, 0.392, 0.404, 0.419, 0.621, 0.621, 0.625, 0.662, 0.683, 0.302, 0.233, 0.206, 0.202, 0.208, 0.223, 0.198, 0.219, 0.229, 0.433, 0.446, 0.456, 0.46, 0.492, 0.488, 0.452, 0.44];
-  const STREETROW2_PROFILE = [0.242, 0.265, 0.287, 0.31, 0.237, 0.242, 0.317, 0.317, 0.277, 0.287, 0.398, 0.396, 0.348, 0.319, 0.277, 0.275, 0.319, 0.285, 0.265, 0.225, 0.258, 0.258, 0.188, 0.362, 0.323, 0.323, 0.56, 0.56, 0.104, 0.063, 0.104, 0.325, 0.325, 0.315, 0.398, 0.0, 0.0, 0.333, 0.356, 0.625, 0.425, 0.212, 0.183, 0.204, 0.183, 0.217, 0.446, 0.465, 0.408, 0.433, 0.435, 0.317, 0.262, 0.238, 0.192, 0.185, 0.225, 0.269, 0.46, 0.479];
+  // Regenerated for the new level2_buildings_strip.png artwork (62 stitched
+  // industrial buildings) — the old profile was measured against the
+  // previous streetrow2.webp art and no longer matches this silhouette.
+  // Sample columns that land in a transparent gap between buildings read as
+  // 1.0 (solid starts at the very bottom), so open sky above a gap never
+  // falsely triggers a hit.
+  const STREETROW2_PROFILE = [0.802, 0.365, 0.497, 0.234, 0.581, 0.575, 0.593, 0.659, 0.323, 0.503, 0.018, 0.281, 0.551, 0.317, 0.695, 0.653, 0.425, 0.683, 0.491, 0.377, 0.581, 0.683, 0.647, 0.503, 1.0, 0.629, 0.467, 0.581, 1.0, 0.216, 0.647, 0.611, 0.713, 0.311, 0.581, 0.611, 0.653, 0.455, 0.623, 0.707, 0.701, 0.677, 0.587, 1.0, 0.683, 0.509, 0.557, 0.407, 0.772, 0.192, 0.689, 0.551, 0.587, 0.719, 0.665, 0.629, 0.341, 0.599, 0.281, 0.587];
   const BUILDING_ROW_PROFILES = { streetrow1: STREETROW1_PROFILE, streetrow2: STREETROW2_PROFILE };
 
   function buildingProfileTopFrac(b, sampleX) {

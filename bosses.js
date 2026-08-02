@@ -138,11 +138,11 @@
   // 5-stage icon set — mirrors the health meter's fill-state pattern.
   // Stage 0 = empty tank, stage 4 = fully charged/ready (matches storm_icon_1..5.webp)
   const STORM_ICON_URLS = [
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_1.webp?cb=2",
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_2.webp?cb=2",
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_3.webp?cb=2",
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_4.webp?cb=2",
-    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_icon_5.webp?cb=2"
+    "storm_icon_1.webp?cb=2",
+    "storm_icon_2.webp?cb=2",
+    "storm_icon_3.webp?cb=2",
+    "storm_icon_4.webp?cb=2",
+    "storm_icon_5.webp?cb=2"
   ];
 
   // Counts every 25-point threshold the score has ever crossed and tops the tank up to match.
