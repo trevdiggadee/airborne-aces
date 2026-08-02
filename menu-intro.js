@@ -5,7 +5,13 @@ const BLIMP_DATA = {
   blimp1: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/asset_extra_06.webp?cb=2", key: "asset_extra_06", name: "Zeppelin Ace", effect: "propeller" },
   blimp2: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp2_main.webp?cb=2", key: "blimp2_main", name: "Deco Liner", effect: null },
   blimp3: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp3_main.webp?cb=2", key: "blimp3_main", name: "Aero Slicer", effect: null },
-  blimp4: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_main.webp?cb=2", key: "blimp4_main", name: "Steampunk", effect: null }
+  blimp4: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_main.webp?cb=2", key: "blimp4_main", name: "Steampunk", effect: null },
+  blimp5: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_purple.png", key: "ship_purple", name: "Royal Voyager", effect: null },
+  blimp6: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_wood.png", key: "ship_wood", name: "Brass Chronograph", effect: null },
+  blimp7: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning.png", key: "ship_lightning", name: "Storm Chaser", effect: null },
+  blimp8: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_cargo.png", key: "ship_cargo", name: "Cargo King", effect: null },
+  blimp9: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate.png", key: "ship_pirate", name: "Jolly Rogers", effect: null },
+  blimp10: { url: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_ivory.png", key: "ship_ivory", name: "Ivory Anchor", effect: null }
 };
 
 // blimps with a real in-game flight animation get that same animation on the
@@ -22,7 +28,9 @@ const HERO_ANIM = {
   blimp1: { urls: heroFramesFor(36, "player_blimp_"), fps: 24 },
   blimp2: { urls: heroFramesFor(25, "blimp2_flight_"), fps: 18 },
   blimp3: { urls: heroFramesFor(25, "blimp3_flight_"), fps: 18 },
-  blimp4: { urls: heroFramesFor(25, "blimp4_flight_"), fps: 18 }
+  blimp4: { urls: heroFramesFor(25, "blimp4_flight_"), fps: 18 },
+  blimp7: { urls: heroFramesFor(25, "ship_lightning_"), fps: 20 },
+  blimp9: { urls: heroFramesFor(36, "ship_pirate_"), fps: 20 }
 };
 
 function blimpSrc(data) {

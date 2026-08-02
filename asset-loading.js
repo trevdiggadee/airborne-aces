@@ -491,6 +491,10 @@
     blimp2_main:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp2_main.webp?cb=2",
     blimp3_main:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp3_main.webp?cb=2",
     blimp4_main:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_main.webp?cb=2",
+    ship_purple:    "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_purple.png",
+    ship_wood:      "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_wood.png",
+    ship_cargo:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_cargo.png",
+    ship_ivory:     "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_ivory.png",
 
     // blimp2 full 25-frame flight animation
     blimp2_flight_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp2_flight_01.webp?cb=2",
@@ -572,6 +576,69 @@
     blimp4_flight_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_23.webp?cb=2",
     blimp4_flight_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_24.webp?cb=2",
     blimp4_flight_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/blimp4_flight_25.webp?cb=2",
+    // ship_lightning full 25-frame flight animation
+    ship_lightning_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_01.webp",
+    ship_lightning_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_02.webp",
+    ship_lightning_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_03.webp",
+    ship_lightning_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_04.webp",
+    ship_lightning_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_05.webp",
+    ship_lightning_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_06.webp",
+    ship_lightning_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_07.webp",
+    ship_lightning_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_08.webp",
+    ship_lightning_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_09.webp",
+    ship_lightning_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_10.webp",
+    ship_lightning_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_11.webp",
+    ship_lightning_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_12.webp",
+    ship_lightning_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_13.webp",
+    ship_lightning_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_14.webp",
+    ship_lightning_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_15.webp",
+    ship_lightning_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_16.webp",
+    ship_lightning_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_17.webp",
+    ship_lightning_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_18.webp",
+    ship_lightning_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_19.webp",
+    ship_lightning_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_20.webp",
+    ship_lightning_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_21.webp",
+    ship_lightning_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_22.webp",
+    ship_lightning_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_23.webp",
+    ship_lightning_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_24.webp",
+    ship_lightning_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_lightning_25.webp",
+    // ship_pirate full 36-frame flight animation
+    ship_pirate_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_01.webp",
+    ship_pirate_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_02.webp",
+    ship_pirate_03: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_03.webp",
+    ship_pirate_04: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_04.webp",
+    ship_pirate_05: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_05.webp",
+    ship_pirate_06: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_06.webp",
+    ship_pirate_07: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_07.webp",
+    ship_pirate_08: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_08.webp",
+    ship_pirate_09: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_09.webp",
+    ship_pirate_10: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_10.webp",
+    ship_pirate_11: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_11.webp",
+    ship_pirate_12: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_12.webp",
+    ship_pirate_13: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_13.webp",
+    ship_pirate_14: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_14.webp",
+    ship_pirate_15: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_15.webp",
+    ship_pirate_16: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_16.webp",
+    ship_pirate_17: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_17.webp",
+    ship_pirate_18: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_18.webp",
+    ship_pirate_19: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_19.webp",
+    ship_pirate_20: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_20.webp",
+    ship_pirate_21: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_21.webp",
+    ship_pirate_22: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_22.webp",
+    ship_pirate_23: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_23.webp",
+    ship_pirate_24: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_24.webp",
+    ship_pirate_25: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_25.webp",
+    ship_pirate_26: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_26.webp",
+    ship_pirate_27: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_27.webp",
+    ship_pirate_28: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_28.webp",
+    ship_pirate_29: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_29.webp",
+    ship_pirate_30: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_30.webp",
+    ship_pirate_31: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_31.webp",
+    ship_pirate_32: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_32.webp",
+    ship_pirate_33: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_33.webp",
+    ship_pirate_34: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_34.webp",
+    ship_pirate_35: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_35.webp",
+    ship_pirate_36: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/ship_pirate_36.webp",
     // Storm cloud animation frames (36 frames) for rain level decorative clouds
     storm_cloud_01: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_01.webp?cb=2",
     storm_cloud_02: "https://raw.githubusercontent.com/trevdiggadee/airborne-aces/main/storm_cloud_02.webp?cb=2",
@@ -641,22 +708,39 @@
   const BLIMP4_FLIGHT_FPS = 18;
   const BLIMP4_FLIGHT_KEYS = Array.from({ length: BLIMP4_FLIGHT_FRAME_COUNT }, (_, i) => `blimp4_flight_${String(i + 1).padStart(2, "0")}`);
 
+  const SHIP_LIGHTNING_FRAME_COUNT = 25;
+  const SHIP_LIGHTNING_FPS = 20;
+  const SHIP_LIGHTNING_KEYS = Array.from({ length: SHIP_LIGHTNING_FRAME_COUNT }, (_, i) => `ship_lightning_${String(i + 1).padStart(2, "0")}`);
+
+  const SHIP_PIRATE_FRAME_COUNT = 36;
+  const SHIP_PIRATE_FPS = 20;
+  const SHIP_PIRATE_KEYS = Array.from({ length: SHIP_PIRATE_FRAME_COUNT }, (_, i) => `ship_pirate_${String(i + 1).padStart(2, "0")}`);
+
   // per-blimp animated frame sets — any blimp not listed here falls back to
   // its single static hero image (see BLIMP_HERO_KEYS below)
   const BLIMP_ANIM = {
     blimp1: { keys: PLAYER_BLIMP_KEYS, fps: PLAYER_BLIMP_FPS, frameCount: PLAYER_BLIMP_FRAME_COUNT },
     blimp2: { keys: BLIMP2_FLIGHT_KEYS, fps: BLIMP2_FLIGHT_FPS, frameCount: BLIMP2_FLIGHT_FRAME_COUNT },
     blimp3: { keys: BLIMP3_FLIGHT_KEYS, fps: BLIMP3_FLIGHT_FPS, frameCount: BLIMP3_FLIGHT_FRAME_COUNT },
-    blimp4: { keys: BLIMP4_FLIGHT_KEYS, fps: BLIMP4_FLIGHT_FPS, frameCount: BLIMP4_FLIGHT_FRAME_COUNT }
+    blimp4: { keys: BLIMP4_FLIGHT_KEYS, fps: BLIMP4_FLIGHT_FPS, frameCount: BLIMP4_FLIGHT_FRAME_COUNT },
+    blimp7: { keys: SHIP_LIGHTNING_KEYS, fps: SHIP_LIGHTNING_FPS, frameCount: SHIP_LIGHTNING_FRAME_COUNT },
+    blimp9: { keys: SHIP_PIRATE_KEYS, fps: SHIP_PIRATE_FPS, frameCount: SHIP_PIRATE_FRAME_COUNT }
   };
 
-  // blimp1 and blimp2 have their own flight animations; blimp3-4 only have a
-  // single static hero image so far, so gameplay falls back to that
+  // blimp1, blimp2, blimp7 and blimp9 have their own flight animations;
+  // everything else only has a single static hero image so far, so gameplay
+  // falls back to that
   const BLIMP_HERO_KEYS = {
     blimp1: "asset_extra_06",
     blimp2: "blimp2_main",
     blimp3: "blimp3_main",
-    blimp4: "blimp4_main"
+    blimp4: "blimp4_main",
+    blimp5: "ship_purple",
+    blimp6: "ship_wood",
+    blimp7: "ship_lightning_01",
+    blimp8: "ship_cargo",
+    blimp9: "ship_pirate_01",
+    blimp10: "ship_ivory"
   };
 
   // ---------- Animation frame validation — detect and skip near-blank frames ----------
